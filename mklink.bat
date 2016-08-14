@@ -20,10 +20,7 @@ for /f "usebackq tokens=*" %%i in (`cd`) do set WD=%%i
 
 for /f "usebackq tokens=*" %%i in (`dir /a-d /b /s`) do (
   set LINE=%%i
-  echo !LINE:%WD%=%USERPROFILE%! !LINE!
 
   REM ファイルのパスからカレントディレクトリを置換してリンク作成
   mklink !LINE:%WD%=%USERPROFILE%! !LINE!
 )
-
-pause
