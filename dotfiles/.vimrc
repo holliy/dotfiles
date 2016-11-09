@@ -305,7 +305,7 @@ noremap <C-b> <C-b>zz
 " noremap <ScrollWheelUp> 3<C-y>
 " noremap <ScrollWheelDown> 3<C-e>
 
-inoremap <C-u> <C-e>
+inoremap <C-u> <C-p>
 cnoremap <C-u> <C-p>
 cnoremap <C-g> <C-u>
 
