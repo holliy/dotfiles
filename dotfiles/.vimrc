@@ -17,7 +17,11 @@ augroup END "}}}
 
 " use Vim with singleton "{{{
 if has('clientserver')
-  runtime macros/editexisting.vim
+  if has('patch-7.4.1674')
+    packadd! editexisting.vim
+  else
+    runtime macros/editexisting.vim
+  endif
 endif "}}}
 
 " non plugin"{{{
@@ -177,7 +181,7 @@ set showtabline=2
 set splitbelow splitright
 set nostartofline
 set switchbuf=useopen,usetab,split
-SetG synmaxcol=500
+SetG synmaxcol=800
 set notimeout ttimeout ttimeoutlen=100
 set title
 set ttymouse=xterm2
@@ -204,6 +208,9 @@ if exists('+fixendofline')
 endif
 if has('patch-7.4.314')
   set shortmess+=c
+endif
+if has('patch-7.4.1384')
+  let &packpath = g:vimrc#dotvim . '/pack'
 endif "}}}
 
 let g:loaded_2html_plugin = 1 "{{{
@@ -512,8 +519,9 @@ endfunction
 for s:d in filter(
     \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
+    \   has('patch-7.4.1384') && &loadplugins ? 'packpath."/pack"' : '',
     \   'viewdir'], 'v:val !=# ""')
-  if !s:mkdir(eval('&' . s:d))
+  if s:d != '' && !s:mkdir(eval('&' . s:d))
     execute 'set' s:d . '&'
   endif
 endfor
@@ -838,7 +846,12 @@ augroup END "}}}
 "}}}
 
 " plugin"{{{
-runtime macros/matchit.vim
+if has('patch-7.4.1674')
+  packadd! matchit.vim
+else
+  runtime macros/matchit.vim
+endif
+
 execute 'source' g:vimrc#dotvim . '/dein.vim'
 "}}}
 
