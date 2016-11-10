@@ -18,7 +18,7 @@ augroup END "}}}
 " use Vim with singleton "{{{
 if has('clientserver')
   if has('patch-7.4.1674')
-    packadd! editexisting.vim
+    packadd! editexisting
   else
     runtime macros/editexisting.vim
   endif
@@ -847,7 +847,7 @@ augroup END "}}}
 
 " plugin"{{{
 if has('patch-7.4.1674')
-  packadd! matchit.vim
+  packadd! matchit
 else
   runtime macros/matchit.vim
 endif
