@@ -1,5 +1,3 @@
-" WIP
-
 let s:dein_dir = g:vimrc#dotvim . '/dein'
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
@@ -17,7 +15,10 @@ if dein#load_state(s:dein_dir)
 
   call dein#add(s:dein_repo_dir)
   call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
+  call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
+  call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
   call dein#add('itchyny/landscape.vim')
+  call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('Shougo/neocomplete.vim')
   call dein#add('Shougo/neosnippet.vim')
   call dein#add('Shougo/neosnippet-snippets')
@@ -34,6 +35,15 @@ if g:vimrc#is_starting && dein#check_install()
   call dein#install()
 endif
 
+" ghcmod-vim "{{{
+if dein#tap('ghcmod')
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>ft :<C-u>GhcModType!<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fi :<C-u>GhcModInfo!<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Space><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fc :<C-u>GhcModCheckAsync<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fl :<C-u>GhcModLintAsync<CR>
+endif "}}}
+
 " landscape "{{{
 if dein#tap('landscape')
   Autocmd VimEnter * nested colorscheme landscape
@@ -45,7 +55,7 @@ if dein#tap('neocomplete')
   let g:neocomplete#enable_auto_close_preview = 1
   let g:neocomplete#enable_auto_delimiter = 1
   let g:neocomplete#enable_camel_case = 1
-  let g:neocomplete#disable_auto_complete = 1
+  let g:neocomplete#disable_auto_complete = 0
   let g:neocomplete#enable_fuzzy_completion = 1
   let g:neocomplete#enable_insert_char_pre = 1
   let g:neocomplete#enable_smart_case = 1
@@ -66,14 +76,24 @@ if dein#tap('neocomplete')
       \ get(g:, 'neocomplete#sources#dictionary#dictionaries', {})
   let g:neocomplete#sources#omni#input_patterns =
       \ get(g:, 'neocomplete#sources#omni#input_patterns', {})
+  let g:neocomplete#sources#omni#functions =
+      \ get(g:, 'neocomplete#sources#omni#functions', {})
 
   let g:neocomplete#keyword_patterns._ = '\h\w*'
+
   let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)\%(\h\w*\)\?'
+
   let g:neocomplete#keyword_patterns.scheme = '[[:alpha:]+*/@$_=.!?-][[:alnum:]+*/@$_:=.!?-]*'
+
   let g:neocomplete#sources#omni#input_patterns.cs = '.*[^=\);]'
   let g:neocomplete#force_omni_input_patterns.cs = '.*[^=\);]'
+
   let g:neocomplete#sources#omni#input_patterns.java = '\k\.\k*'
   let g:neocomplete#force_omni_input_patterns.java = '\k\.\k*'
+
+  if dein#tap('neco-ghc')
+    let g:neocomplete#sources#omni#functions.haskell = 'necoghc#omnifunc'
+  endif
 endif "}}}
 
 " neosnippet "{{{
@@ -87,4 +107,9 @@ if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
   if has('conceal')
     set conceallevel=2 concealcursor=iv
   endif
+endif "}}}
+
+" vim-haskell-indent "{{{
+if dein#tap('haskell-indent')
+  let g:haskell_indent_disable_case = 1
 endif "}}}
