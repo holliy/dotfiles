@@ -811,8 +811,9 @@ Autocmd BufReadPost ?*
 "   Autocmd QuickfixCmdPost make call QfMakeConv('utf-8', 'cp932')
 " else
 "   Autocmd QuickfixCmdPost make call QfMakeConv('cp932', 'utf-8')
-" endif
+" endif }}}
 
+" その他"{{{
 AutocmdFT * setlocal formatoptions-=o
 Autocmd BufWinEnter,ColorScheme,FileType * call Highlight()
 AutocmdFT * if &commentstring !~# '^ ' |
