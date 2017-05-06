@@ -61,8 +61,8 @@ if g:vimrc#is_windows
   let $PATH .= ';C:\Windows\Microsoft.NET\Framework64\v4.0.30319'
   let $PATH .= ';C:\Program Files\Cygwin\bin'
   let $PATH .= ';C:\Program Files\Cygwin\usr\local\bin'
-  let $VIM = $HOME . '\.vim\vim74-kaoriya-win64'
-  let $VIMRUNTIME = $VIM . '\vim74'
+  let $VIM = $HOME . '\.vim\vim-kaoriya-win64'
+  let $VIMRUNTIME = $VIM . '\vimfiles'
   let g:vimrc#dotvim = $HOME . '\.vim'
 
   set helpfile=$VIMRUNTIME\doc\help.txt
@@ -75,7 +75,7 @@ if g:vimrc#is_windows
     let &runtimepath .= ',' . substitute(g:vimrc#dotvim . '/after', '\v(/|\\)', '\', 'g')
   endif
 elseif g:vimrc#is_cygwin
-  command! Gui !~/.vim/vim74-kaoriya-win64/gvim.exe &
+  command! Gui !~/.vim/vim-kaoriya-win64/gvim.exe &
   cnoreabbrev gui Gui
 endif "}}}
 
@@ -210,7 +210,7 @@ if has('patch-7.4.314')
   set shortmess+=c
 endif
 if has('patch-7.4.1384')
-  let &packpath = g:vimrc#dotvim . '/pack'
+  let &packpath .= ',' . g:vimrc#dotvim . '/pack'
 endif "}}}
 
 let g:loaded_2html_plugin = 1 "{{{
@@ -519,7 +519,7 @@ endfunction
 for s:d in filter(
     \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
-    \   has('patch-7.4.1384') && &loadplugins ? 'packpath."/pack"' : '',
+    \   has('patch-7.4.1384') && &loadplugins ? 'packpath' : '',
     \   'viewdir'], 'v:val !=# ""')
   if s:d != '' && !s:mkdir(eval('&' . s:d))
     execute 'set' s:d . '&'
