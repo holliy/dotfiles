@@ -7,7 +7,7 @@ set guioptions+=c
 if g:vimrc#is_windows
   set guifont=Consolas:h9
   set guifontwide=Terminal:h9
-  silent! set guifont=Myrica\ M:h10
+  silent! set guifont=Myrica\ M:h10 guifontwide=Myrica\ M:h10
 elseif g:vimrc#is_unix
   set guifont=DejaVu\ Sans\ Mono\ 12
 endif
