@@ -102,7 +102,8 @@ if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
 
   imap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : neocomplete#start_manual_complete()
   smap <expr><silent> <C-n> neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<C-n>'
-  imap <expr><silent> <CR> pumvisible() ? neosnippet#expandable() ? '<Plug>(neosnippet_expand)' : neocomplete#close_popup() : '<CR>'
+  inoremap <Plug>(vimrc_complete-close) <C-y>
+  imap <expr><silent> <CR> pumvisible() ? neosnippet#expandable() ? '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-close)' : '<CR>'
 
   if has('conceal')
     set conceallevel=2 concealcursor=iv
