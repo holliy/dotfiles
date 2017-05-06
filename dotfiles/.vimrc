@@ -19,7 +19,7 @@ augroup END "}}}
 if has('clientserver')
   if has('patch-7.4.1674')
     packadd! editexisting
-  else
+  elseif g:vimrc#is_starting
     runtime macros/editexisting.vim
   endif
 endif "}}}
@@ -856,7 +856,12 @@ endif
 execute 'source' g:vimrc#dotvim . '/dein.vim'
 "}}}
 
+colorscheme desert
+
+if !g:vimrc#is_starting
+  doautocmd Vimrc VimEnter
+endif
+
 let g:vimrc#is_starting = 0
 filetype plugin indent on
 syntax on
-colorscheme desert
