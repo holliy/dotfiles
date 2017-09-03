@@ -3,6 +3,9 @@
 IFS_BAK=$IFS
 IFS=$'\n'
 
+# スクリプトが置かれている場所をカレントディレクトリにする
+cd $(dirname $0)
+
 WD=`pwd`
 DIR=($(find dotfiles/ -mindepth 1 -type d))
 FILE=($(find dotfiles/ -type f))
