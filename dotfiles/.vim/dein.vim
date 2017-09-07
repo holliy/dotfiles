@@ -14,6 +14,7 @@ if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim', $MYVIMRC])
 
   call dein#add(s:dein_repo_dir)
+  call dein#add('cohama/lexima.vim')
   call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
   call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
   call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
@@ -22,6 +23,8 @@ if dein#load_state(s:dein_dir)
   call dein#add('Shougo/neocomplete.vim')
   call dein#add('Shougo/neosnippet.vim')
   call dein#add('Shougo/neosnippet-snippets')
+  call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
+  call dein#add('thinca/vim-prettyprint')
   call dein#add('vim-jp/vimdoc-ja')
 
   call dein#end()
@@ -47,6 +50,202 @@ endif "}}}
 " landscape "{{{
 if dein#tap('landscape')
   Autocmd VimEnter * nested colorscheme landscape
+endif "}}}
+
+" lexima"{{{
+if dein#tap('lexima')
+  let g:lexima_map_escape = 'jk'
+
+  function! s:lexima_sourced(...) "{{{
+    let quotes = [
+        \   {'start': "'", 'end': "'"}, {'start': '"', 'end': '"'}
+        \ ]
+    let brackets = [
+        \   {'start': '(', 'end': ')'}, {'start': '{', 'end': '}'},
+        \   {'start': '[', 'end': ']'}
+        \ ]
+
+    call filter(g:lexima#default_rules,
+        \ '!has_key(v:val, "at") || v:val.at !=# "\\\\\\%#"')
+    call lexima#set_default_rules()
+
+    " quote in lisp "{{{
+    call lexima#add_rule({
+        \   'char': "'",
+        \   'filetype': ['lisp', 'scheme']
+        \ })
+    call lexima#add_rule({
+        \   'char': "'",
+        \   'input_after': "'",
+        \   'filetype': ['lisp', 'scheme'],
+        \   'syntax': ['Comment', 'Constant', 'String']
+        \ })
+    call lexima#add_rule({
+        \   'at': "\\%#'",
+        \   'char': "'",
+        \   'leave': 1,
+        \   'filetype': ['lisp', 'scheme'],
+        \   'syntax': ['Comment', 'Constant', 'String']
+        \ }) "}}}
+
+    " comment{{{
+    " C style "{{{
+    call lexima#add_rule({
+        \   'at': '/\%#$',
+        \   'char': '*',
+        \   'input_after': '*/',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '/\*\%#\*/',
+        \   'char': '<Space>',
+        \   'input_after': '<Space>',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '/\*\%#\*/',
+        \   'char': '<BS>',
+        \   'input': '<BS><BS>',
+        \   'delete': 2,
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '/\* \%# \*/',
+        \   'char': '<BS>',
+        \   'delete': 1,
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '/\*\%#\*/',
+        \   'char': '<BS>',
+        \   'delete': 2,
+        \   'input': '<BS><BS>',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '^ \* \%# \?\*/',
+        \   'char': '<BS>',
+        \   'input': '<BS><BS>',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '^ \%#',
+        \   'char': '<Space>',
+        \   'input': '*<Space>',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala'],
+        \   'syntax': ['Comment']
+        \ }) "}}}
+
+    " Haskell "{{{
+    call lexima#add_rule({
+        \   'at': '{\%#$',
+        \   'char': '-',
+        \   'input_after': '-}',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{\%#}$',
+        \   'char': '-',
+        \   'input_after': '-',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{-\%#-}',
+        \   'char': '<Space>',
+        \   'input_after': '<Space>',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{-\%#-}',
+        \   'char': '<BS>',
+        \   'input': '<BS><BS>',
+        \   'delete': 2,
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{- \%# -}',
+        \   'char': '<BS>',
+        \   'delete': 1,
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{-\%#-}',
+        \   'char': '<BS>',
+        \   'delete': 2,
+        \   'input': '<BS><BS>',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '^ - \%# \?-}',
+        \   'char': '<BS>',
+        \   'input': '<BS><BS>',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '^ \%#',
+        \   'char': '<Space>',
+        \   'input': '-<Space>',
+        \   'filetype': ['haskell'],
+        \   'syntax': ['Comment']
+        \ }) "}}}
+    "}}}
+
+    " bracket "{{{
+    for pair in brackets
+      call lexima#add_rule({
+          \   'at': '\V' . pair.start . '\%#' . pair.end,
+          \   'char': '<CR>',
+          \   'input': '<CR>\ ',
+          \   'input_after': '<CR>\ ',
+          \   'filetype': ['vim']
+          \ })
+      call lexima#add_rule({
+          \   'at': pair.start . '\%#$',
+          \   'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
+          \   'char': '<CR>',
+          \   'input': '<CR>\ ',
+          \   'input_after': '<CR>\ ' . pair.end,
+          \   'filetype': ['vim']
+          \ })
+      call lexima#add_rule({
+          \   'at': '\C\v^(\s*)\S.*\' . pair.start . '%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
+          \   'char': '<CR>',
+          \   'input': '<CR>\ ',
+          \   'filetype': ['vim']
+          \ })
+    endfor
+
+    call lexima#add_rule({
+        \   'at': '\\\%#',
+        \   'char': '(',
+        \   'input_after': '\)',
+        \   'filetype': ['vim']
+        \ }) "}}}
+
+    " <Tab>で補完した文字の後ろに移動 "{{{
+    for pair in brackets + quotes
+      call lexima#add_rule({
+          \   'at': '\S\%# \?' . pair.end,
+          \   'char': '<Tab>',
+          \   'leave': pair.end
+          \ })
+    endfor
+
+    call lexima#add_rule({
+        \   'at': '\%# \?\*/',
+        \   'char': '<Tab>',
+        \   'leave': '/',
+        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
+        \ })
+    call lexima#add_rule({
+        \   'at': '\%# \?-}',
+        \   'char': '<Tab>',
+        \   'leave': '/',
+        \   'filetype': ['haskell']
+        \ })
+    "}}}
+  endfunction "}}}
+  call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
 endif "}}}
 
 " neocomplete "{{{
@@ -114,3 +313,5 @@ endif "}}}
 if dein#tap('haskell-indent')
   let g:haskell_indent_disable_case = 1
 endif "}}}
+
+call dein#call_hook('source')
