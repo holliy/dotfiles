@@ -4,27 +4,32 @@ if 0 | endif
 " Initialize "{{{
 if &compatible | set compatible! | endif
 
-let g:vimrc#is_windows = has('win32')
-let g:vimrc#is_cygwin = has('win32unix')
-let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
-let g:vimrc#is_gui = has('gui_running')
-if !exists('g:vimrc#is_starting') | let g:vimrc#is_starting = 1 | endif
-let g:vimrc#dotvim = expand('~/.vim')
+if !exists('g:vimrc#is_starting')
+  let g:vimrc#is_windows = has('win32')
+  let g:vimrc#is_cygwin = has('win32unix')
+  let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
+  let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~# 'Microsoft'
+  let g:vimrc#is_gui = has('gui_running')
+  let g:vimrc#is_starting = 1
+  let g:vimrc#dotvim = expand('~/.vim')
+endif
 
 augroup Vimrc
   autocmd!
+  autocmd VimEnter * let g:vimrc#is_starting = 0
 augroup END "}}}
 
 " use Vim with singleton "{{{
-if has('clientserver')
-  if has('patch-7.4.1674')
+if has('clientserver') && !exists('g:loaded_editexisting')
+  let g:loaded_editexisting = 1
+  if exists(':packadd')
     packadd! editexisting
-  elseif g:vimrc#is_starting
+  else
     runtime macros/editexisting.vim
   endif
 endif "}}}
 
-" non plugin"{{{
+" non plugin "{{{
 " print startup time "{{{
 if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
@@ -35,9 +40,9 @@ if g:vimrc#is_starting && has('reltime')
   augroup END
 endif "}}}
 
-" encoding"{{{
+" encoding "{{{
 " if &encoding !=# 'utf-8'
-if &term ==# 'win32'
+if &term ==# 'win32' " command prompt
   set encoding=cp932
 else
   set encoding=utf-8
@@ -45,11 +50,13 @@ endif
 
 if g:vimrc#is_windows
   set termencoding=cp932
+  setglobal fileencoding=cp932
 else
   set termencoding=utf-8
+  setglobal fileencoding=utf-8
 endif
 
-setglobal fileencoding=japan
+" setglobal fileencoding=japan
 " endif
 
 scriptencoding utf-8 "}}}
@@ -88,7 +95,7 @@ cnoreabbrev egv Egvimrc
 cnoreabbrev sv Svimrc
 cnoreabbrev newtab tabnew
 
-if has('gui_running')
+if g:vimrc#is_gui
   command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
   cnoreabbrev sgv Sgvimrc
 endif
@@ -129,17 +136,18 @@ if !exists(':DiffOrig')
       \ read ++edit # | 0d_ | diffthis | wincmd p | diffthis
 endif "}}}
 
-" オプション"{{{
+" オプション "{{{
 " options "{{{
 set ambiwidth=single
 SetG autoindent cindent copyindent smartindent
+SetG expandtab shiftwidth=2 softtabstop=2 tabstop=8
+set shiftround smarttab
 SetG autoread
 set backspace=indent,eol,start whichwrap+=h,l
 set backup backupskip+=*~,*.o
 let &backupdir = g:vimrc#dotvim . '/.backup'
 set browsedir=buffer
-set clipboard=unnamed
-set complete-=u completeopt=menuone,longest,preview pumheight=8
+SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG cursorline
@@ -165,7 +173,7 @@ setglobal statusline+=\ \|%4P
 setglobal statusline+=\ \|%4l:%-2c
 let &g:statusline .= ' ' | let &l:statusline = &g:statusline
 set lazyredraw
-set list listchars=tab:>\ ,nbsp:%
+SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
 SetG modeline
 set mouse=a
@@ -174,7 +182,6 @@ SetG number relativenumber
 set pastetoggle=<F2>
 set scrolloff=2
 set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
-set shiftround smarttab | SetG expandtab shiftwidth=2 softtabstop=2 tabstop=8
 set shortmess+=mrx shortmess-=i shortmess-=t shortmess-=T
 set showcmd
 set showtabline=2
@@ -197,25 +204,37 @@ set wildignore+=*~,*.o wildignorecase wildmenu wildmode=list:longest,full
 set winaltkeys=yes
 " set <xUp>=OA <xDown>=OB <xRight>=OC <xLeft>=OD
 
-if exists('+breakindent')
-  SetG breakindent breakindentopt=shift:2
-endif
 if exists('+ballooneval')
   set ballooneval
+endif
+if exists('+breakindent')
+  SetG breakindent breakindentopt=shift:2
 endif
 if exists('+fixendofline')
   SetG nofixendofline
 endif
+if exists('+packpath')
+  let &packpath .= ',' . g:vimrc#dotvim . '/pack'
+endif
+if g:vimrc#is_wsl
+  set clipboard=exclude:.*
+else
+  set clipboard=exclude:console\|linux
+endif
+if has('unnamedplus')
+  set clipboard^=unnamedplus
+else
+  set clipboard^=unnamed
+endif
 if has('patch-7.4.314')
   set shortmess+=c
-endif
-if has('patch-7.4.1384')
-  let &packpath .= ',' . g:vimrc#dotvim . '/pack'
 endif "}}}
 
-let g:loaded_2html_plugin = 1 "{{{
+" $VIMRUNTIME 以下の不要なプラグインを読み込まない "{{{
+let g:loaded_2html_plugin = 1
 let g:loaded_gzip = 1
 let g:loaded_tar = 1
+
 let g:loaded_tarPlugin = 1
 let g:loaded_zip = 1
 let g:loaded_zipPlugin = 1
@@ -229,7 +248,7 @@ let g:netrw_liststyle = 3
 let g:vim_indent_cont = shiftwidth()*2 "}}}
 "}}}
 
-" キーマップ"{{{
+" キーマップ "{{{
 map <Nul> <C-Space>
 map <C-[> <Esc>
 map <C-h> <BS>
@@ -360,7 +379,7 @@ nnoremap <silent> <Space>sf
     \ :<C-u>setlocal foldmethod=<C-r>=&foldmethod==#'marker'?'indent':'marker'<CR> foldmethod?<CR>zv
 "}}}
 
-" エンコード"{{{
+" エンコード "{{{
 set fileformats=unix,dos,mac
 set fileencodings=utf-8
 
@@ -420,11 +439,11 @@ Autocmd FileReadPost *
     \ if &fileencoding=~#'iso-2022-jp' && search("[^\x01-\x7e]", 'n')==0 |
     \   let &fileencoding = &encoding | endif "}}}
 
-" http://ttssh2.sourceforge.jp/manual/ja/usage/tips/vim.html"{{{
+" http://ttssh2.sourceforge.jp/manual/ja/usage/tips/vim.html "{{{
 if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   set t_Co=256
 
-  " Shift-Insert, C-S-vでペースト時に自動でpastetoggle"{{{
+  " Shift-Insertのペースト時に自動でpastetoggle "{{{
   " http://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
   " http://qiita.com/kefir_/items/415a30930a80b9b42adb
   let &t_ti .= "\e[?2004h"
@@ -441,12 +460,12 @@ if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " 
   map <F2> <Esc>[201~
   imap <F2> <Esc>[201~
 
-  function s:xTermPasteBegin(ret) abort
+  function! s:xTermPasteBegin(ret) abort
     set paste
     return a:ret
   endfunction "}}}
 
-  " 挿入モードを出るときにIME を自動で切る(minttyでは効かない)"{{{
+  " 挿入モードを出るときにIME を自動で切る(minttyでは効かない) "{{{
   " http://qiita.com/mwmsnn/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
   if 0 " !g:vimrc#is_cygwin
     let &t_EI .= "\e[<s\e[<0t"
@@ -463,7 +482,7 @@ if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " 
     " let &t_EI .= "\e[?7727l"
   endif "}}}
 
-  " 縦分割時のスクロールの高速化"{{{
+  " 縦分割時のスクロールの高速化 "{{{
   if 0
     " http://qiita.com/kefir_/items/c725731d33de4d8fb096
     set nottyfast
@@ -519,7 +538,7 @@ endfunction
 for s:d in filter(
     \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
-    \   has('patch-7.4.1384') && &loadplugins ? 'packpath' : '',
+    \   exists('+loadplugins') && &loadplugins ? 'packpath' : '',
     \   'viewdir'], 'v:val !=# ""')
   if s:d != '' && !s:mkdir(eval('&' . s:d))
     execute 'set' s:d . '&'
@@ -536,7 +555,7 @@ function! QfMakeConv(fenc, enc) abort
   call setqflist(qflist, 'r')
 endfunction "}}}
 
-" 外部スクリプトのローカル関数を呼び出す"{{{
+" 外部スクリプトのローカル関数を呼び出す "{{{
 " http://d.hatena.ne.jp/thinca/20111228/1325077104
 function! CallInternalFunc(f, ...) abort
   let [file, func] = a:f =~# ':' ?  split(a:f, ':') : [expand('%:p'), a:f]
@@ -711,7 +730,7 @@ nnoremap <silent> <Space><Space>J :<C-u>set operatorfunc=Concat<CR>g@
 nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
 "}}}
 
-" ウィンドウの左側の余白の幅"{{{
+" ウィンドウの左側の余白の幅 "{{{
 function! s:winleftpad() abort
   if &number
     let lnrwidth = max([strlen(string(line('$'))) + 1, &numberwidth])
@@ -775,7 +794,7 @@ function! Foldtext() abort
 endfunction "}}}
 "}}}
 
-" ColorScheme等"{{{
+" ColorScheme等 "{{{
 set background=dark
 Highlight ColorColumn ctermbg=233 guibg=#353535
 Highlight CursorLineNr ctermbg=NONE guibg=NONE
@@ -794,26 +813,29 @@ Highlight TabLineFill ctermfg=236
 
 " 画面の80桁目にcolorcolumnを表示 (signは考慮しない)
 Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
-    \ let &colorcolumn = 81 - s:winleftpad() "}}}
+    \ let &colorcolumn = 81 - s:winleftpad()
+"}}}
 
-" autocmd"{{{
-" カレントウィンドウのみカーソル行を強調"{{{
+" autocmd "{{{
+" カレントウィンドウのみカーソル行を強調 "{{{
 Autocmd WinLeave * setlocal nocursorline
-Autocmd WinEnter,BufWinEnter * setlocal cursorline "}}}
+Autocmd WinEnter,BufWinEnter * setlocal cursorline
+"}}}
 
-" カーソル位置や折りたたみの状態を保存"{{{
+" カーソル位置や折りたたみの状態を保存 "{{{
 Autocmd BufReadPost ?*
     \ if line("'\"") > 0 && line ("'\"") <= line('$') |
     \   execute "normal! g'\"zzzv" | endif
+" }}}
 
+" その他 "{{{
 " Autocmd QuickfixCmdPost make call QfMakeConv(&fileencoding, &encoding)
 " if g:vimrc#is_windows
 "   Autocmd QuickfixCmdPost make call QfMakeConv('utf-8', 'cp932')
 " else
 "   Autocmd QuickfixCmdPost make call QfMakeConv('cp932', 'utf-8')
-" endif }}}
+" endif
 
-" その他"{{{
 AutocmdFT * setlocal formatoptions-=o
 Autocmd BufWinEnter,ColorScheme,FileType * call Highlight()
 AutocmdFT * if &commentstring !~# '^ ' |
@@ -823,6 +845,8 @@ AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
 AutocmdFT help,gosh-repl,netrw,qf,quickrun
     \ nnoremap <buffer><silent> q :<C-u>bwipeout<CR>
+AutocmdFT qf
+    \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc' line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 if g:vimrc#is_windows
@@ -843,10 +867,10 @@ augroup Vimrc_bin
       \   execute 'Autocmd BufWritePost <buffer=abuf> silent %!xxd -g 1' |
       \   execute 'Autocmd BufWritePost <buffer=abuf> setlocal nomodified' |
       \ endif
-augroup END "}}}
-"}}}
+augroup END
+"}}}}}}
 
-" plugin"{{{
+" plugin "{{{
 if has('patch-7.4.1674')
   packadd! matchit
 else
@@ -856,12 +880,14 @@ endif
 execute 'source' g:vimrc#dotvim . '/dein.vim'
 "}}}
 
-colorscheme desert
+
+if get(g:, 'colors_name', '') ==# ''
+  colorscheme desert
+endif
+
+filetype plugin indent on
+syntax on
 
 if !g:vimrc#is_starting
   doautocmd Vimrc VimEnter
 endif
-
-let g:vimrc#is_starting = 0
-filetype plugin indent on
-syntax on

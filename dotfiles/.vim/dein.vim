@@ -9,9 +9,10 @@ let &runtimepath = s:dein_repo_dir .",". &runtimepath
 let g:dein#enable_name_conversion = 1
 " let g:dein#install_process_timeout = 60
 let g:dein#install_progress_type = 'echo'
+let g:dein#install_message_type = 'tabline'
 
 if dein#load_state(s:dein_dir)
-  call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim', $MYVIMRC])
+  call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim'])
 
   call dein#add(s:dein_repo_dir)
   call dein#add('cohama/lexima.vim')
@@ -20,11 +21,14 @@ if dein#load_state(s:dein_dir)
   call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
+  call dein#add('kana/vim-operator-user')
+  call dein#add('mattn/benchvimrc-vim')
   call dein#add('Shougo/neocomplete.vim')
   call dein#add('Shougo/neosnippet.vim')
   call dein#add('Shougo/neosnippet-snippets')
   call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
   call dein#add('thinca/vim-prettyprint')
+  call dein#add('tyru/caw.vim')
   call dein#add('vim-jp/vimdoc-ja')
 
   call dein#end()
@@ -37,6 +41,27 @@ endif
 if g:vimrc#is_starting && dein#check_install()
   call dein#install()
 endif
+
+" caw "{{{
+if dein#tap('caw')
+  let g:caw_dollarpos_sp_left = ' '
+  " let g:caw_no_default_keymappings = 1
+  let g:caw_operator_keymappings = 1
+
+  AutocmdFT haskell let b:caw_wrap_oneline_comment = ['{-', '-}']
+  AutocmdFT haskell let b:caw_wrap_multiline_comment = {'left': '{-', 'right': '-}', 'top': '-', 'bottom': '-'}
+
+  nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
+  nnoremap <silent> <Space>ct :normal 1 cc<CR>
+  nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
+  nmap <Space>ca <Plug>(caw:dollarpos:toggle)
+  nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
+  nmap <Space>co <Plug>(caw:jump:comment-next)
+  nmap <Space>cO <Plug>(caw:jump:comment-prev)
+  vmap <Space>cc <Plug>(caw:hatpos:comment)
+  vmap <Space>cC <Plug>(caw:hatpos:toggle)
+  vmap <Space>cw <Plug>(caw:wrap:toggle)
+endif "}}}
 
 " ghcmod-vim "{{{
 if dein#tap('ghcmod')
@@ -52,7 +77,7 @@ if dein#tap('landscape')
   Autocmd VimEnter * nested colorscheme landscape
 endif "}}}
 
-" lexima"{{{
+" lexima "{{{
 if dein#tap('lexima')
   let g:lexima_map_escape = 'jk'
 
@@ -275,8 +300,6 @@ if dein#tap('neocomplete')
       \ get(g:, 'neocomplete#sources#dictionary#dictionaries', {})
   let g:neocomplete#sources#omni#input_patterns =
       \ get(g:, 'neocomplete#sources#omni#input_patterns', {})
-  let g:neocomplete#sources#omni#functions =
-      \ get(g:, 'neocomplete#sources#omni#functions', {})
 
   let g:neocomplete#keyword_patterns._ = '\h\w*'
 
@@ -297,7 +320,7 @@ endif "}}}
 
 " neosnippet "{{{
 if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
-  let g:neosnippet#snippets_directory = expand(g:dein#plugin['path'] . '/neosnippet')
+  let g:neosnippet#snippets_directory = expand(g:dein#plugin['path'] . '/neosnippets')
 
   imap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : neocomplete#start_manual_complete()
   smap <expr><silent> <C-n> neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<C-n>'

@@ -1,5 +1,3 @@
-let g:vimrc#is_gui = 1
-
 set guicursor=a:block-Cursor
 set guioptions-=a guioptions-=e guioptions-=m guioptions-=t guioptions-=T
 set guioptions+=c
@@ -10,10 +8,11 @@ if g:vimrc#is_windows
   silent! set guifont=Myrica\ M:h10 guifontwide=Myrica\ M:h10
 elseif g:vimrc#is_unix
   set guifont=DejaVu\ Sans\ Mono\ 12
+  silent! set guifont=MyricaM\ M\ 12 guifontwide=MyricaM\ M\ 12
 endif
 
 if has('kaoriya')
-  Autocmd GUIEnter * set transparency=180
+  Autocmd GUIEnter * set transparency=210
 endif
 
 if get(g:, 'colors_name', 'desert') ==# 'desert'
