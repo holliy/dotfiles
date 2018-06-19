@@ -176,6 +176,18 @@ if dein#tap('lexima')
         \ })
     call lexima#add_rule({
         \   'at': '{-\%#-}',
+        \   'char': '#',
+        \   'input_after': '#',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{-\%#-}',
+        \   'char': '<Space>',
+        \   'input_after': '<Space>',
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
+        \   'at': '{-#\%##-}',
         \   'char': '<Space>',
         \   'input_after': '<Space>',
         \   'filetype': ['haskell']
@@ -188,16 +200,21 @@ if dein#tap('lexima')
         \   'filetype': ['haskell']
         \ })
     call lexima#add_rule({
+        \   'at': '{-#\%##-}',
+        \   'char': '<BS>',
+        \   'delete': 1,
+        \   'filetype': ['haskell']
+        \ })
+    call lexima#add_rule({
         \   'at': '{- \%# -}',
         \   'char': '<BS>',
         \   'delete': 1,
         \   'filetype': ['haskell']
         \ })
     call lexima#add_rule({
-        \   'at': '{-\%#-}',
+        \   'at': '{-# \%# #-}',
         \   'char': '<BS>',
-        \   'delete': 2,
-        \   'input': '<BS><BS>',
+        \   'delete': 1,
         \   'filetype': ['haskell']
         \ })
     call lexima#add_rule({
@@ -238,6 +255,10 @@ if dein#tap('lexima')
           \   'input': '<CR>\ ',
           \   'filetype': ['vim']
           \ })
+      call lexima#add_rule({
+          \   'at': '\%#\w',
+          \   'char': pair.start
+          \ })
     endfor
 
     call lexima#add_rule({
@@ -265,12 +286,16 @@ if dein#tap('lexima')
     call lexima#add_rule({
         \   'at': '\%# \?-}',
         \   'char': '<Tab>',
-        \   'leave': '/',
+        \   'leave': '}',
         \   'filetype': ['haskell']
         \ })
     "}}}
+
+    imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
+
+  inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<CR>', 'i')
 endif "}}}
 
 " neocomplete "{{{
@@ -285,10 +310,6 @@ if dein#tap('neocomplete')
   let g:neocomplete#enable_smart_case = 1
   let g:neosnippet#expand_word_boundary = 1
   let g:neocomplete#sources#syntax#min_keyword_length = 3
-
-  inoremap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neocomplete#start_manual_complete()
-  inoremap <expr><silent> <C-u> pumvisible() ? '<C-p>' : neocomplete#start_manual_complete()
-  autocmd Vimrc BufReadPost,BufWritePost ?* if &filetype !~# 'qf' | NeoCompleteBufferMakeCache % | endif
 
   let g:neocomplete#force_omni_input_patterns =
       \ get(g: , 'neocomplete#force_omni_input_patterns', {})
@@ -313,23 +334,28 @@ if dein#tap('neocomplete')
   let g:neocomplete#sources#omni#input_patterns.java = '\k\.\k*'
   let g:neocomplete#force_omni_input_patterns.java = '\k\.\k*'
 
+  autocmd Vimrc BufReadPost,BufWritePost ?* if &filetype !~# 'qf' | NeoCompleteBufferMakeCache % | endif
+
+  inoremap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neocomplete#start_manual_complete()
+  inoremap <expr><silent> <C-u> pumvisible() ? '<C-p>' : neocomplete#start_manual_complete()
+
   if dein#tap('neco-ghc')
     let g:neocomplete#sources#omni#functions.haskell = 'necoghc#omnifunc'
   endif
-endif "}}}
 
-" neosnippet "{{{
-if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
-  let g:neosnippet#snippets_directory = expand(g:dein#plugin['path'] . '/neosnippets')
+  " neosnippet "{{{
+  if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
+    let g:neosnippet#snippets_directory = expand(g:dein#plugin['path'] . '/neosnippets')
 
-  imap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : neocomplete#start_manual_complete()
-  smap <expr><silent> <C-n> neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<C-n>'
-  inoremap <Plug>(vimrc_complete-close) <C-y>
-  imap <expr><silent> <CR> pumvisible() ? neosnippet#expandable() ? '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-close)' : '<CR>'
+    inoremap <expr><silent> <C-u> pumvisible() ? '<C-u>' : neosnippet#jumpable() ? neosnippet#mappings#jump_impl() : neocomplete#start_manual_complete()
+    snoremap <expr><silent> <C-u> neosnippet#jumpable() ? neosnippet#mappings#jump_impl() : '<C-u>'
+    inoremap <expr><silent> <Plug>(vimrc_complete-select) neosnippet#expandable() ? neosnippet#mappings#expand_impl() : '<C-y>'
 
-  if has('conceal')
-    set conceallevel=2 concealcursor=iv
-  endif
+    if has('conceal')
+      set conceallevel=2 concealcursor=iv
+    endif
+  else
+  endif "}}}
 endif "}}}
 
 " vim-haskell-indent "{{{

@@ -377,6 +377,10 @@ nnoremap <silent> <Space>h
 
 nnoremap <silent> <Space>sf
     \ :<C-u>setlocal foldmethod=<C-r>=&foldmethod==#'marker'?'indent':'marker'<CR> foldmethod?<CR>zv
+
+inoremap <Plug>(vimrc_cr) <CR>
+inoremap <Plug>(vimrc_complete-select) <C-y>
+imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 "}}}
 
 " エンコード "{{{
@@ -854,7 +858,6 @@ if g:vimrc#is_windows
 endif
 AutocmdFT text setlocal textwidth=78
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
-Autocmd VimEnter * doautocmd Vimrc FileType
 
 augroup Vimrc_bin
   autocmd!
@@ -880,6 +883,7 @@ endif
 execute 'source' g:vimrc#dotvim . '/dein.vim'
 "}}}
 
+Autocmd VimEnter * doautocmd Vimrc FileType
 
 if get(g:, 'colors_name', '') ==# ''
   colorscheme desert
