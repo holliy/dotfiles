@@ -8,7 +8,7 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_windows = has('win32')
   let g:vimrc#is_cygwin = has('win32unix')
   let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
-  let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~# 'Microsoft'
+  let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
   let g:vimrc#is_gui = has('gui_running')
   let g:vimrc#is_starting = 1
   let g:vimrc#dotvim = expand('~/.vim')
@@ -119,6 +119,7 @@ else
   command! -bar -complete=option -nargs=* SetG setglobal <args>
 endif
 
+" syntax "{{{
 AutocmdFT vim
     \ syntax keyword vimAutoCmd Autocmd skipwhite nextgroup=vimAutoEventList
 AutocmdFT vim
@@ -129,6 +130,7 @@ AutocmdFT vim
     \ syntax keyword vimCommand contained SetG
 AutocmdFT vim
     \ syntax region vimSet matchgroup=vimCommand start='\<\%(SetG\)\>' skip='\%(\\\\\)*\\.' end='$' matchgroup=vimNotation end='<[cC][rR]>' keepend oneline contains=vimSetEqual,vimOption,vimErrSetting,vimComment,vimSetString,vimSetMod
+ "}}}
 
 if !exists(':DiffOrig')
   command -bar -nargs=0 DiffOrig
@@ -140,7 +142,7 @@ endif "}}}
 " options "{{{
 set ambiwidth=single
 SetG autoindent cindent copyindent smartindent
-SetG expandtab shiftwidth=2 softtabstop=2 tabstop=8
+SetG expandtab shiftwidth=2 softtabstop=2 tabstop=4
 set shiftround smarttab
 SetG autoread
 set backspace=indent,eol,start whichwrap+=h,l
@@ -169,9 +171,8 @@ setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}%<%#StatusLineNC#%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
 setglobal statusline+=\ \|\ %{empty(&filetype)?'?':&filetype}
-setglobal statusline+=\ \|%4P
-setglobal statusline+=\ \|%4l:%-2c
-let &g:statusline .= ' ' | let &l:statusline = &g:statusline
+setglobal statusline+=\ \|\ %3P
+setglobal statusline+=\ \|\ %3l:%-2c\ %#StatusLineNC#
 set lazyredraw
 SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
@@ -537,8 +538,9 @@ function! s:mkdir(path) abort "{{{
 
   echoerr a:path . ' should be directory and readable.'
   return 0
-endfunction
+endfunction "}}}
 
+" バックアップフォルダ等を作成 "{{{
 for s:d in filter(
     \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
@@ -560,7 +562,7 @@ function! QfMakeConv(fenc, enc) abort
 endfunction "}}}
 
 " 外部スクリプトのローカル関数を呼び出す "{{{
-" http://d.hatena.ne.jp/thinca/20111228/1325077104
+" https://thinca.hatenablog.com/entry/20111228/1325077104
 function! CallInternalFunc(f, ...) abort
   let [file, func] = a:f =~# ':' ?  split(a:f, ':') : [expand('%:p'), a:f]
   let fname = matchstr(func, '^\w*')
@@ -600,26 +602,26 @@ function! CallInternalFunc(f, ...) abort
 endfunction "}}}
 
 " マップ時のv:countを<Esc>を使わずに削除 "{{{
+" ex. noremap <expr> j <SID>delcount(v:count) . 'gj'
 function! s:delcount(count) abort
   return !a:count ? '' : repeat("\<Del>", strlen(string(a:count)))
-endfunction "}}} ex. noremap <expr> j <SID>delcount(v:count) . 'gj'
+endfunction "}}}
 
 " 自動で生成されるバッファか判定 "{{{
-let s:ignore_filetypes = [
-    \ 'help', 'netrw', 'qf']
+let g:vimrc#generate_filetypes = ['help', 'netrw', 'qf']
 
 " a:1 - バッファ番号 (0 だと現在のバッファの番号)
 function! s:ignore(...) abort
   if a:0 && a:1 !=# 0
     let bh = getbufvar(a:1, '&bufhidden')
     let bl = getbufvar(a:1, '&buflisted')
-    let bn = fnamemodify(bufname(a:1), ':t')
+    let bname = fnamemodify(bufname(a:1), ':t')
     let bt = getbufvar(a:1, '&buftype')
     let fts = getbufvar(a:1, '&filetype')
   else
     let bh = &bufhidden
     let bl = &buflisted
-    let bn = expand('%:t')
+    let bname = expand('%:t')
     let bt = &buftype
     let fts = &filetype
   endif
@@ -629,12 +631,12 @@ function! s:ignore(...) abort
   endif
 
   for ft in split(fts, '\.')
-    if index(s:ignore_filetypes, ft) !=# -1
+    if index(g:vimrc#generate_filetypes, ft) !=# -1
       return 1
     endif
   endfor
 
-  return bn =~# '^\[Command\ Line\]$'
+  return bname =~# '^\[Command\ Line\]$'
 endfunction "}}}
 
 function! Highlight() abort "{{{
@@ -650,7 +652,9 @@ function! Highlight() abort "{{{
       let w:spaceid = matchadd('TrailingWhiteSpace', '\s\+$', 11)
     endif
   endif
-endfunction "}}}
+endfunction
+Autocmd BufWinEnter,ColorScheme,FileType * call Highlight()
+"}}}
 
 " 指定範囲の空行を削除 "{{{
 function! s:delemptyline(start, last) abort
@@ -744,6 +748,7 @@ function! s:winleftpad() abort
     let lnrwidth = 0
   endif
 
+  " TODO: signの幅を計算
   return lnrwidth + &foldcolumn
 endfunction "}}}
 
@@ -841,14 +846,13 @@ Autocmd BufReadPost ?*
 " endif
 
 AutocmdFT * setlocal formatoptions-=o
-Autocmd BufWinEnter,ColorScheme,FileType * call Highlight()
 AutocmdFT * if &commentstring !~# '^ ' |
     \ let &commentstring = ' ' . &commentstring | endif
 AutocmdFT c setlocal omnifunc=ccomplete#Complete
 AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
-AutocmdFT help,gosh-repl,netrw,qf,quickrun
-    \ nnoremap <buffer><silent> q :<C-u>bwipeout<CR>
+AutocmdFT help,netrw,qf,quickrun
+    \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf
     \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc' line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
