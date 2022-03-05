@@ -321,6 +321,8 @@ if dein#tap('neocomplete')
       \ get(g:, 'neocomplete#sources#dictionary#dictionaries', {})
   let g:neocomplete#sources#omni#input_patterns =
       \ get(g:, 'neocomplete#sources#omni#input_patterns', {})
+  let g:neocomplete#sources#omni#functions =
+      \ get(g:, 'neocomplete#sources#omni#functions', {})
 
   let g:neocomplete#keyword_patterns._ = '\h\w*'
 
