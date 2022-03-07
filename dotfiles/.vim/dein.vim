@@ -3,6 +3,7 @@ let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
   call system('git clone https://github.com/Shougo/dein.vim ' .
       \ shellescape(s:dein_repo_dir))
+  execute('helptags ' . s:dein_repo_dir . '/doc')
 endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
@@ -23,12 +24,17 @@ if dein#load_state(s:dein_dir)
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('mattn/benchvimrc-vim')
-  call dein#add('Shougo/neocomplete.vim')
-  call dein#add('Shougo/neosnippet.vim')
-  call dein#add('Shougo/neosnippet-snippets')
-  call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
+  " call dein#add('Shougo/neocomplete.vim')
+  " call dein#add('Shougo/neosnippet.vim')
+  " call dein#add('Shougo/neosnippet-snippets')
+  " call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
+  call dein#add('Shougo/ddc.vim')
+  call dein#add('Shougo/ddc-around')
+  call dein#add('Shougo/ddc-matcher_head')
+  call dein#add('Shougo/ddc-sorter_rank')
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tyru/caw.vim')
+  call dein#add('vim-denops/denops.vim')
   call dein#add('vim-jp/vimdoc-ja')
 
   call dein#end()
@@ -61,6 +67,27 @@ if dein#tap('caw')
   vmap <Space>cc <Plug>(caw:hatpos:comment)
   vmap <Space>cC <Plug>(caw:hatpos:toggle)
   vmap <Space>cw <Plug>(caw:wrap:toggle)
+endif "}}}
+
+" ddc.vim "{{{
+if dein#tap('ddc')
+  call ddc#custom#patch_global('sources', ['around'])
+
+  call ddc#custom#patch_global('sourceOptions', {
+      \ '_': {
+      \   'matchers': ['matcher_head'],
+      \   'sorters': ['sorter_rank']
+      \ }})
+  call ddc#custom#patch_global('sourceOptions', {
+      \ 'around': {'mark': 'A'},
+      \ })
+
+  call ddc#custom#patch_global('completionMode', 'manual')
+
+  call ddc#enable()
+
+  inoremap <silent><expr> <C-n> ddc#map#pum_visible() ? '<C-n>' : ddc#map#manual_complete()
+  " imap <C-Space> <C-n>
 endif "}}}
 
 " ghcmod-vim "{{{
@@ -366,3 +393,4 @@ if dein#tap('haskell-indent')
 endif "}}}
 
 call dein#call_hook('source')
+
