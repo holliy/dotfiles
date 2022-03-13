@@ -17,21 +17,24 @@ if dein#load_state(s:dein_dir)
 
   call dein#add(s:dein_repo_dir)
   call dein#add('cohama/lexima.vim')
-  call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
-  call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
-  call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
+  " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
+  " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
+  " call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('mattn/benchvimrc-vim')
+  call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
+  call dein#add('prabirshrestha/vim-lsp')
   " call dein#add('Shougo/neocomplete.vim')
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
   " call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
-  call dein#add('Shougo/ddc.vim')
-  call dein#add('Shougo/ddc-around')
-  call dein#add('Shougo/ddc-matcher_head')
-  call dein#add('Shougo/ddc-sorter_rank')
+  call dein#add('Shougo/ddc.vim', {'depends': ['denops']})
+  call dein#add('Shougo/ddc-around', {'depends': ['ddc']})
+  call dein#add('Shougo/ddc-matcher_head', {'depends': ['ddc']})
+  call dein#add('Shougo/ddc-sorter_rank', {'depends': ['ddc']})
+  call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tyru/caw.vim')
   call dein#add('vim-denops/denops.vim')
@@ -70,8 +73,8 @@ if dein#tap('caw')
 endif "}}}
 
 " ddc.vim "{{{
-if dein#tap('ddc')
-  call ddc#custom#patch_global('sources', ['around'])
+if dein#tap('ddc') && executable('deno')
+  call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
 
   call ddc#custom#patch_global('sourceOptions', {
       \ '_': {
@@ -80,6 +83,7 @@ if dein#tap('ddc')
       \ }})
   call ddc#custom#patch_global('sourceOptions', {
       \ 'around': {'mark': 'A'},
+      \ 'vim-lsp': {'mark': 'L'}
       \ })
 
   call ddc#custom#patch_global('completionMode', 'manual')
@@ -87,6 +91,7 @@ if dein#tap('ddc')
   call ddc#enable()
 
   inoremap <silent><expr> <C-n> ddc#map#pum_visible() ? '<C-n>' : ddc#map#manual_complete()
+  inoremap <silent><expr> <C-p> ddc#map#pum_visible() ? '<C-p>' : ddc#map#manual_complete()
   " imap <C-Space> <C-n>
 endif "}}}
 
@@ -325,71 +330,36 @@ if dein#tap('lexima')
   inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<CR>', 'i')
 endif "}}}
 
-" neocomplete "{{{
-if dein#tap('neocomplete')
-  let g:neocomplete#enable_at_startup = 1
-  let g:neocomplete#enable_auto_close_preview = 1
-  let g:neocomplete#enable_auto_delimiter = 1
-  let g:neocomplete#enable_camel_case = 1
-  let g:neocomplete#disable_auto_complete = 0
-  let g:neocomplete#enable_fuzzy_completion = 1
-  let g:neocomplete#enable_insert_char_pre = 1
-  let g:neocomplete#enable_smart_case = 1
-  let g:neosnippet#expand_word_boundary = 1
-  let g:neocomplete#sources#syntax#min_keyword_length = 3
-
-  let g:neocomplete#force_omni_input_patterns =
-      \ get(g: , 'neocomplete#force_omni_input_patterns', {})
-  let g:neocomplete#keyword_patterns =
-      \ get(g:, 'neocomplete#keyword_patterns', {})
-  let g:neocomplete#same_filetypes =
-      \ get(g:, 'neocomplete#same_filetypes', {})
-  let g:neocomplete#sources#dictionary#dictionaries =
-      \ get(g:, 'neocomplete#sources#dictionary#dictionaries', {})
-  let g:neocomplete#sources#omni#input_patterns =
-      \ get(g:, 'neocomplete#sources#omni#input_patterns', {})
-  let g:neocomplete#sources#omni#functions =
-      \ get(g:, 'neocomplete#sources#omni#functions', {})
-
-  let g:neocomplete#keyword_patterns._ = '\h\w*'
-
-  let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)\%(\h\w*\)\?'
-
-  let g:neocomplete#keyword_patterns.scheme = '[[:alpha:]+*/@$_=.!?-][[:alnum:]+*/@$_:=.!?-]*'
-
-  let g:neocomplete#sources#omni#input_patterns.cs = '.*[^=\);]'
-  let g:neocomplete#force_omni_input_patterns.cs = '.*[^=\);]'
-
-  let g:neocomplete#sources#omni#input_patterns.java = '\k\.\k*'
-  let g:neocomplete#force_omni_input_patterns.java = '\k\.\k*'
-
-  autocmd Vimrc BufReadPost,BufWritePost ?* if &filetype !~# 'qf' | NeoCompleteBufferMakeCache % | endif
-
-  inoremap <expr><silent> <C-n> pumvisible() ? '<C-n>' : neocomplete#start_manual_complete()
-  inoremap <expr><silent> <C-u> pumvisible() ? '<C-p>' : neocomplete#start_manual_complete()
-
-  if dein#tap('neco-ghc')
-    let g:neocomplete#sources#omni#functions.haskell = 'necoghc#omnifunc'
-  endif
-
-  " neosnippet "{{{
-  if dein#tap('neosnippet') && dein#tap('neosnippet-snippets')
-    let g:neosnippet#snippets_directory = expand(g:dein#plugin['path'] . '/neosnippets')
-
-    inoremap <expr><silent> <C-u> pumvisible() ? '<C-u>' : neosnippet#jumpable() ? neosnippet#mappings#jump_impl() : neocomplete#start_manual_complete()
-    snoremap <expr><silent> <C-u> neosnippet#jumpable() ? neosnippet#mappings#jump_impl() : '<C-u>'
-    inoremap <expr><silent> <Plug>(vimrc_complete-select) neosnippet#expandable() ? neosnippet#mappings#expand_impl() : '<C-y>'
-
-    if has('conceal')
-      set conceallevel=2 concealcursor=iv
-    endif
-  else
-  endif "}}}
-endif "}}}
-
 " vim-haskell-indent "{{{
 if dein#tap('haskell-indent')
   let g:haskell_indent_disable_case = 1
+endif "}}}
+
+" vim-lsp "{{{
+if dein#tap('lsp')
+  " let g:lsp_diagnostics_signs_enabled = 0
+  let g:lsp_diagnostics_signs_insert_mode_enabled = 0
+  " let g:lsp_hover_ui = 'preview'
+
+  let g:lsp_diagnostics_signs_error = {'text': '!'}
+  let g:lsp_diagnostics_signs_warning = {'text': '*'}
+  let g:lsp_diagnostics_signs_hint = {'text': '.'}
+  let g:lsp_diagnostics_signs_information = {'text': '.'}
+  let g:lsp_document_code_action_signs_hint = {'text': ':'}
+
+  nnoremap <Space>lh <Plug>(lsp-hover)
+  nnoremap <Space>ls <Plug>(lsp-signature-help)
+
+  Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
+
+  if !has('nvim')
+    " https://github.com/prabirshrestha/vim-lsp/issues/1281
+    " Autocmd User lsp_float_opened call setwinvar(lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
+    Autocmd User lsp_float_opened call setwinvar(g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid(), '&wincolor', 'MatchParen')
+  else
+    " Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+    Autocmd User lsp_float_opened call nvim_win_set_option(g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid(), 'winhighlight', 'MatchParen')
+  endif
 endif "}}}
 
 call dein#call_hook('source')
