@@ -166,7 +166,7 @@ SetG iminsert=0 imsearch=-1
 set laststatus=2
 setglobal statusline =\ %{mode(1)}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
-setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:h'),':~'))}
+setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:h'),':~').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}%<%#StatusLineNC#%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
@@ -251,13 +251,19 @@ let g:vim_indent_cont = shiftwidth()*2 "}}}
 
 " キーマップ "{{{
 map <Nul> <C-Space>
+map! <Nul> <C-Space>
 map <C-[> <Esc>
+map! <C-[> <Esc>
 map <C-h> <BS>
+map! <C-h> <BS>
 map <C-i> <Tab>
+imap <C-i> <Tab>
 map <C-m> <CR>
+map! <C-m> <CR>
 
 " minttyだけ?
 map <C-j> <S-CR>
+map! <C-j> <S-CR>
 
 noremap - ^
 noremap ^ $
@@ -325,20 +331,21 @@ noremap <C-b> <C-b>zz
 " noremap <ScrollWheelUp> 3<C-y>
 " noremap <ScrollWheelDown> 3<C-e>
 
-inoremap <C-u> <C-p>
-cnoremap <C-u> <C-p>
+" inoremap <C-u> <C-p>
+" cnoremap <C-u> <C-p>
 cnoremap <C-g> <C-u>
 
 nnoremap Y y$
 noremap! jk <Esc>
 nnoremap <S-Tab> <C-o>
+cnoremap <Esc><Esc> <C-c>
 
 noremap! <C-p> <Up>
 noremap! <C-l> <Down>
 inoremap <C-k> <Left>
 cnoremap <C-k> <Space><BS><Left>
-inoremap <C-@> <Right>
-cnoremap <C-@> <Space><BS><Right>
+" inoremap <C-@> <Right>
+" cnoremap <C-@> <Space><BS><Right>
 
 inoremap <C-y> <C-o>^
 cnoremap <C-y> <Home>
@@ -355,7 +362,7 @@ noremap <F1> <Esc>:help<Space>
 nnoremap <F1> :<C-u>help<Space>
 inoremap <F1> <Esc>:help<Space>
 
-nnoremap <expr> <CR> 'o<Esc>' . v:count . 'k'
+nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . '<C-e>'
 nnoremap <C-Space> i<CR><Esc>
 
@@ -367,11 +374,18 @@ nnoremap <expr> gt <SID>delcount(v:count) .
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) . 'gt'
 
 nnoremap <silent> <C-n> :<C-u><C-r>=v:count<CR>bnext<CR>
-nnoremap <silent> <C-p> :<C-u><C-r>=v:count<CR>bNext<CR>
+nnoremap <silent> <C-p> :<C-u><C-r>=v:count<CR>bprevious<CR>
+nnoremap <silent> <Space>bn :<C-u><C-r>=v:count<CR>bnext<CR>
+nnoremap <silent> <Space>bN :<C-u><C-r>=v:count<CR>bNext<CR>
+nnoremap <silent> <Space>bp :<C-u><C-r>=v:count<CR>bprevious<CR>
 
 nnoremap <silent> <Space>cn :<C-u><C-r>=v:count<CR>cnext<CR>
 nnoremap <silent> <Space>cN :<C-u><C-r>=v:count<CR>cNext<CR>
 nnoremap <silent> <Space>cp :<C-u><C-r>=v:count<CR>cprevious<CR>
+
+nnoremap <silent> <Space>ln :<C-u><C-r>=v:count<CR>lnext<CR>
+nnoremap <silent> <Space>lN :<C-u><C-r>=v:count<CR>lNext<CR>
+nnoremap <silent> <Space>lp :<C-u><C-r>=v:count<CR>lprevious<CR>
 
 nnoremap <silent> <Space>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),'synIDattr(v:val,"name")')<CR>
@@ -444,7 +458,8 @@ Autocmd FileReadPost *
     \ if &fileencoding=~#'iso-2022-jp' && search("[^\x01-\x7e]", 'n')==0 |
     \   let &fileencoding = &encoding | endif "}}}
 
-" http://ttssh2.sourceforge.jp/manual/ja/usage/tips/vim.html "{{{
+" terminal "{{{
+" http://ttssh2.sourceforge.jp/manual/ja/usage/tips/vim.html
 if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   set t_Co=256
 

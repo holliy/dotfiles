@@ -67,8 +67,7 @@ if dein#tap('caw')
   nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
   nmap <Space>co <Plug>(caw:jump:comment-next)
   nmap <Space>cO <Plug>(caw:jump:comment-prev)
-  vmap <Space>cc <Plug>(caw:hatpos:comment)
-  vmap <Space>cC <Plug>(caw:hatpos:toggle)
+  vmap <Space>cc <Plug>(caw:hatpos:toggle)
   vmap <Space>cw <Plug>(caw:wrap:toggle)
 endif "}}}
 
@@ -349,16 +348,21 @@ if dein#tap('lsp')
 
   nnoremap <Space>lh <Plug>(lsp-hover)
   nnoremap <Space>ls <Plug>(lsp-signature-help)
+  nnoremap <Space>ld <Plug>(lsp-peek-definition)
+  nnoremap <Space>lt <Plug>(lsp-peek-type-definition)
+  nnoremap <Space>li <Plug>(lsp-peek-implementation)
+  nnoremap <Space>ll <Plug>(lsp-document-diagnostics)
+  nnoremap <Space>lr <Plug>(lsp-rename)
 
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
   if !has('nvim')
     " https://github.com/prabirshrestha/vim-lsp/issues/1281
     " Autocmd User lsp_float_opened call setwinvar(lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
-    Autocmd User lsp_float_opened call setwinvar(g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid(), '&wincolor', 'MatchParen')
+    Autocmd User lsp_float_opened call setwinvar(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
   else
     " Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
-    Autocmd User lsp_float_opened call nvim_win_set_option(g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid(), 'winhighlight', 'MatchParen')
+    Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
   endif
 endif "}}}
 
