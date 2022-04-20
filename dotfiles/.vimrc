@@ -29,7 +29,6 @@ if has('clientserver') && !exists('g:loaded_editexisting')
   endif
 endif "}}}
 
-" non plugin "{{{
 " print startup time "{{{
 if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
@@ -166,7 +165,7 @@ SetG iminsert=0 imsearch=-1
 set laststatus=2
 setglobal statusline =\ %{mode(1)}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
-setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:h'),':~').'/')}
+setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}%<%#StatusLineNC#%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
@@ -190,7 +189,7 @@ set splitbelow splitright
 set nostartofline
 set switchbuf=useopen,usetab,split
 SetG synmaxcol=800
-set notimeout ttimeout ttimeoutlen=100
+set timeout ttimeout timeoutlen=700 ttimeoutlen=50
 set title
 set ttymouse=xterm2
 set undoreload=20000 | SetG undofile undolevels=800
@@ -201,7 +200,7 @@ set viewoptions+=localoptions,slash,unix
 let &viewdir = g:vimrc#dotvim . '/.view'
 set viminfo-=<50 viminfo+=<100
 set virtualedit+=block
-set wildignore+=*~,*.o wildignorecase wildmenu wildmode=list:longest,full
+set wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
 set winaltkeys=yes
 " set <xUp>=OA <xDown>=OB <xRight>=OC <xLeft>=OD
 
@@ -217,6 +216,10 @@ endif
 if exists('+packpath')
   let &packpath .= ',' . g:vimrc#dotvim . '/pack'
 endif
+if exists('+termguicolors') && !g:vimrc#is_windows
+  " set termguicolors
+endif
+
 if g:vimrc#is_wsl
   set clipboard=exclude:.*
 else
@@ -229,6 +232,9 @@ else
 endif
 if has('patch-7.4.314')
   set shortmess+=c
+endif
+if has('patch-8.2.4325')
+  set wildoptions=pum
 endif "}}}
 
 " $VIMRUNTIME 以下の不要なプラグインを読み込まない "{{{
@@ -245,25 +251,22 @@ let g:loaded_vimballPlugin = 1
 let g:loaded_getscript = 1
 let g:loaded_getscriptPlugin = 1
 
+let g:newtw_clipboard = 0
+let g:netrw_keepj = ""
 let g:netrw_liststyle = 3
+let g:netrw_sizestyle = "H"
+let g:netrw_use_errorwindow = 2
+let g:netrw_winsize=30
 let g:vim_indent_cont = shiftwidth()*2 "}}}
 "}}}
 
 " キーマップ "{{{
 map <Nul> <C-Space>
 map! <Nul> <C-Space>
-map <C-[> <Esc>
-map! <C-[> <Esc>
-map <C-h> <BS>
-map! <C-h> <BS>
-map <C-i> <Tab>
-imap <C-i> <Tab>
-map <C-m> <CR>
-map! <C-m> <CR>
 
 " minttyだけ?
-map <C-j> <S-CR>
-map! <C-j> <S-CR>
+" map <C-j> <S-CR>
+" map! <C-j> <S-CR>
 
 noremap - ^
 noremap ^ $
@@ -338,12 +341,12 @@ cnoremap <C-g> <C-u>
 nnoremap Y y$
 noremap! jk <Esc>
 nnoremap <S-Tab> <C-o>
-cnoremap <Esc><Esc> <C-c>
+" cnoremap <Esc><Esc> <C-c>
 
-noremap! <C-p> <Up>
-noremap! <C-l> <Down>
-inoremap <C-k> <Left>
-cnoremap <C-k> <Space><BS><Left>
+" noremap! <C-p> <Up>
+" noremap! <C-l> <Down>
+" inoremap <C-k> <Left>
+" cnoremap <C-k> <Space><BS><Left>
 " inoremap <C-@> <Right>
 " cnoremap <C-@> <Space><BS><Right>
 
@@ -396,6 +399,8 @@ nnoremap <silent> <Space>sf
 inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
+cnoremap <expr> <S-Tab> wildmenumode() ? '<C-p>' : '<S-Tab>'
 "}}}
 
 " エンコード "{{{
@@ -861,8 +866,8 @@ Autocmd BufReadPost ?*
 " endif
 
 AutocmdFT * setlocal formatoptions-=o
-AutocmdFT * if &commentstring !~# '^ ' |
-    \ let &commentstring = ' ' . &commentstring | endif
+" AutocmdFT * if &commentstring !~# '^ ' |
+"    \ let &commentstring = ' ' . &commentstring | endif
 AutocmdFT c setlocal omnifunc=ccomplete#Complete
 AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif

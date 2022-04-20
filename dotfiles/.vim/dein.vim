@@ -60,7 +60,8 @@ if dein#tap('caw')
   AutocmdFT haskell let b:caw_wrap_oneline_comment = ['{-', '-}']
   AutocmdFT haskell let b:caw_wrap_multiline_comment = {'left': '{-', 'right': '-}', 'top': '-', 'bottom': '-'}
 
-  nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
+  " nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
+  nmap <Space>cc <Plug>(caw:hatpos:toggle)
   nnoremap <silent> <Space>ct :normal 1 cc<CR>
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
   nmap <Space>ca <Plug>(caw:dollarpos:toggle)
@@ -121,8 +122,8 @@ if dein#tap('lexima')
         \   {'start': '[', 'end': ']'}
         \ ]
 
-    call filter(g:lexima#default_rules,
-        \ '!has_key(v:val, "at") || v:val.at !=# "\\\\\\%#"')
+    " call filter(g:lexima#default_rules,
+    "    \ '!has_key(v:val, "at") || v:val.at !=# "\\\\\\%#"')
     call lexima#set_default_rules()
 
     " quote in lisp "{{{
@@ -326,7 +327,7 @@ if dein#tap('lexima')
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
 
-  inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<CR>', 'i')
+  inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
 endif "}}}
 
 " vim-haskell-indent "{{{
@@ -336,6 +337,8 @@ endif "}}}
 
 " vim-lsp "{{{
 if dein#tap('lsp')
+  let g:lsp_completion_documentation_enabled = 0
+  let g:lsp_diagnostics_echo_cursor = 1
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
   " let g:lsp_hover_ui = 'preview'
