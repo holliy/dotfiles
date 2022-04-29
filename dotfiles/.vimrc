@@ -464,52 +464,76 @@ Autocmd FileReadPost *
     \   let &fileencoding = &encoding | endif "}}}
 
 " terminal "{{{
-" http://ttssh2.sourceforge.jp/manual/ja/usage/tips/vim.html
-if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
-  set t_Co=256
+" https://ttssh2.osdn.jp/manual/4/ja/usage/tips/vim.html
+if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
+  " set t_Co=256
+
+  " modifyOtherKeys "{{{
+  " let &t_TI = "\<Esc>[>4;1m"
+  " let &t_TE = "\<Esc>[>4;m"
+  map <special> <Esc>[27;2;13~ <S-CR>
+  imap <special> <Esc>[27;2;13~ <S-CR>
+  "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
-  " http://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
-  " http://qiita.com/kefir_/items/415a30930a80b9b42adb
-  let &t_ti .= "\e[?2004h"
-  " let &t_te .= "\e[?2004l"
-  let &t_te = "\e[?2004l" . &t_te
-  let &pastetoggle = "\e[201~"
+  " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
+  " https://qiita.com/kefir_/items/415a30930a80b9b42adb
+  if !has("patch-8.0.0238")
+    if g:vimrc#is_starting
+      if has("patch-8.0.0210")
+          set t_BE=
+      endif
 
-  " noremap <special> <expr> <Esc>[200~ XTermPasteBegin('0i')
-  noremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('i')
-  inoremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('')
-  cnoremap <special> <Esc>[200~ <nop>
-  cnoremap <special> <Esc>[201~ <nop>
+      let &t_ti .= "\e[?2004h"
+      " let &t_te .= "\e[?2004l"
+      let &t_te = "\e[?2004l" . &t_te
+      let &pastetoggle = "\e[201~"
+    endif
 
-  map <F2> <Esc>[201~
-  imap <F2> <Esc>[201~
+    function! s:xTermPasteBegin(ret) abort
+      set paste
+      return a:ret
+    endfunction
 
-  function! s:xTermPasteBegin(ret) abort
-    set paste
-    return a:ret
-  endfunction "}}}
+    " noremap <special> <expr> <Esc>[200~ XTermPasteBegin('0i')
+    noremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('i')
+    inoremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('')
+    cnoremap <special> <Esc>[200~ <nop>
+    cnoremap <special> <Esc>[201~ <nop>
 
-  " 挿入モードを出るときにIME を自動で切る(minttyでは効かない) "{{{
-  " http://qiita.com/mwmsnn/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
-  if 0 " !g:vimrc#is_cygwin
-    let &t_EI .= "\e[<s\e[<0t"
+    map <F2> <Esc>[201~
+    imap <F2> <Esc>[201~
+  endif "}}}
+
+  " OSC52でのコピー "{{{
+  function s:paste64(text) abort
+    let l:s = join(systemlist('base64', a:text), '')
+    call writefile([printf("\e]52;;%s\e\\", l:s)], '/dev/tty', 'a')
+  endfunction
+
+  nnoremap <silent> <Space>y :<C-u>call <SID>paste64(@")<CR>
+  "}}}
+
+  " 挿入モードを出るときにIME を自動で切る "{{{
+  " https://qiita.com/U25CE/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
+  if g:vimrc#is_starting
     let &t_SI .= "\e[<r"
+    let &t_EI .= "\e[<s\e[<0t"
     let &t_te .= "\e[<0\e[<s"
   endif "}}}
 
   " 挿入モードでのESCキーの待ちをなくす "{{{
-  if 0
-    inoremap <special> <Esc>O[ <Esc>
-    inoremap <special> <C-V><Esc>O[ <C-V><Esc>
+  inoremap <special> <Esc>O[ <Esc>
+  inoremap <special> <C-V><Esc>O[ <C-V><Esc>
+
+  if g:vimrc#is_starting
     let &t_SI .= "\e[?7727h"
-    let &t_EI = "\e[?7727l" . &t_EI
-    " let &t_EI .= "\e[?7727l"
+    let &t_EI .= "\e[?7727l"
   endif "}}}
 
   " 縦分割時のスクロールの高速化 "{{{
+  " http://qiita.com/kefir_/items/c725731d33de4d8fb096
   if 0
-    " http://qiita.com/kefir_/items/c725731d33de4d8fb096
     set nottyfast
     function! s:enableVsplitMode() abort "{{{
       " enable origin mode and left/right margins
@@ -534,7 +558,10 @@ if !g:vimrc#is_gui && g:vimrc#is_starting && &term !~# 'cygwin\|win32\|linux' " 
     " set t_F9=[3;3R
     map <Esc>[3;3R <t_F9>
     map <expr> <t_F9> <SID>enableVsplitMode()
-    let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
+
+    if g:vimrc#is_starting
+      let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
+    endif
   endif "}}}
 endif "}}}
 
