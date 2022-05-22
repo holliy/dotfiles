@@ -200,12 +200,15 @@ set viewoptions+=localoptions,slash,unix
 let &viewdir = g:vimrc#dotvim . '/.view'
 set viminfo-=<50 viminfo+=<100
 set virtualedit+=block
-set wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
+set wildcharm=<Tab> wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
 set winaltkeys=yes
 " set <xUp>=OA <xDown>=OB <xRight>=OC <xLeft>=OD
 
 if exists('+ballooneval')
   set ballooneval
+endif
+if exists('+balloonevalterm')
+  set balloonevalterm
 endif
 if exists('+breakindent')
   SetG breakindent breakindentopt=shift:2
@@ -340,6 +343,7 @@ cnoremap <C-g> <C-u>
 
 nnoremap Y y$
 noremap! jk <Esc>
+nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
 " cnoremap <Esc><Esc> <C-c>
 
@@ -366,7 +370,7 @@ nnoremap <F1> :<C-u>help<Space>
 inoremap <F1> <Esc>:help<Space>
 
 nnoremap <CR> o<Esc>
-nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . '<C-e>'
+nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . 'k'
 nnoremap <C-Space> i<CR><Esc>
 
 inoremap <silent> <C-z> <C-o>:update<CR>
@@ -400,7 +404,6 @@ inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
-cnoremap <expr> <S-Tab> wildmenumode() ? '<C-p>' : '<S-Tab>'
 "}}}
 
 " エンコード "{{{
@@ -472,7 +475,10 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " let &t_TI = "\<Esc>[>4;1m"
   " let &t_TE = "\<Esc>[>4;m"
   map <special> <Esc>[27;2;13~ <S-CR>
-  imap <special> <Esc>[27;2;13~ <S-CR>
+  map! <special> <Esc>[27;2;13~ <S-CR>
+  map <special> <Esc>[27;2;9~ <S-Tab>
+  map! <special> <Esc>[27;2;9~ <S-Tab>
+  cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
   "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
@@ -532,7 +538,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endif "}}}
 
   " 縦分割時のスクロールの高速化 "{{{
-  " http://qiita.com/kefir_/items/c725731d33de4d8fb096
+  " https://qiita.com/kefir_/items/c725731d33de4d8fb096
   if 0
     set nottyfast
     function! s:enableVsplitMode() abort "{{{
@@ -909,6 +915,7 @@ if g:vimrc#is_windows
 endif
 AutocmdFT text setlocal textwidth=78
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
+" Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
 
 augroup Vimrc_bin
   autocmd!

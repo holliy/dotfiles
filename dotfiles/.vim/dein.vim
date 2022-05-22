@@ -20,12 +20,14 @@ if dein#load_state(s:dein_dir)
   " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
   " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
   " call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
+  call dein#add('gamoutatsumi/ddc-sorter_ascii')
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
   call dein#add('prabirshrestha/vim-lsp')
+  call dein#add('rbtnn/vim-ambiwidth')
   " call dein#add('Shougo/neocomplete.vim')
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
@@ -62,6 +64,7 @@ if dein#tap('caw')
 
   " nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
+  nmap <C-_> <Space>cc
   nnoremap <silent> <Space>ct :normal 1 cc<CR>
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
   nmap <Space>ca <Plug>(caw:dollarpos:toggle)
@@ -78,12 +81,13 @@ if dein#tap('ddc') && executable('deno')
 
   call ddc#custom#patch_global('sourceOptions', {
       \ '_': {
+      \   'ignoreCase': v:true,
       \   'matchers': ['matcher_head'],
       \   'sorters': ['sorter_rank']
       \ }})
   call ddc#custom#patch_global('sourceOptions', {
       \ 'around': {'mark': 'A'},
-      \ 'vim-lsp': {'mark': 'L'}
+      \ 'vim-lsp': {'mark': 'L', 'sorters': ['sorter_rank', 'sorter_ascii']}
       \ })
 
   call ddc#custom#patch_global('completionMode', 'manual')
@@ -356,6 +360,7 @@ if dein#tap('lsp')
   nnoremap <Space>li <Plug>(lsp-peek-implementation)
   nnoremap <Space>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Space>lr <Plug>(lsp-rename)
+  nnoremap <Space>lc <Plug>(lsp-code-action)
 
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
