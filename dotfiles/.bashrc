@@ -122,3 +122,15 @@ if type "gh" > /dev/null 2>&1; then
   eval "$(gh completion -s bash)"
 fi
 
+__fzf_compgen_path() {
+  find $1 -type f | grep -Fv "/.git/"
+}
+
+__fzf_compgen_dir() {
+  find $1 -type d | grep -Fv "/.git/"
+}
+
+if [ -f ~/.fzf.bash ]; then
+  . ~/.fzf.bash
+fi
+
