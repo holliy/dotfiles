@@ -477,8 +477,12 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   map <special> <Esc>[27;2;13~ <S-CR>
   map! <special> <Esc>[27;2;13~ <S-CR>
   map <special> <Esc>[27;2;9~ <S-Tab>
-  map! <special> <Esc>[27;2;9~ <S-Tab>
+  imap <special> <Esc>[27;2;9~ <S-Tab>
   cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
+  map <special> <Esc>[27;2;8~ <S-BS>
+  map! <special> <Esc>[27;2;8~ <S-BS>
+  map <special> <Esc>[27;5;8~ <C-BS>
+  map! <special> <Esc>[27;5;8~ <C-BS>
   "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
