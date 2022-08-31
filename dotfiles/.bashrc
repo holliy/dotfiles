@@ -103,6 +103,12 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
+findf() {
+  dir=$1
+  shift
+  find ${dir} -type f $*
+}
+
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
@@ -123,11 +129,11 @@ if type "gh" > /dev/null 2>&1; then
 fi
 
 __fzf_compgen_path() {
-  find $1 -type f | grep -Fv "/.git/"
+  find $1 -type f | grep -Fv "/.git/" | grep -Fv "/node_module/"
 }
 
 __fzf_compgen_dir() {
-  find $1 -type d | grep -Fv "/.git/"
+  find $1 -type d | grep -Fv "/.git/" | grep -Fv "/node_module/"
 }
 
 if [ -f ~/.fzf.bash ]; then
