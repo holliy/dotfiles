@@ -16,6 +16,7 @@ if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim'])
 
   call dein#add(s:dein_repo_dir)
+  call dein#add('airblade/vim-gitgutter')
   call dein#add('cohama/lexima.vim')
   " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
   " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
@@ -38,6 +39,8 @@ if dein#load_state(s:dein_dir)
   call dein#add('Shougo/ddc-sorter_rank', {'depends': ['ddc']})
   call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
   call dein#add('thinca/vim-prettyprint')
+  call dein#add('tpope/vim-fugitive')
+  call dein#add('tpope/vim-surround')
   call dein#add('tyru/caw.vim')
   call dein#add('vim-denops/denops.vim')
   call dein#add('vim-jp/vimdoc-ja')
@@ -87,9 +90,13 @@ if dein#tap('ddc') && executable('deno')
       \ }})
   call ddc#custom#patch_global('sourceOptions', {
       \ 'around': {'mark': 'A'},
-      \ 'vim-lsp': {'mark': 'L', 'sorters': ['sorter_rank', 'sorter_ascii']}
+      \ 'vim-lsp': {
+      \   'mark': 'L',
+      \   'sorters': ['sorter_rank', 'sorter_ascii']
+      \ }
       \ })
 
+  " call ddc#custom#patch_global('autoCompleteDelay', 50)
   call ddc#custom#patch_global('completionMode', 'manual')
 
   call ddc#enable()

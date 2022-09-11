@@ -920,6 +920,7 @@ endif
 AutocmdFT text setlocal textwidth=78
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
+Autocmd TerminalWinOpen * setlocal nonumber norelativenumber
 
 augroup Vimrc_bin
   autocmd!
