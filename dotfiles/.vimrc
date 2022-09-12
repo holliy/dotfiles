@@ -397,8 +397,10 @@ nnoremap <silent> <Space>lp :<C-u><C-r>=v:count<CR>lprevious<CR>
 nnoremap <silent> <Space>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),'synIDattr(v:val,"name")')<CR>
 
+let g:foldmethods = ['marker', 'indent', 'expr']
+call add(g:foldmethods, g:foldmethods[0])
 nnoremap <silent> <Space>sf
-    \ :<C-u>setlocal foldmethod=<C-r>=&foldmethod==#'marker'?'indent':'marker'<CR> foldmethod?<CR>zv
+    \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
 
 inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_complete-select) <C-y>
@@ -805,8 +807,18 @@ function! s:winleftpad() abort
     let lnrwidth = 0
   endif
 
-  " TODO: signの幅を計算
-  return lnrwidth + &foldcolumn
+  if &signcolumn ==# 'yes'
+    let signwidth = 2
+  elseif &signcolumn ==# 'no'
+    let signwidth = 0
+  elseif &signcolumn ==# 'number' && &number
+    let signwidth = 0
+  else
+    " TODO: 表示されない場合
+    let signwidth = 2
+  endif
+
+  return lnrwidth + signwidth + &foldcolumn
 endfunction "}}}
 
 set foldtext=Foldtext() "{{{

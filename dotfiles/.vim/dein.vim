@@ -341,6 +341,11 @@ if dein#tap('lexima')
   inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
 endif "}}}
 
+" vim-gitgutter "{{{
+if dein#tap('gitgutter')
+  let g:gitgutter_highlight_lines = 1
+endif "}}}
+
 " vim-haskell-indent "{{{
 if dein#tap('haskell-indent')
   let g:haskell_indent_disable_case = 1
@@ -369,16 +374,14 @@ if dein#tap('lsp')
   nnoremap <Space>lr <Plug>(lsp-rename)
   nnoremap <Space>lc <Plug>(lsp-code-action)
 
+  Autocmd User lsp_buffer_enabled setlocal foldmethod=expr
+  Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
+  " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
-  if !has('nvim')
-    " https://github.com/prabirshrestha/vim-lsp/issues/1281
-    " Autocmd User lsp_float_opened call setwinvar(lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
-    Autocmd User lsp_float_opened call setwinvar(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
-  else
-    " Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
-    Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
-  endif
+  " https://github.com/prabirshrestha/vim-lsp/issues/1281
+  " Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+  Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
 endif "}}}
 
 call dein#call_hook('source')
