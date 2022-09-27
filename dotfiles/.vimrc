@@ -371,6 +371,7 @@ inoremap <F1> <Esc>:help<Space>
 
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . 'k'
+inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
 
 inoremap <silent> <C-z> <C-o>:update<CR>
@@ -478,6 +479,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " let &t_TE = "\<Esc>[>4;m"
   map <special> <Esc>[27;2;13~ <S-CR>
   map! <special> <Esc>[27;2;13~ <S-CR>
+  map <special> <Esc>[27;5;13~ <C-CR>
+  map! <special> <Esc>[27;5;13~ <C-CR>
   map <special> <Esc>[27;2;9~ <S-Tab>
   imap <special> <Esc>[27;2;9~ <S-Tab>
   cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
@@ -889,7 +892,7 @@ Highlight SignColumn ctermbg=NONE guibg=NONE
 Highlight StatusLineNC ctermfg=235
 Highlight TabLineFill ctermfg=236
 
-" 画面の80桁目にcolorcolumnを表示 (signは考慮しない)
+" 画面の81桁目にcolorcolumnを表示
 Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
     \ let &colorcolumn = 81 - s:winleftpad()
 "}}}
@@ -932,7 +935,7 @@ endif
 AutocmdFT text setlocal textwidth=78
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
-Autocmd TerminalWinOpen * setlocal nonumber norelativenumber
+Autocmd TerminalWinOpen * setlocal nonumber norelativenumber winfixheight
 
 augroup Vimrc_bin
   autocmd!
