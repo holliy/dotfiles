@@ -3,6 +3,9 @@
 REM 遅延環境変数の有効化
 setlocal ENABLEDELAYEDEXPANSION
 
+REM 実行ファイルをカレントディレクトリから探さない
+set NODEFAULTCURRENTDIRECTORYINEXEPATH=1
+
 REM スクリプトが置かれている場所をカレントディレクトリにする
 cd /d %~dp0
 
@@ -14,33 +17,22 @@ if NOT "%LEVEL%"=="High" (
   exit /b 0
 )
 
+set DOTTER=dotter.exe
+
+where /q %DOTTER%
+if not %ERRORLEVEL% == 0 (
+  echo %DOTTER%: not found in %%PATH%%
+  echo Download from https://github.com/SuperCuber/dotter/releases
+  exit /b 1
+) else if exist %DOTTER% (
+  REM whereコマンドはカレントディレクトリも見るので追加で分岐する
+  echo %DOTTER%: not found in %%PATH%%
+  echo Download from https://github.com/SuperCuber/dotter/releases
+  exit /b 1
+)
 
 cd dotfiles
 
-REM カレントディレクトリを取得
-for /f "usebackq tokens=*" %%i in (`cd`) do set WD=%%i
+%DOTTER% deploy --local-config .dotter/windows.toml
+pause
 
-REM 途中のディレクトリが存在しないとき作成
-for /f "usebackq tokens=*" %%i in (`dir /ad /b /s`) do (
-  set LINE=%%i
-  set DIR=!LINE:%WD%=%USERPROFILE%!
-
-  if NOT EXIST "!DIR!" (
-    REM ファイル・フォルダが存在しない
-    mkdir !DIR!
-  ) else if NOT EXIST "!DIR!\" (
-    REM フォルダが存在しない
-    mshta vbscript:execute^("MsgBox(""Cannot create !DIR!""),16:close"^)
-  )
-)
-
-
-for /f "usebackq tokens=*" %%i in (`dir /a-d /b /s`) do (
-  set LINE=%%i
-  set FILE=!LINE:%WD%=%USERPROFILE%!
-
-  if NOT EXIST "!FILE!" (
-    REM ファイルのパスからカレントディレクトリを置換してリンク作成
-    mklink !LINE:%WD%=%USERPROFILE%! !LINE!
-  )
-)

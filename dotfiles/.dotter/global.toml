@@ -1,0 +1,16 @@
+[helpers]
+
+[default]
+depends = ["vim", "bash"]
+
+[default.files]
+
+[vim.files]
+vimrc = { target="~/.vimrc", type="symbolic" }
+gvimrc = { target="~/.gvimrc", type="symbolic" }
+vim = { target="~/.vim", type="symbolic" }
+
+[bash.files]
+bashrc = "~/.bashrc"
+
+[default.variables]
