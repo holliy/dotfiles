@@ -929,13 +929,10 @@ AutocmdFT qf
     \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc' line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
-if g:vimrc#is_windows
-  AutocmdFT cs edit ++fileformat=dos
-endif
-AutocmdFT text setlocal textwidth=78
+Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
-Autocmd TerminalWinOpen * setlocal nonumber norelativenumber winfixheight
+Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
 
 augroup Vimrc_bin
   autocmd!
