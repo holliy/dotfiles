@@ -90,13 +90,17 @@ command! -bar -nargs=0 Evimrc edit $MYVIMRC
 command! -bar -nargs=0 Egvimrc edit $MYGVIMRC
 command! -bar -nargs=0 Svimrc source $MYVIMRC
 cnoreabbrev ev Evimrc
+cnoreabbrev evimrc Evimrc
 cnoreabbrev egv Egvimrc
+cnoreabbrev egvimrc Egvimrc
 cnoreabbrev sv Svimrc
+cnoreabbrev svimrc Svimrc
 cnoreabbrev newtab tabnew
 
 if g:vimrc#is_gui
   command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
   cnoreabbrev sgv Sgvimrc
+  cnoreabbrev sgvimrc Sgvimrc
 endif
 
 command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
@@ -106,8 +110,7 @@ command! -bar -complete=highlight -nargs=*
 if g:vimrc#is_starting
   command -complete=filetype -nargs=*
       \ AutocmdFT Autocmd VimEnter * Autocmd FileType <args>
-  command -bar -complete=option -nargs=*
-      \ SetG setglobal <args> | set <args>
+  command -bar -complete=option -nargs=* SetG set <args>
 
   Autocmd VimEnter * command! -complete=filetype -nargs=*
       \   AutocmdFT Autocmd FileType <args>
@@ -187,7 +190,7 @@ set showcmd
 set showtabline=2
 set splitbelow splitright
 set nostartofline
-set switchbuf=useopen,usetab,split
+set switchbuf=useopen,usetab
 SetG synmaxcol=800
 set timeout ttimeout timeoutlen=700 ttimeoutlen=50
 set title
@@ -253,14 +256,17 @@ let g:loaded_vimball = 1
 let g:loaded_vimballPlugin = 1
 let g:loaded_getscript = 1
 let g:loaded_getscriptPlugin = 1
+"}}}
 
+" $VIMRUNTIME以下のプラグインの設定 "{{{
 let g:newtw_clipboard = 0
 let g:netrw_keepj = ""
 let g:netrw_liststyle = 3
 let g:netrw_sizestyle = "H"
 let g:netrw_use_errorwindow = 2
 let g:netrw_winsize=30
-let g:vim_indent_cont = shiftwidth()*2 "}}}
+let g:vim_indent_cont = shiftwidth()*2
+"}}}
 "}}}
 
 " キーマップ "{{{
@@ -421,7 +427,10 @@ else
   set fileencodings+=euc-jp,sjis
 endif
 
-" ファイルの漢字コード自動判別のために必要。(要iconv)
+" http://www.kawaz.jp/pukiwiki/?vim (404)
+" http://pcmania.jp/~moraz/howto/install.html#japanese (404)
+" Kaoriya Vim 6 のvimrcから？ (http://elpeo.jp/diary/20031113p01.html)
+" ファイルの漢字コード自動判別のために必要 (要iconv)
 if has('iconv')
   set fileencodings-=euc-jp
 
@@ -524,12 +533,13 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   function s:paste64(text) abort
     let l:s = join(systemlist('base64', a:text), '')
     call writefile([printf("\e]52;;%s\e\\", l:s)], '/dev/tty', 'a')
+    redraw! " カーソルがずれるので
   endfunction
 
   nnoremap <silent> <Space>y :<C-u>call <SID>paste64(@")<CR>
   "}}}
 
-  " 挿入モードを出るときにIME を自動で切る "{{{
+  " 挿入モードを出るときにIMEを自動で切る "{{{
   " https://qiita.com/U25CE/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
   if g:vimrc#is_starting
     let &t_SI .= "\e[<r"
@@ -672,7 +682,7 @@ endfunction "}}}
 " 自動で生成されるバッファか判定 "{{{
 let g:vimrc#generate_filetypes = ['help', 'netrw', 'qf']
 
-" a:1 - バッファ番号 (0 だと現在のバッファの番号)
+" a:1 - バッファ番号 (0のとき現在のバッファに対して判定)
 function! s:ignore(...) abort
   if a:0 && a:1 !=# 0
     let bh = getbufvar(a:1, '&bufhidden')
