@@ -3,16 +3,20 @@ set guioptions-=a guioptions-=e guioptions-=m guioptions-=t guioptions-=T
 set guioptions+=c
 
 if g:vimrc#is_windows
-  set guifont=Consolas:h9
-  set guifontwide=Terminal:h9
-  silent! set guifont=Myrica\ M:h10 guifontwide=Myrica\ M:h10
+  if has('nvim')
+    set guifont=Consolas:h8 guifontwide=Terminal:h9
+    silent! set guifont=Fira\ Code\ Retina:h8 guifontwide=Cica:h8
+  else
+    set guifont=Consolas:h12 guifontwide=Terminal:h14
+    silent! set guifont=Fira\ Code\ Retina:h10.5 guifontwide=Cica:h13.5
+  endif
 elseif g:vimrc#is_unix
   set guifont=DejaVu\ Sans\ Mono\ 12
   silent! set guifont=MyricaM\ M\ 12 guifontwide=MyricaM\ M\ 12
 endif
 
 if has('kaoriya')
-  Autocmd GUIEnter * set transparency=210
+  Autocmd GUIEnter * set transparency=240
 endif
 
 if get(g:, 'colors_name', 'desert') ==# 'desert'

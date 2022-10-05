@@ -1,1 +1,4 @@
-packages = ["vim"]
+packages = ["vim", "neovim"]
+
+[files]
+nvimrc = { target="~/AppData/Local/nvim/init.vim", type="symbolic" }

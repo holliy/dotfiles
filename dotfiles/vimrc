@@ -9,7 +9,7 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_cygwin = has('win32unix')
   let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
   let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
-  let g:vimrc#is_gui = has('gui_running')
+  let g:vimrc#is_gui = has('gui_running') || has('nvim')
   let g:vimrc#is_starting = 1
   let g:vimrc#dotvim = expand('~/.vim')
 endif
@@ -59,31 +59,6 @@ endif
 " endif
 
 scriptencoding utf-8 "}}}
-
-" setup for Windows "{{{
-if g:vimrc#is_windows
-  let $SHELL = 'cmd.exe'
-  let $HOME = $USERPROFILE
-  let $PATH .= ';C:\Windows\Microsoft.NET\Framework64\v4.0.30319'
-  let $PATH .= ';C:\Program Files\Cygwin\bin'
-  let $PATH .= ';C:\Program Files\Cygwin\usr\local\bin'
-  let $VIM = $HOME . '\.vim\vim-kaoriya-win64'
-  let $VIMRUNTIME = $VIM . '\vimfiles'
-  let g:vimrc#dotvim = $HOME . '\.vim'
-
-  set helpfile=$VIMRUNTIME\doc\help.txt
-  set shell=$SHELL shellcmdflag=/c noshellslash
-
-  if &runtimepath !~# '\V' . substitute($VIMRUNTIME, '\v(/|\\)', '\[/\\\]', 'g')
-    set runtimepath^=$VIMRUNTIME
-  endif
-  if &runtimepath !~# '\V' . substitute(g:vimrc#dotvim . '/after', '\v(/|\\)', '\[/\\\]', 'g')
-    let &runtimepath .= ',' . substitute(g:vimrc#dotvim . '/after', '\v(/|\\)', '\', 'g')
-  endif
-elseif g:vimrc#is_cygwin
-  command! Gui !~/.vim/vim-kaoriya-win64/gvim.exe &
-  cnoreabbrev gui Gui
-endif "}}}
 
 " コマンド "{{{
 command! -bar -nargs=0 Evimrc edit $MYVIMRC
@@ -194,7 +169,6 @@ set switchbuf=useopen,usetab
 SetG synmaxcol=800
 set timeout ttimeout timeoutlen=700 ttimeoutlen=50
 set title
-set ttymouse=xterm2
 set undoreload=20000 | SetG undofile undolevels=800
 let &undodir = g:vimrc#dotvim . '/.undo'
 set updatecount=0 | SetG noswapfile
@@ -225,8 +199,13 @@ endif
 if exists('+termguicolors') && !g:vimrc#is_windows
   " set termguicolors
 endif
+if exists('+ttymouse')
+  set ttymouse=xterm2
+endif
 
-if g:vimrc#is_wsl
+if has('nvim')
+  set clipboard=
+elseif g:vimrc#is_wsl
   set clipboard=exclude:.*
 else
   set clipboard=exclude:console\|linux
@@ -898,6 +877,10 @@ Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
 " Highlight PmenuSel ctermfg=yellow ctermbg=darkblue guifg=yellow guibg=blue
 " Highlight PmenuThumb ctermfg=darkblue guifg=blue
 Highlight SignColumn ctermbg=NONE guibg=NONE
+Highlight DiffAdd guifg=NONE
+Highlight DiffChange guifg=NONE
+Highlight DiffDelete guifg=NONE
+Highlight DiffText guifg=NONE
 
 Highlight StatusLineNC ctermfg=235
 Highlight TabLineFill ctermfg=236
@@ -942,7 +925,11 @@ AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
-Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+if has('nvim')
+  Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+else
+  Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+endif
 
 augroup Vimrc_bin
   autocmd!
