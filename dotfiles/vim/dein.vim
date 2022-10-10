@@ -1,9 +1,14 @@
 let s:dein_dir = g:vimrc#dotvim . '/dein'
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
-  call system('git clone https://github.com/Shougo/dein.vim ' .
-      \ shellescape(s:dein_repo_dir))
-  execute('helptags ' . s:dein_repo_dir . '/doc')
+  if executable('git')
+    call system('git clone https://github.com/Shougo/dein.vim ' .
+        \ shellescape(s:dein_repo_dir))
+    execute 'helptags' s:dein_repo_dir . '/doc'
+  else
+    echomsg 'no plugins installed.'
+    finish
+  endif
 endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
@@ -21,7 +26,7 @@ if dein#load_state(s:dein_dir)
   " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
   " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
   " call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
-  call dein#add('gamoutatsumi/ddc-sorter_ascii')
+  call dein#add('gamoutatsumi/ddc-sorter_ascii', {'depends': ['ddc']})
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
@@ -42,7 +47,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('tpope/vim-fugitive')
   call dein#add('tpope/vim-surround')
   call dein#add('tyru/caw.vim')
-  call dein#add('vim-denops/denops.vim')
+  call dein#add('vim-denops/denops.vim', {'if': executable('deno')})
   call dein#add('vim-jp/vimdoc-ja')
 
   call dein#end()
@@ -116,7 +121,7 @@ if dein#tap('ghcmod')
 endif "}}}
 
 " landscape "{{{
-if dein#tap('landscape')
+if dein#tap('landscape') && (g:vimrc#is_gui || &t_Co > 16)
   Autocmd VimEnter * nested colorscheme landscape
 endif "}}}
 
@@ -341,6 +346,12 @@ if dein#tap('lexima')
   inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
 endif "}}}
 
+" vim-fugitive "{{{
+if dein#tap('fugitive')
+  " コミットメッセージ入力時に先頭の行へ移動
+  Autocmd BufWinEnter COMMIT_EDITMSG goto 1
+endif "}}}
+
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
@@ -380,8 +391,21 @@ if dein#tap('lsp')
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
   " https://github.com/prabirshrestha/vim-lsp/issues/1281
-  " Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
-  Autocmd User lsp_float_opened call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ? g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() : lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+  if has('nvim')
+    " Autocmd User lsp_float_opened
+    "    \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+    Autocmd User lsp_float_opened
+        \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ?
+        \   g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() :
+        \   lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+  else
+    " Autocmd User lsp_float_opened
+    "    \ call setwinvar(lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
+    Autocmd User lsp_float_opened
+        \ call setwinvar(lsp#ui#vim#output#getpreviewwinid() is v:false ?
+        \   g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() :
+        \   lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
+  endif
 endif "}}}
 
 call dein#call_hook('source')

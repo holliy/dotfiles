@@ -30,12 +30,15 @@ if has('clientserver') && !exists('g:loaded_editexisting')
 endif "}}}
 
 " print startup time "{{{
+" https://gist.github.com/thinca/1518874#file-vimrc-L20
 if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
+  " :redraw hides intro screen
   augroup vimrc-startuptime
-    autocmd! VimEnter *
-        \ echomsg 'startuptime: ' . reltimestr(reltime(s:startuptime)) |
-        \ unlet s:startuptime | autocmd! vimrc-startuptime
+    autocmd! VimEnter * ++once
+        \ let s:startuptime = reltime(s:startuptime) |
+        \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
+        \ unlet s:startuptime
   augroup END
 endif "}}}
 
@@ -61,6 +64,10 @@ endif
 scriptencoding utf-8 "}}}
 
 " コマンド "{{{
+cnoreabbrev <expr> w] getcmdtype() ==# ':' ? 'write' : 'w]'
+cnoreabbrev <expr> new  getcmdtype() ==# ':' ? 'enew' : 'new'
+cnoreabbrev <expr> newtab  getcmdtype() ==# ':' ? 'tabnew' : 'newtab'
+
 command! -bar -nargs=0 Evimrc edit $MYVIMRC
 command! -bar -nargs=0 Egvimrc edit $MYGVIMRC
 command! -bar -nargs=0 Svimrc source $MYVIMRC
@@ -70,7 +77,6 @@ cnoreabbrev egv Egvimrc
 cnoreabbrev egvimrc Egvimrc
 cnoreabbrev sv Svimrc
 cnoreabbrev svimrc Svimrc
-cnoreabbrev newtab tabnew
 
 if g:vimrc#is_gui
   command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
@@ -108,6 +114,18 @@ AutocmdFT vim
 AutocmdFT vim
     \ syntax region vimSet matchgroup=vimCommand start='\<\%(SetG\)\>' skip='\%(\\\\\)*\\.' end='$' matchgroup=vimNotation end='<[cC][rR]>' keepend oneline contains=vimSetEqual,vimOption,vimErrSetting,vimComment,vimSetString,vimSetMod
  "}}}
+
+" シンボリックリンク先のファイルを開く "{{{
+command! -bar OpenSymbolicTarget
+    \ if getftype(expand('%:p')) ==# 'link' |
+    \   let s:filename = resolve(expand('%:p')) |
+    \   bwipeout |
+    \   execute 'edit' s:filename |
+    \   unlet s:filename |
+    \ else |
+    \   echohl Error | echo 'not symbolic link' | echohl None |
+    \ endif
+"}}}
 
 if !exists(':DiffOrig')
   command -bar -nargs=0 DiffOrig
@@ -339,10 +357,10 @@ nnoremap <S-Tab> <C-o>
 " inoremap <C-@> <Right>
 " cnoremap <C-@> <Space><BS><Right>
 
-inoremap <C-y> <C-o>^
-cnoremap <C-y> <Home>
-noremap! <C-b> <End>
-cnoremap <C-e> <C-y>
+" inoremap <C-y> <C-o>^
+" cnoremap <C-y> <Home>
+" noremap! <C-b> <End>
+" cnoremap <C-e> <C-y>
 
 inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
@@ -453,7 +471,7 @@ execute 'set fileencodings-=' . &encoding
 execute 'set fileencodings+=' . &encoding
 
 " 日本語を含まない場合は fileencoding に encoding を使うようにする
-Autocmd FileReadPost *
+Autocmd BufReadPost,FileReadPost *
     \ if &fileencoding=~#'iso-2022-jp' && search("[^\x01-\x7e]", 'n')==0 |
     \   let &fileencoding = &encoding | endif "}}}
 
@@ -732,9 +750,6 @@ function! s:J() range
   return 'g@' . max([a:lastline - a:firstline - 1, 1]) . 'j'
 endfunction
 
-" TODO:
-" let s:line_separator = {'vim' : '|'}
-
 function! Concat(type) abort
   let js_save = &joinspaces
   let sel_save = &selection
@@ -866,24 +881,27 @@ endfunction "}}}
 
 " ColorScheme等 "{{{
 set background=dark
-Highlight ColorColumn ctermbg=233 guibg=#353535
+Highlight ColorColumn ctermbg=233 guibg=#181818
+" Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
+
 Highlight CursorLineNr ctermbg=NONE guibg=NONE
-" Highlight DiffChange ctermbg=25 guibg=#004060
-" Highlight DiffText ctermbg=18 guibg=#000080
-Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
 " Highlight LineNr ctermfg=darkgreen guifg=#00c000
+Highlight SignColumn ctermbg=NONE guibg=NONE
+" Highlight StatusLineNC ctermfg=235
+
+" Highlight TabLineFill ctermfg=236
+
 " Highlight Pmenu ctermfg=black ctermbg=lightgray guifg=black guibg=lightgray
 " Highlight PmenuSbar ctermfg=black guifg=black
 " Highlight PmenuSel ctermfg=yellow ctermbg=darkblue guifg=yellow guibg=blue
 " Highlight PmenuThumb ctermfg=darkblue guifg=blue
-Highlight SignColumn ctermbg=NONE guibg=NONE
+
+" Highlight DiffChange ctermbg=25 guibg=#004060
+" Highlight DiffText ctermbg=18 guibg=#000080
 Highlight DiffAdd guifg=NONE
 Highlight DiffChange guifg=NONE
 Highlight DiffDelete guifg=NONE
 Highlight DiffText guifg=NONE
-
-Highlight StatusLineNC ctermfg=235
-Highlight TabLineFill ctermfg=236
 
 " 画面の81桁目にcolorcolumnを表示
 Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
@@ -899,7 +917,8 @@ Autocmd WinEnter,BufWinEnter * setlocal cursorline
 " カーソル位置や折りたたみの状態を保存 "{{{
 Autocmd BufReadPost ?*
     \ if line("'\"") > 0 && line ("'\"") <= line('$') |
-    \   execute "normal! g'\"zzzv" | endif
+    \   execute "normal! g'\"zzzv" |
+    \ endif
 " }}}
 
 " その他 "{{{
