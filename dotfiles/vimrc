@@ -116,6 +116,7 @@ AutocmdFT vim
  "}}}
 
 " シンボリックリンク先のファイルを開く "{{{
+" not works in Windows
 command! -bar OpenSymbolicTarget
     \ if getftype(expand('%:p')) ==# 'link' |
     \   let s:filename = resolve(expand('%:p')) |
@@ -178,7 +179,7 @@ SetG number relativenumber
 set pastetoggle=<F2>
 set scrolloff=2
 set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
-set shortmess+=mrx shortmess-=i shortmess-=t shortmess-=T
+set shortmess+=mrx shortmess-=t shortmess-=T
 set showcmd
 set showtabline=2
 set splitbelow splitright
@@ -687,15 +688,21 @@ function! s:ignore(...) abort
     let bname = fnamemodify(bufname(a:1), ':t')
     let bt = getbufvar(a:1, '&buftype')
     let fts = getbufvar(a:1, '&filetype')
+    let wt = win_gettype(bufwinnr(a:1))
   else
     let bh = &bufhidden
     let bl = &buflisted
     let bname = expand('%:t')
     let bt = &buftype
     let fts = &filetype
+    let wt = win_gettype()
   endif
 
   if !(bl && empty(bt) && (bh ==# '' ? &hidden : bh ==# 'hide'))
+    return 1
+  endif
+
+  if !(wt ==# '' || wt ==# 'unknown')
     return 1
   endif
 
@@ -708,7 +715,7 @@ function! s:ignore(...) abort
   return bname =~# '^\[Command\ Line\]$'
 endfunction "}}}
 
-function! Highlight() abort "{{{
+function! HighlightTrailingSpace() abort "{{{
   if s:ignore()
     if get(w:, 'spaceid', 0)
       call matchdelete(w:spaceid)
@@ -722,7 +729,7 @@ function! Highlight() abort "{{{
     endif
   endif
 endfunction
-Autocmd BufWinEnter,ColorScheme,FileType * call Highlight()
+Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
 "}}}
 
 " 指定範囲の空行を削除 "{{{
@@ -905,6 +912,8 @@ Highlight DiffText guifg=NONE
 
 " 画面の81桁目にcolorcolumnを表示
 Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
+    \ let &colorcolumn = 81 - s:winleftpad()
+Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
     \ let &colorcolumn = 81 - s:winleftpad()
 "}}}
 

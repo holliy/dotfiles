@@ -17,6 +17,11 @@ elseif has('nvim')
   if exists(':GuiWindowOpacity') ==# 2
     GuiWindowOpacity 0.9
   endif
+else
+  Autocmd GUIEnter *
+      \ if exists(':VimTweakSetAlpha') ==# 2 |
+      \   Autocmd GUIEnter * VimTweakSetAlpha 235 |
+      \ endif
 endif
 
 if get(g:, 'colors_name', 'desert') ==# 'desert'

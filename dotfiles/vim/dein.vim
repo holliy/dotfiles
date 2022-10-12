@@ -13,9 +13,10 @@ endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
 let g:dein#enable_name_conversion = 1
+let g:dein#enable_notification = v:true
 " let g:dein#install_process_timeout = 60
-let g:dein#install_progress_type = 'echo'
-let g:dein#install_message_type = 'tabline'
+let g:dein#install_progress_type = 'tabline'
+let g:dein#install_message_type = 'echo'
 
 if dein#load_state(s:dein_dir)
   call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim'])
@@ -32,6 +33,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('kana/vim-operator-user')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
+  call dein#add('mattn/vimtweak', {'if': g:vimrc#is_windows})
   call dein#add('prabirshrestha/vim-lsp')
   call dein#add('rbtnn/vim-ambiwidth')
   " call dein#add('Shougo/neocomplete.vim')
@@ -355,6 +357,11 @@ endif "}}}
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
+
+  if &encoding !=# 'utf-8'
+    let g:gitgutter_sign_removed_first_line = '_'
+    let g:gitgutter_sign_removed_above_and_below = '_'
+  endif
 endif "}}}
 
 " vim-haskell-indent "{{{
