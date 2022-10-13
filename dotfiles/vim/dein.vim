@@ -33,7 +33,6 @@ if dein#load_state(s:dein_dir)
   call dein#add('kana/vim-operator-user')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
-  call dein#add('mattn/vimtweak', {'if': g:vimrc#is_windows})
   call dein#add('prabirshrestha/vim-lsp')
   call dein#add('rbtnn/vim-ambiwidth')
   " call dein#add('Shougo/neocomplete.vim')
@@ -52,6 +51,10 @@ if dein#load_state(s:dein_dir)
   call dein#add('vim-denops/denops.vim', {'if': executable('deno')})
   call dein#add('vim-jp/vimdoc-ja')
 
+  if g:vimrc#is_windows
+    call dein#add('mattn/vimtweak', {'if': !has('nvim') && g:vimrc#is_gui})
+  endif
+
   call dein#end()
 
   if !(g:vimrc#is_unix && $USER ==# 'root')
@@ -61,6 +64,10 @@ endif
 
 if g:vimrc#is_starting && dein#check_install()
   call dein#install()
+endif
+
+if !isdirectory(dein#util#_get_runtime_path()) || empty(readdir(dein#util#_get_runtime_path()))
+  call dein#recache_runtimepath()
 endif
 
 " caw "{{{
@@ -86,27 +93,30 @@ if dein#tap('caw')
 endif "}}}
 
 " ddc.vim "{{{
-if dein#tap('ddc') && executable('deno')
-  call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
+if dein#tap('ddc')
+  function s:ddc_sourced() "{{{
+    call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
 
-  call ddc#custom#patch_global('sourceOptions', {
-      \ '_': {
-      \   'ignoreCase': v:true,
-      \   'matchers': ['matcher_head'],
-      \   'sorters': ['sorter_rank']
-      \ }})
-  call ddc#custom#patch_global('sourceOptions', {
-      \ 'around': {'mark': 'A'},
-      \ 'vim-lsp': {
-      \   'mark': 'L',
-      \   'sorters': ['sorter_rank', 'sorter_ascii']
-      \ }
-      \ })
+    call ddc#custom#patch_global('sourceOptions', {
+        \ '_': {
+        \   'ignoreCase': v:true,
+        \   'matchers': ['matcher_head'],
+        \   'sorters': ['sorter_rank']
+        \ }})
+    call ddc#custom#patch_global('sourceOptions', {
+        \ 'around': {'mark': 'A'},
+        \ 'vim-lsp': {
+        \   'mark': 'L',
+        \   'sorters': ['sorter_rank', 'sorter_ascii']
+        \ }
+        \ })
 
-  " call ddc#custom#patch_global('autoCompleteDelay', 50)
-  call ddc#custom#patch_global('completionMode', 'manual')
+    " call ddc#custom#patch_global('autoCompleteDelay', 50)
+    call ddc#custom#patch_global('completionMode', 'manual')
 
-  call ddc#enable()
+    call ddc#enable()
+  endfunction "}}}
+  call dein#set_hook('ddc', 'hook_source', function('s:ddc_sourced'))
 
   inoremap <silent><expr> <C-n> ddc#map#pum_visible() ? '<C-n>' : ddc#map#manual_complete()
   inoremap <silent><expr> <C-p> ddc#map#pum_visible() ? '<C-p>' : ddc#map#manual_complete()
@@ -392,7 +402,10 @@ if dein#tap('lsp')
   nnoremap <Space>lr <Plug>(lsp-rename)
   nnoremap <Space>lc <Plug>(lsp-code-action)
 
-  Autocmd User lsp_buffer_enabled setlocal foldmethod=expr
+  Autocmd User lsp_buffer_enabled
+      \ if &filetype !=# 'vim' |
+      \   setlocal foldmethod=expr |
+      \ endif
   Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
