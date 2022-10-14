@@ -1,7 +1,7 @@
-set guicursor=a:block-Cursor
 set guioptions-=a guioptions-=e guioptions-=m guioptions-=t guioptions-=T
 set guioptions+=c
 set linespace=1
+set lines=30 columns=100
 
 if g:vimrc#is_windows
   set guifont=Consolas:h10.5 guifontwide=ＭＳ_ゴシック:h12

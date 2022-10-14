@@ -9,7 +9,11 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_cygwin = has('win32unix')
   let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
   let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
-  let g:vimrc#is_gui = has('gui_running') || has('nvim')
+  if has('nvim')
+    let g:vimrc#is_gui = nvim_list_uis()[0].chan ==# 1
+  else
+    let g:vimrc#is_gui = has('gui_running')
+  endif
   let g:vimrc#is_starting = 1
   let g:vimrc#dotvim = expand('~/.vim')
 endif
@@ -154,6 +158,7 @@ set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG foldenable foldmethod=marker
 SetG formatoptions+=Bjmr
+set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
 set hidden
 set history=1000
