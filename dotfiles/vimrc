@@ -67,25 +67,318 @@ endif
 
 scriptencoding utf-8 "}}}
 
+" functions "{{{
+function! s:mkdir(path) abort "{{{
+  " return: ディレクトリを読み込めない(作成できない)とき0, それ以外は1
+  if a:path =~# '^.\{-}://' " Non local file, ignore
+    return 0
+  endif
+
+  for p in split(a:path, ',')
+    if !isdirectory(p)
+      if !filereadable(p) && !filewritable(p)
+        call mkdir(p, 'p')
+        return 1
+      endif
+    else
+      return 1
+    endif
+  endfor
+
+  echoerr a:path . ' should be directory and readable.'
+  return 0
+endfunction "}}}
+
+" quickfixリストの文字化け回避 "{{{
+function! QfMakeConv(fenc, enc) abort
+  let qflist = getqflist()
+  for i in qflist
+    let i.text = iconv(i.text, a:fenc, a:enc)
+  endfor
+  call setqflist(qflist, 'r')
+endfunction "}}}
+
+" 外部スクリプトのローカル関数を呼び出す "{{{
+" https://thinca.hatenablog.com/entry/20111228/1325077104
+function! CallInternalFunc(f, ...) abort
+  let [file, func] = a:f =~# ':' ?  split(a:f, ':') : [expand('%:p'), a:f]
+  let fname = matchstr(func, '^\w*')
+  let cfunc = ''
+
+  " Get sourced scripts.
+  redir => slist
+  silent scriptnames
+  redir END
+
+  let filepat = '\V' . substitute(file, '\\', '/', 'g') . '\v%(\.vim)?$'
+  for s in split(slist, "\n")
+    let p = matchlist(s, '^\s*\(\d\+\):\s*\(.*\)$')
+    if empty(p)
+      continue
+    endif
+    let [nr, sfile] = p[1 : 2]
+    let sfile = fnamemodify(sfile, ':p:gs?\\?/?')
+    if sfile =~# filepat && exists(printf("*\<SNR>%d_%s", nr, fname))
+      let cfunc = printf("\<SNR>%d_%s", nr, func)
+      break
+    endif
+  endfor
+
+  if !exists('nr')
+    echoerr 'Not sourced: ' . file
+    return
+  elseif !exists('cfunc')
+    let file = fnamemodify(file, ':p')
+    echoerr printf(
+        \ 'File found, but function is not defined: %s: %s()', file, fname)
+    return
+  endif
+
+  return 0 <= match(func, '^\w*\s*(.*)\s*$')
+      \ ? eval(cfunc) : call(cfunc, a:000)
+endfunction "}}}
+
+" マップ時のv:countを<Esc>を使わずに削除 "{{{
+" ex. noremap <expr> j <SID>delcount(v:count) . 'gj'
+function! s:delcount(count) abort
+  return !a:count ? '' : repeat("\<Del>", strlen(string(a:count)))
+endfunction "}}}
+
+" 自動で生成されるバッファか判定 "{{{
+let g:vimrc#generate_filetypes = ['help', 'netrw', 'qf']
+
+" a:1 - バッファ番号 (0のとき現在のバッファに対して判定)
+function! s:ignore(...) abort
+  if a:0 && a:1 !=# 0
+    let bh = getbufvar(a:1, '&bufhidden')
+    let bl = getbufvar(a:1, '&buflisted')
+    let bname = fnamemodify(bufname(a:1), ':t')
+    let bt = getbufvar(a:1, '&buftype')
+    let fts = getbufvar(a:1, '&filetype')
+    let wt = win_gettype(bufwinnr(a:1))
+  else
+    let bh = &bufhidden
+    let bl = &buflisted
+    let bname = expand('%:t')
+    let bt = &buftype
+    let fts = &filetype
+    let wt = win_gettype()
+  endif
+
+  if !(bl && empty(bt) && (bh ==# '' ? &hidden : bh ==# 'hide'))
+    return 1
+  endif
+
+  if !(wt ==# '' || wt ==# 'unknown')
+    return 1
+  endif
+
+  for ft in split(fts, '\.')
+    if index(g:vimrc#generate_filetypes, ft) !=# -1
+      return 1
+    endif
+  endfor
+
+  return bname =~# '^\[Command\ Line\]$'
+endfunction "}}}
+
+" 行末の空白をハイライト "{{{
+function! HighlightTrailingSpace() abort
+  if s:ignore()
+    if get(w:, 'spaceid', 0)
+      call matchdelete(w:spaceid)
+      let w:spaceid = 0
+    endif
+  else
+    highlight TrailingWhiteSpace ctermbg=darkred guibg=#ff0000
+    if !get(w:, 'spaceid', 0)
+      " 行末の空白をハイライト
+      let w:spaceid = matchadd('TrailingWhiteSpace', '\s\+$', 11)
+    endif
+  endif
+endfunction "}}}
+
+" 指定範囲の空行を削除 "{{{
+function! s:delemptyline(start, last) abort
+  " return: 削除した行の数
+  let save_cursor = getcurpos()
+
+  let n = 0 | let end = a:last
+  call cursor(a:start, 1)
+  while 1
+    let l = search('^$', 'c', end)
+    if l <= 0 | break | endif
+
+    execute l . 'delete' '_'
+    let n += 1 | let end -= 1
+  endwhile
+
+  call setpos('.', save_cursor)
+  return n
+endfunction "}}}
+
+" バックスラッシュを消して結合(J) "{{{
+function! s:J() range
+  set operatorfunc=Concat
+  return 'g@' . max([a:lastline - a:firstline - 1, 1]) . 'j'
+endfunction
+
+function! Concat(type) abort
+  let js_save = &joinspaces
+  let sel_save = &selection
+  set selection=inclusive
+
+  let startline = line("'[")
+  let endline = line("']")
+
+  let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
+  if startline ==# endline
+    let endline += 1
+  endif
+
+  let endline -= s:delemptyline(startline, endline)
+  if startline < endline
+    let lines = getline(startline + 1, endline)
+
+    if &filetype !~# '\v(\.|^)text(\.|$)'
+      if synname !~# '\v(Comment|String)$'
+        set nojoinspaces
+      else
+        " call map(lines, "substitute(v:val, '^\\s*' . substitute(&commentstring, '^\\s*\\|%s', '', 'g'), '', '')")
+      endif
+    endif
+
+    if &filetype =~# '\v(\.|^)vim(\.|$)'
+      call map(lines, "substitute(v:val, '^\\s*\\\\', '', '')")
+      let lines = [getline(startline)] + lines
+    else
+      let lastline = lines[-1]
+      let lines = [getline(startline)] + lines[:-2]
+      call map(lines, "substitute(v:val, '\\\\$', '', '')")
+      let lines += [lastline]
+    endif
+
+    call setline(startline, lines)
+    execute 'join' endline - startline + 1
+  endif
+
+  let &joinspaces = js_save
+  let &selection = sel_save
+endfunction
+
+noremap <expr> J <SID>J()
+noremap <Space>J J
+sunmap J
+ounmap J
+sunmap <Space>J
+ounmap <Space>J
+
+nnoremap <silent> <Space><Space>J :<C-u>set operatorfunc=Concat<CR>g@
+nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
+"}}}
+
+" ウィンドウの左側の余白の幅 "{{{
+function! s:winleftpad() abort
+  if &number
+    let lnrwidth = max([strlen(string(line('$'))) + 1, &numberwidth])
+  elseif &relativenumber
+    let lnrwidth = max([strlen(string(winheight('.'))) + 1, &numberwidth])
+  else
+    let lnrwidth = 0
+  endif
+
+  if &signcolumn ==# 'yes'
+    let signwidth = 2
+  elseif &signcolumn ==# 'no'
+    let signwidth = 0
+  elseif &signcolumn ==# 'number' && &number
+    let signwidth = 0
+  else
+    " TODO: 表示されない場合
+    let signwidth = 2
+  endif
+
+  return lnrwidth + signwidth + &foldcolumn
+endfunction "}}}
+
+function! Foldtext() abort "{{{
+  let save_cursor = getcurpos()
+  call cursor(v:foldstart, 1)
+
+  let indentstart = 0
+  let pattern = '^\S'
+  while indentstart == 0
+    let indentstart = search(pattern, 'bcnW')
+    let pattern = '^\s' . strpart(pattern, 1)
+  endwhile
+  let shift = repeat(' ', v:foldlevel -
+      \ (indentstart == v:foldstart ? 1 : foldlevel(indentstart) + 1))
+
+  call setpos('.', save_cursor)
+
+  let linelen = winwidth('.') - s:winleftpad()
+  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
+  let range = foldclosedend(v:foldstart) - foldclosed(v:foldstart) + 1
+
+  let comment = split(substitute(&commentstring, '\s', '', 'g'), '%s')
+  let commentstart = len(comment) < 1 ? '' : comment[0]
+  let commentend = len(comment) < 2 ? '' : comment[1]
+
+  let left = getline(v:foldstart)
+  let pattern = printf('\V\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)',
+      \ commentstart, marker, commentend)
+  let left = substitute(left, pattern, '', '')
+  let pattern = printf('\V\^\s\*\zs\(%s\)\?\s\*', commentstart)
+  let left = substitute(left, pattern, '', '')
+  let left = substitute(left, '\t', repeat(' ', &tabstop), 'g')
+  let left = shift . left
+  let leftlen = strdisplaywidth(left)
+
+  let right = range . ' [' . v:foldlevel . ']'
+  let rightlen = len(right)
+
+  let tmp = strpart(left, 0, linelen - rightlen)
+  let tmplen = len(tmp)
+
+  if leftlen > tmplen
+    let left = strpart(tmp, 0, tmplen - 4) . '... '
+    let leftlen = tmplen
+  endif
+
+  let fill = repeat(' ', linelen - (leftlen + rightlen))
+
+  return left . fill . right
+endfunction "}}}
+
+" cmapやcabbrev用 "{{{
+function! Cmdwhen(mode, lhs, rhs) abort
+  if getcmdtype() ==# a:mode
+    return a:rhs
+  else
+    return a:lhs
+  endif
+endfunction "}}}
+"}}}
+
 " コマンド "{{{
-cnoreabbrev <expr> w] getcmdtype() ==# ':' ? 'write' : 'w]'
-cnoreabbrev <expr> new  getcmdtype() ==# ':' ? 'enew' : 'new'
-cnoreabbrev <expr> newtab  getcmdtype() ==# ':' ? 'tabnew' : 'newtab'
+cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
+cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
+cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 
 command! -bar -nargs=0 Evimrc edit $MYVIMRC
 command! -bar -nargs=0 Egvimrc edit $MYGVIMRC
 command! -bar -nargs=0 Svimrc source $MYVIMRC
-cnoreabbrev ev Evimrc
-cnoreabbrev evimrc Evimrc
-cnoreabbrev egv Egvimrc
-cnoreabbrev egvimrc Egvimrc
-cnoreabbrev sv Svimrc
-cnoreabbrev svimrc Svimrc
+cnoreabbrev <expr> ev Cmdwhen(':', 'ev', 'Evimrc')
+cnoreabbrev <expr> evimrc Cmdwhen(':', 'evimrc', 'Evimrc')
+cnoreabbrev <expr> egv Cmdwhen(':', 'egv', 'Egvimrc')
+cnoreabbrev <expr> egvimrc Cmdwhen(':', 'egvimrc', 'Egvimrc')
+cnoreabbrev <expr> sv Cmdwhen(':', 'sv', 'Svimrc')
+cnoreabbrev <expr> svimrc Cmdwhen(':', 'svimrc', 'Svimrc')
 
 if g:vimrc#is_gui
   command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
-  cnoreabbrev sgv Sgvimrc
-  cnoreabbrev sgvimrc Sgvimrc
+  cnoreabbrev <expr> sgv Cmdwhen(':', 'sgv', 'Sgvimrc')
+  cnoreabbrev <expr> sgvimrc Cmdwhen(':', 'sgvimrc', 'Sgvimrc')
 endif
 
 command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
@@ -156,7 +449,7 @@ SetG cursorline
 set diffopt+=context:2,vertical
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
-SetG foldenable foldmethod=marker
+SetG foldenable foldmethod=marker foldtext=Foldtext()
 SetG formatoptions+=Bjmr
 set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
@@ -245,6 +538,18 @@ endif
 if has('patch-8.2.4325')
   set wildoptions=pum
 endif "}}}
+
+" バックアップフォルダ等を作成 "{{{
+for s:d in filter(
+    \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
+    \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
+    \   exists('+loadplugins') && &loadplugins ? 'packpath' : '',
+    \   'viewdir'], 'v:val !=# ""')
+  if s:d != '' && !s:mkdir(eval('&' . s:d))
+    execute 'set' s:d . '&'
+  endif
+endfor
+unlet s:d "}}}
 
 " $VIMRUNTIME 以下の不要なプラグインを読み込まない "{{{
 let g:loaded_2html_plugin = 1
@@ -593,305 +898,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endif "}}}
 endif "}}}
 
-" functions "{{{
-function! s:mkdir(path) abort "{{{
-  " return: ディレクトリを読み込めない(作成できない)とき0, それ以外は1
-  if a:path =~# '^.\{-}://' " Non local file, ignore
-    return 0
-  endif
-
-  for p in split(a:path, ',')
-    if !isdirectory(p)
-      if !filereadable(p) && !filewritable(p)
-        call mkdir(p, 'p')
-        return 1
-      endif
-    else
-      return 1
-    endif
-  endfor
-
-  echoerr a:path . ' should be directory and readable.'
-  return 0
-endfunction "}}}
-
-" バックアップフォルダ等を作成 "{{{
-for s:d in filter(
-    \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
-    \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
-    \   exists('+loadplugins') && &loadplugins ? 'packpath' : '',
-    \   'viewdir'], 'v:val !=# ""')
-  if s:d != '' && !s:mkdir(eval('&' . s:d))
-    execute 'set' s:d . '&'
-  endif
-endfor
-unlet s:d "}}}
-
-" quickfixの文字化け回避 "{{{
-function! QfMakeConv(fenc, enc) abort
-  let qflist = getqflist()
-  for i in qflist
-    let i.text = iconv(i.text, a:fenc, a:enc)
-  endfor
-  call setqflist(qflist, 'r')
-endfunction "}}}
-
-" 外部スクリプトのローカル関数を呼び出す "{{{
-" https://thinca.hatenablog.com/entry/20111228/1325077104
-function! CallInternalFunc(f, ...) abort
-  let [file, func] = a:f =~# ':' ?  split(a:f, ':') : [expand('%:p'), a:f]
-  let fname = matchstr(func, '^\w*')
-  let cfunc = ''
-
-  " Get sourced scripts.
-  redir => slist
-  silent scriptnames
-  redir END
-
-  let filepat = '\V' . substitute(file, '\\', '/', 'g') . '\v%(\.vim)?$'
-  for s in split(slist, "\n")
-    let p = matchlist(s, '^\s*\(\d\+\):\s*\(.*\)$')
-    if empty(p)
-      continue
-    endif
-    let [nr, sfile] = p[1 : 2]
-    let sfile = fnamemodify(sfile, ':p:gs?\\?/?')
-    if sfile =~# filepat && exists(printf("*\<SNR>%d_%s", nr, fname))
-      let cfunc = printf("\<SNR>%d_%s", nr, func)
-      break
-    endif
-  endfor
-
-  if !exists('nr')
-    echoerr 'Not sourced: ' . file
-    return
-  elseif !exists('cfunc')
-    let file = fnamemodify(file, ':p')
-    echoerr printf(
-        \ 'File found, but function is not defined: %s: %s()', file, fname)
-    return
-  endif
-
-  return 0 <= match(func, '^\w*\s*(.*)\s*$')
-      \ ? eval(cfunc) : call(cfunc, a:000)
-endfunction "}}}
-
-" マップ時のv:countを<Esc>を使わずに削除 "{{{
-" ex. noremap <expr> j <SID>delcount(v:count) . 'gj'
-function! s:delcount(count) abort
-  return !a:count ? '' : repeat("\<Del>", strlen(string(a:count)))
-endfunction "}}}
-
-" 自動で生成されるバッファか判定 "{{{
-let g:vimrc#generate_filetypes = ['help', 'netrw', 'qf']
-
-" a:1 - バッファ番号 (0のとき現在のバッファに対して判定)
-function! s:ignore(...) abort
-  if a:0 && a:1 !=# 0
-    let bh = getbufvar(a:1, '&bufhidden')
-    let bl = getbufvar(a:1, '&buflisted')
-    let bname = fnamemodify(bufname(a:1), ':t')
-    let bt = getbufvar(a:1, '&buftype')
-    let fts = getbufvar(a:1, '&filetype')
-    let wt = win_gettype(bufwinnr(a:1))
-  else
-    let bh = &bufhidden
-    let bl = &buflisted
-    let bname = expand('%:t')
-    let bt = &buftype
-    let fts = &filetype
-    let wt = win_gettype()
-  endif
-
-  if !(bl && empty(bt) && (bh ==# '' ? &hidden : bh ==# 'hide'))
-    return 1
-  endif
-
-  if !(wt ==# '' || wt ==# 'unknown')
-    return 1
-  endif
-
-  for ft in split(fts, '\.')
-    if index(g:vimrc#generate_filetypes, ft) !=# -1
-      return 1
-    endif
-  endfor
-
-  return bname =~# '^\[Command\ Line\]$'
-endfunction "}}}
-
-function! HighlightTrailingSpace() abort "{{{
-  if s:ignore()
-    if get(w:, 'spaceid', 0)
-      call matchdelete(w:spaceid)
-      let w:spaceid = 0
-    endif
-  else
-    highlight TrailingWhiteSpace ctermbg=darkred guibg=#ff0000
-    if !get(w:, 'spaceid', 0)
-      " 行末の空白をハイライト
-      let w:spaceid = matchadd('TrailingWhiteSpace', '\s\+$', 11)
-    endif
-  endif
-endfunction
-Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
-"}}}
-
-" 指定範囲の空行を削除 "{{{
-function! s:delemptyline(start, last) abort
-  " return: 削除した行の数
-  let save_cursor = getcurpos()
-
-  let n = 0 | let end = a:last
-  call cursor(a:start, 1)
-  while 1
-    let l = search('^$', 'c', end)
-    if l <= 0 | break | endif
-
-    execute l . 'delete' '_'
-    let n += 1 | let end -= 1
-  endwhile
-
-  call setpos('.', save_cursor)
-  return n
-endfunction "}}}
-
-" バックスラッシュを消して結合(J) "{{{
-function! s:J() range
-  set operatorfunc=Concat
-  return 'g@' . max([a:lastline - a:firstline - 1, 1]) . 'j'
-endfunction
-
-function! Concat(type) abort
-  let js_save = &joinspaces
-  let sel_save = &selection
-  set selection=inclusive
-
-  let startline = line("'[")
-  let endline = line("']")
-
-  let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
-  if startline ==# endline
-    let endline += 1
-  endif
-
-  let endline -= s:delemptyline(startline, endline)
-  if startline < endline
-    let lines = getline(startline + 1, endline)
-
-    if &filetype !~# '\v(\.|^)text(\.|$)'
-      if synname !~# '\v(Comment|String)$'
-        set nojoinspaces
-      else
-        " call map(lines, "substitute(v:val, '^\\s*' . substitute(&commentstring, '^\\s*\\|%s', '', 'g'), '', '')")
-      endif
-    endif
-
-    if &filetype =~# '\v(\.|^)vim(\.|$)'
-      call map(lines, "substitute(v:val, '^\\s*\\\\', '', '')")
-      let lines = [getline(startline)] + lines
-    else
-      let lastline = lines[-1]
-      let lines = [getline(startline)] + lines[:-2]
-      call map(lines, "substitute(v:val, '\\\\$', '', '')")
-      let lines += [lastline]
-    endif
-
-    call setline(startline, lines)
-    execute 'join' endline - startline + 1
-  endif
-
-  let &joinspaces = js_save
-  let &selection = sel_save
-endfunction
-
-noremap <expr> J <SID>J()
-noremap <Space>J J
-sunmap J
-ounmap J
-sunmap <Space>J
-ounmap <Space>J
-
-nnoremap <silent> <Space><Space>J :<C-u>set operatorfunc=Concat<CR>g@
-nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
-"}}}
-
-" ウィンドウの左側の余白の幅 "{{{
-function! s:winleftpad() abort
-  if &number
-    let lnrwidth = max([strlen(string(line('$'))) + 1, &numberwidth])
-  elseif &relativenumber
-    let lnrwidth = max([strlen(string(winheight('.'))) + 1, &numberwidth])
-  else
-    let lnrwidth = 0
-  endif
-
-  if &signcolumn ==# 'yes'
-    let signwidth = 2
-  elseif &signcolumn ==# 'no'
-    let signwidth = 0
-  elseif &signcolumn ==# 'number' && &number
-    let signwidth = 0
-  else
-    " TODO: 表示されない場合
-    let signwidth = 2
-  endif
-
-  return lnrwidth + signwidth + &foldcolumn
-endfunction "}}}
-
-set foldtext=Foldtext() "{{{
-function! Foldtext() abort
-  let save_cursor = getcurpos()
-  call cursor(v:foldstart, 1)
-
-  let indentstart = 0
-  let pattern = '^\S'
-  while indentstart == 0
-    let indentstart = search(pattern, 'bcnW')
-    let pattern = '^\s' . strpart(pattern, 1)
-  endwhile
-  let shift = repeat(' ', v:foldlevel -
-      \ (indentstart == v:foldstart ? 1 : foldlevel(indentstart) + 1))
-
-  call setpos('.', save_cursor)
-
-  let linelen = winwidth('.') - s:winleftpad()
-  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
-  let range = foldclosedend(v:foldstart) - foldclosed(v:foldstart) + 1
-
-  let comment = split(substitute(&commentstring, '\s', '', 'g'), '%s')
-  let commentstart = len(comment) < 1 ? '' : comment[0]
-  let commentend = len(comment) < 2 ? '' : comment[1]
-
-  let left = getline(v:foldstart)
-  let pattern = printf('\V\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)',
-      \ commentstart, marker, commentend)
-  let left = substitute(left, pattern, '', '')
-  let pattern = printf('\V\^\s\*\zs\(%s\)\?\s\*', commentstart)
-  let left = substitute(left, pattern, '', '')
-  let left = substitute(left, '\t', repeat(' ', &tabstop), 'g')
-  let left = shift . left
-  let leftlen = strdisplaywidth(left)
-
-  let right = range . ' [' . v:foldlevel . ']'
-  let rightlen = len(right)
-
-  let tmp = strpart(left, 0, linelen - rightlen)
-  let tmplen = len(tmp)
-
-  if leftlen > tmplen
-    let left = strpart(tmp, 0, tmplen - 4) . '... '
-    let leftlen = tmplen
-  endif
-
-  let fill = repeat(' ', linelen - (leftlen + rightlen))
-
-  return left . fill . right
-endfunction "}}}
-"}}}
-
-" ColorScheme等 "{{{
+" ColorScheme "{{{
 set background=dark
 Highlight ColorColumn ctermbg=233 guibg=#181818
 " Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
@@ -914,12 +921,6 @@ Highlight DiffAdd guifg=NONE
 Highlight DiffChange guifg=NONE
 Highlight DiffDelete guifg=NONE
 Highlight DiffText guifg=NONE
-
-" 画面の81桁目にcolorcolumnを表示
-Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
-    \ let &colorcolumn = 81 - s:winleftpad()
-Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
-    \ let &colorcolumn = 81 - s:winleftpad()
 "}}}
 
 " autocmd "{{{
@@ -933,7 +934,14 @@ Autocmd BufReadPost ?*
     \ if line("'\"") > 0 && line ("'\"") <= line('$') |
     \   execute "normal! g'\"zzzv" |
     \ endif
-" }}}
+"}}}
+
+" 画面の81桁目にcolorcolumnを表示 "{{{
+Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
+    \ let &colorcolumn = 81 - s:winleftpad()
+Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
+    \ let &colorcolumn = 81 - s:winleftpad()
+"}}}
 
 " その他 "{{{
 " Autocmd QuickfixCmdPost make call QfMakeConv(&fileencoding, &encoding)
@@ -963,6 +971,7 @@ if has('nvim')
 else
   Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
 endif
+Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
 
 augroup Vimrc_bin
   autocmd!
@@ -976,7 +985,8 @@ augroup Vimrc_bin
       \   execute 'Autocmd BufWritePost <buffer=abuf> setlocal nomodified' |
       \ endif
 augroup END
-"}}}}}}
+"}}}
+"}}}
 
 " plugin "{{{
 if has('patch-7.4.1674')

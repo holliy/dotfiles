@@ -13,7 +13,6 @@ endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
 let g:dein#enable_name_conversion = 1
-let g:dein#enable_notification = v:true
 " let g:dein#install_process_timeout = 60
 let g:dein#install_progress_type = 'tabline'
 let g:dein#install_message_type = 'echo'
