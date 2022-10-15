@@ -145,7 +145,7 @@ function! s:delcount(count) abort
 endfunction "}}}
 
 " 自動で生成されるバッファか判定 "{{{
-let g:vimrc#generate_filetypes = ['help', 'netrw', 'qf']
+let g:vimrc#generate_filetypes = ['git', 'help', 'netrw', 'qf']
 
 " a:1 - バッファ番号 (0のとき現在のバッファに対して判定)
 function! s:ignore(...) abort
@@ -358,9 +358,55 @@ function! Cmdwhen(mode, lhs, rhs) abort
     return a:lhs
   endif
 endfunction "}}}
+
+function! OpenSymbolicTarget() abort "{{{
+  " not works in Windows
+  let filename = resolve(expand('%:p'))
+
+  if getftype(expand('%:p')) !=# 'link'
+    echohl Error
+    echo 'not symbolic link'
+    echohl None
+
+    return
+  endif
+
+  let view = winsaveview()
+
+  if winnr('$') > 1
+    " すべてのウィンドウに対して閉じないようにしつつ対象のバッファを変更
+    let bn = bufnr()
+    let buflist = tabpagebuflist()
+    call remove(buflist, index(buflist, bn))
+    let tmpbn = buflist[0]
+    let restwins = []
+
+    for wn in range(winnr('$'))
+      if winbufnr(wn) ==# bn
+        call insert(restwins, wn)
+        execute wn . 'windo' 'buffer' tmpbn
+      endif
+    endfor
+
+    execute 'bwipeout' bn
+    execute 'edit' filename
+    let bn = bufnr()
+
+    for wn in restwins
+      execute wn . 'windo' 'buffer' bn
+    endfor
+  else
+    bwipeout
+    execute 'edit' filename
+  endif
+
+  call winrestview(view)
+  normal! zv
+endfunction "}}}
 "}}}
 
 " コマンド "{{{
+" vimrc等を読み込む "{{{
 cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
 cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
 cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
@@ -379,8 +425,9 @@ if g:vimrc#is_gui
   command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
   cnoreabbrev <expr> sgv Cmdwhen(':', 'sgv', 'Sgvimrc')
   cnoreabbrev <expr> sgvimrc Cmdwhen(':', 'sgvimrc', 'Sgvimrc')
-endif
+endif "}}}
 
+" SetG, Autocmd, AutocmgFT, Highlight "{{{
 command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
 command! -bar -complete=highlight -nargs=*
     \ Highlight Autocmd ColorScheme * highlight <args>
@@ -411,25 +458,18 @@ AutocmdFT vim
 AutocmdFT vim
     \ syntax region vimSet matchgroup=vimCommand start='\<\%(SetG\)\>' skip='\%(\\\\\)*\\.' end='$' matchgroup=vimNotation end='<[cC][rR]>' keepend oneline contains=vimSetEqual,vimOption,vimErrSetting,vimComment,vimSetString,vimSetMod
  "}}}
-
-" シンボリックリンク先のファイルを開く "{{{
-" not works in Windows
-command! -bar OpenSymbolicTarget
-    \ if getftype(expand('%:p')) ==# 'link' |
-    \   let s:filename = resolve(expand('%:p')) |
-    \   bwipeout |
-    \   execute 'edit' s:filename |
-    \   unlet s:filename |
-    \ else |
-    \   echohl Error | echo 'not symbolic link' | echohl None |
-    \ endif
 "}}}
 
-if !exists(':DiffOrig')
+" シンボリックリンク先のファイルを開く "{{{
+command! -bar OpenSymbolicTarget call OpenSymbolicTarget()
+"}}}
+
+if !exists(':DiffOrig') "{{{
   command -bar -nargs=0 DiffOrig
       \ vertical new | setlocal buftype=nofile |
       \ read ++edit # | 0d_ | diffthis | wincmd p | diffthis
 endif "}}}
+"}}}
 
 " オプション "{{{
 " options "{{{
@@ -446,7 +486,7 @@ SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG cursorline
-set diffopt+=context:2,vertical
+set diffopt+=context:2,vertical,algorithm:histogram
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG foldenable foldmethod=marker foldtext=Foldtext()
@@ -957,7 +997,7 @@ AutocmdFT * setlocal formatoptions-=o
 AutocmdFT c setlocal omnifunc=ccomplete#Complete
 AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
-AutocmdFT help,netrw,qf,quickrun
+AutocmdFT git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf
     \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc' line('.')<CR>
