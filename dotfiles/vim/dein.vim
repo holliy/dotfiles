@@ -1,14 +1,28 @@
+if v:version < 704
+  echomsg 'dein.vim works on Vim 7.4'
+  finish
+endif
+
 let s:dein_dir = g:vimrc#dotvim . '/dein'
 let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
-  if executable('git')
-    call system('git clone https://github.com/Shougo/dein.vim ' .
-        \ shellescape(s:dein_repo_dir))
-    execute 'helptags' s:dein_repo_dir . '/doc'
-  else
+  if !executable('git')
     echomsg 'no plugins installed.'
     finish
   endif
+
+  if v:version >= 802
+    let s:arg_branch = ''
+  elseif v:version > 704
+    let s:arg_branch = '-b 2.2 '
+  else
+    let s:arg_branch = '-b 1.5 '
+  endif
+
+  call system('git clone https://github.com/Shougo/dein.vim ' .
+      \ s:arg_branch . shellescape(s:dein_repo_dir))
+  execute 'helptags' s:dein_repo_dir . '/doc'
+  unlet s:arg_branch
 endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
@@ -65,7 +79,9 @@ if g:vimrc#is_starting && dein#check_install()
   call dein#install()
 endif
 
-if !isdirectory(dein#util#_get_runtime_path()) || empty(readdir(dein#util#_get_runtime_path()))
+if !isdirectory(dein#util#_get_runtime_path()) ||
+    \ (empty(has('*readdir') ? readdir(dein#util#_get_runtime_path()) :
+    \   glob(dein#util#_get_runtime_path() . '/*', 0, 1)))
   call dein#recache_runtimepath()
 endif
 
@@ -93,7 +109,7 @@ endif "}}}
 
 " ddc.vim "{{{
 if dein#tap('ddc')
-  function s:ddc_sourced() "{{{
+  function s:ddc_sourced() abort "{{{
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
 
     call ddc#custom#patch_global('sourceOptions', {
@@ -140,7 +156,7 @@ endif "}}}
 if dein#tap('lexima')
   let g:lexima_map_escape = 'jk'
 
-  function! s:lexima_sourced(...) "{{{
+  function! s:lexima_sourced(...) abort "{{{
     let quotes = [
         \   {'start': "'", 'end': "'"}, {'start': '"', 'end': '"'}
         \ ]

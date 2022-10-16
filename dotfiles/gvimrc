@@ -12,19 +12,20 @@ elseif g:vimrc#is_unix
 endif
 
 if has('kaoriya')
-  set transparency=235
+  Autocmd GUIEnter * set transparency=235
 elseif has('nvim')
   if exists(':GuiWindowOpacity') ==# 2
     GuiWindowOpacity 0.9
   endif
 else
+  " autocmd中にコマンド呼び出しだとE116
   Autocmd GUIEnter *
       \ if exists(':VimTweakSetAlpha') ==# 2 |
-      \   Autocmd GUIEnter * VimTweakSetAlpha 235 |
+      \   call libcallnr(g:vimtweak_dll_path, "SetAlpha", 235) |
       \ endif
 endif
 
-if get(g:, 'colors_name', 'desert') ==# 'desert'
+if get(g:, 'colors_name', 'desert') ==# 'desert' || g:colors_name ==# 'morning'
   colorscheme torte
 endif
 

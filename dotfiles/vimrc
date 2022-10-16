@@ -39,10 +39,17 @@ if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
   " :redraw hides intro screen
   augroup vimrc-startuptime
-    autocmd! VimEnter * ++once
-        \ let s:startuptime = reltime(s:startuptime) |
-        \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
-        \ unlet s:startuptime
+    if has('patch-8.1.1113')
+      autocmd! VimEnter * ++once
+          \ let s:startuptime = reltime(s:startuptime) |
+          \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
+          \ unlet s:startuptime
+    else
+      autocmd! VimEnter *
+          \ let s:startuptime = reltime(s:startuptime) |
+          \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
+          \ unlet s:startuptime | autocmd! vimrc-startuptime
+    endif
   augroup END
 endif "}}}
 
@@ -155,14 +162,14 @@ function! s:ignore(...) abort
     let bname = fnamemodify(bufname(a:1), ':t')
     let bt = getbufvar(a:1, '&buftype')
     let fts = getbufvar(a:1, '&filetype')
-    let wt = win_gettype(bufwinnr(a:1))
+    let wt = exists('*win_gettype') ? win_gettype(bufwinnr(a:1)) : ''
   else
     let bh = &bufhidden
     let bl = &buflisted
     let bname = expand('%:t')
     let bt = &buftype
     let fts = &filetype
-    let wt = win_gettype()
+    let wt = exists('*win_gettype') ? win_gettype() : ''
   endif
 
   if !(bl && empty(bt) && (bh ==# '' ? &hidden : bh ==# 'hide'))
@@ -360,10 +367,11 @@ function! Cmdwhen(mode, lhs, rhs) abort
 endfunction "}}}
 
 function! OpenSymbolicTarget() abort "{{{
-  " not works in Windows
-  let filename = resolve(expand('%:p'))
+  let filepath = resolve(expand('%:p'))
 
-  if getftype(expand('%:p')) !=# 'link'
+  " Windowsではgetftype()からlinkが返らない
+  " 8.1.894以前だとresolve()でのパス解決もWindowsでは動かない
+  if filepath ==# expand('%:p')
     echohl Error
     echo 'not symbolic link'
     echohl None
@@ -389,7 +397,7 @@ function! OpenSymbolicTarget() abort "{{{
     endfor
 
     execute 'bwipeout' bn
-    execute 'edit' filename
+    execute 'edit' filepath
     let bn = bufnr()
 
     for wn in restwins
@@ -397,11 +405,22 @@ function! OpenSymbolicTarget() abort "{{{
     endfor
   else
     bwipeout
-    execute 'edit' filename
+    execute 'edit' filepath
   endif
 
   call winrestview(view)
   normal! zv
+endfunction "}}}
+
+function! Mode() abort "{{{
+  let mode = mode(1)
+
+  let mode = substitute(mode, '\Cr', 'p', '')
+  let mode = substitute(mode, '\C[SV]\zs', 'l', '')
+  let mode = substitute(mode, "\\C\<C-v>", 'vr', '')
+  let mode = substitute(mode, "\\C\<C-s>", 'sr', '')
+
+  return toupper(mode[0]) . mode[1:]
 endfunction "}}}
 "}}}
 
@@ -486,7 +505,7 @@ SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG cursorline
-set diffopt+=context:2,vertical,algorithm:histogram
+set diffopt+=context:2,vertical
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG foldenable foldmethod=marker foldtext=Foldtext()
@@ -498,7 +517,7 @@ set history=1000
 set hlsearch ignorecase incsearch smartcase | nohlsearch
 SetG iminsert=0 imsearch=-1
 set laststatus=2
-setglobal statusline =\ %{mode(1)}%{&paste?'\ \ \|\ p':''}
+setglobal statusline =\ %{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
@@ -554,7 +573,7 @@ if exists('+packpath')
   let &packpath .= ',' . g:vimrc#dotvim . '/pack'
 endif
 if exists('+termguicolors') && !g:vimrc#is_windows
-  " set termguicolors
+  set termguicolors
 endif
 if exists('+ttymouse')
   set ttymouse=xterm2
@@ -574,6 +593,9 @@ else
 endif
 if has('patch-7.4.314')
   set shortmess+=c
+endif
+if has('patch-8.1.360')
+  set diffopt+=algorithm:histogram
 endif
 if has('patch-8.2.4325')
   set wildoptions=pum
@@ -595,7 +617,6 @@ unlet s:d "}}}
 let g:loaded_2html_plugin = 1
 let g:loaded_gzip = 1
 let g:loaded_tar = 1
-
 let g:loaded_tarPlugin = 1
 let g:loaded_zip = 1
 let g:loaded_zipPlugin = 1
@@ -607,12 +628,12 @@ let g:loaded_getscriptPlugin = 1
 "}}}
 
 " $VIMRUNTIME以下のプラグインの設定 "{{{
-let g:newtw_clipboard = 0
+let g:newrw_clipboard = 0
 let g:netrw_keepj = ""
 let g:netrw_liststyle = 3
 let g:netrw_sizestyle = "H"
 let g:netrw_use_errorwindow = 2
-let g:netrw_winsize=30
+let g:netrw_winsize = 30
 let g:vim_indent_cont = shiftwidth()*2
 "}}}
 "}}}
@@ -727,6 +748,7 @@ nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . 'k'
 inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
+nnoremap <C-CR> i<CR><Esc>
 
 inoremap <silent> <C-z> <C-o>:update<CR>
 nnoremap <silent> <Space><Tab> :<C-u>nohlsearch<CR>
@@ -832,27 +854,28 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " set t_Co=256
 
   " modifyOtherKeys "{{{
-  " let &t_TI = "\<Esc>[>4;1m"
-  " let &t_TE = "\<Esc>[>4;m"
-  map <special> <Esc>[27;2;13~ <S-CR>
-  map! <special> <Esc>[27;2;13~ <S-CR>
-  map <special> <Esc>[27;5;13~ <C-CR>
-  map! <special> <Esc>[27;5;13~ <C-CR>
-  map <special> <Esc>[27;2;9~ <S-Tab>
-  imap <special> <Esc>[27;2;9~ <S-Tab>
-  cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
-  map <special> <Esc>[27;2;8~ <S-BS>
-  map! <special> <Esc>[27;2;8~ <S-BS>
-  map <special> <Esc>[27;5;8~ <C-BS>
-  map! <special> <Esc>[27;5;8~ <C-BS>
-  "}}}
+  if !has('nvim')
+    " let &t_TI = "\<Esc>[>4;1m"
+    " let &t_TE = "\<Esc>[>4;m"
+    map <special> <Esc>[27;2;13~ <S-CR>
+    map! <special> <Esc>[27;2;13~ <S-CR>
+    map <special> <Esc>[27;5;13~ <C-CR>
+    map! <special> <Esc>[27;5;13~ <C-CR>
+    map <special> <Esc>[27;2;9~ <S-Tab>
+    imap <special> <Esc>[27;2;9~ <S-Tab>
+    cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
+    map <special> <Esc>[27;2;8~ <S-BS>
+    map! <special> <Esc>[27;2;8~ <S-BS>
+    map <special> <Esc>[27;5;8~ <C-BS>
+    map! <special> <Esc>[27;5;8~ <C-BS>
+  endif "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
   " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
   " https://qiita.com/kefir_/items/415a30930a80b9b42adb
-  if !has("patch-8.0.0238")
+  if !has("patch-8.0.238") && !has('nvim')
     if g:vimrc#is_starting
-      if has("patch-8.0.0210")
+      if has("patch-8.0.210")
           set t_BE=
       endif
 
@@ -889,7 +912,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " 挿入モードを出るときにIMEを自動で切る "{{{
   " https://qiita.com/U25CE/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
-  if g:vimrc#is_starting
+  if g:vimrc#is_starting && !has('nvim')
     let &t_SI .= "\e[<r"
     let &t_EI .= "\e[<s\e[<0t"
     let &t_te .= "\e[<0\e[<s"
@@ -899,7 +922,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   inoremap <special> <Esc>O[ <Esc>
   inoremap <special> <C-V><Esc>O[ <C-V><Esc>
 
-  if g:vimrc#is_starting
+  if g:vimrc#is_starting && !has('nvim')
     let &t_SI .= "\e[?7727h"
     let &t_EI .= "\e[?7727l"
   endif "}}}
@@ -932,7 +955,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     map <Esc>[3;3R <t_F9>
     map <expr> <t_F9> <SID>enableVsplitMode()
 
-    if g:vimrc#is_starting
+    if g:vimrc#is_starting && !has('nvim')
       let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
   endif "}}}
@@ -1008,8 +1031,12 @@ execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
 if has('nvim')
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
-else
-  Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+elseif has('terminal')
+  if exists('##TerminalWinOpen')
+    Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+  else
+    Autocmd TerminalOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+  endif
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
 
