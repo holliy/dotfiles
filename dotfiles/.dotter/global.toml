@@ -1,7 +1,7 @@
 [helpers]
 
 [default]
-depends = ["vim", "bash", "neovim"]
+depends = []
 
 [default.files]
 
@@ -14,6 +14,17 @@ vim = { target="~/.vim", type="symbolic" }
 bashrc = "~/.bashrc"
 
 [neovim.files]
-nvimrc = { target="~/.config/nvim/init.vim", type="symbolic" }
+"config/nvim/init.vim" = { target="~/.config/nvim/init.vim", type="symbolic" }
+
+[alacritty.files]
+# see (windows|linux).toml
+"config/alacritty/windows.yml" = ""
+"config/alacritty/linux.yml" = ""
+
+[wezterm.files]
+"config/wezterm/wezterm.lua" = "~/.config/wezterm/wezterm.lua"
+
+[x.files]
+Xresources = "~/.Xresources"
 
 [default.variables]

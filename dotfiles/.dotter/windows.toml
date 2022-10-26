@@ -1,4 +1,6 @@
-packages = ["vim", "neovim"]
+packages = ["vim", "neovim", "alacritty", "wezterm"]
 
 [files]
-nvimrc = { target="~/AppData/Local/nvim/init.vim", type="symbolic" }
+"config/nvim/init.vim" = "~/AppData/Local/nvim/init.vim"
+"config/wezterm/wezterm.lua" = "~/.config/wezterm/wezterm.lua"
+"config/alacritty/windows.yml" = "~/AppData/Roaming/alacritty/alacritty.yml"

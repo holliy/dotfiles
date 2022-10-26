@@ -1,0 +1,27 @@
+! $Id$
+
+! load color-specific resources for clients that have them
+#ifdef COLOR
+*customization: -color
+#endif
+
+! make Xaw (Athena widget set) clients understand the delete key
+! this causes problems with some non-Xaw apps, use with care
+! *Text.translations: #override ~Shift ~Meta <Key>Delete: delete-next-character()
+
+Xft*antialias: true
+
+XTerm*geometry: 100x30
+XTerm*menuLocale: ja_JP
+XTerm*tcapFunctionKeys: true
+XTerm*termName: xterm-256color
+
+XTerm*vt100*allowBoldFonts: true
+XTerm*vt100*allowColorOps: true
+! XTerm*vt100.allowFontOps: true
+XTerm*vt100*allowMouseOps: true
+XTerm*vt100*allowTcapOps: true
+! XTerm*vt100*faceName: Cica:size=12:antialias=true
+XTerm*vt100*faceName: Fira Code Retina
+XTerm*vt100*faceNameDoublesize: Cica
+XTerm*vt100*faceSize: 12

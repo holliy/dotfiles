@@ -1,0 +1,4 @@
+packages = ["vim", "bash", "neovim", "alacritty", "wezterm", "x"]
+
+[files]
+"config/alacritty/linux.yml" = "~/.config/alacritty/alacritty.yml"

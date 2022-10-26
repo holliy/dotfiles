@@ -17,8 +17,8 @@ cd dotfiles/
 FORCE=0
 
 if [ "$FORCE" = "1" ]; then
-  $DOTTER deploy --force
+  $DOTTER deploy --force --local-config .dotter/linux.toml
 else
-  $DOTTER deploy
+  $DOTTER deploy --local-config .dotter/linux.toml
 fi
 
