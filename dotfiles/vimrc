@@ -9,7 +9,8 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_cygwin = has('win32unix')
   let g:vimrc#is_unix = has('unix') && !g:vimrc#is_cygwin
   let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
-  if has('nvim')
+  let g:vimrc#is_nvim = has('nvim')
+  if g:vimrc#is_nvim
     let g:vimrc#is_gui = nvim_list_uis()[0].chan ==# 1
   else
     let g:vimrc#is_gui = has('gui_running')
@@ -26,7 +27,7 @@ augroup END "}}}
 " use Vim with singleton "{{{
 if has('clientserver') && !exists('g:loaded_editexisting')
   let g:loaded_editexisting = 1
-  if exists(':packadd')
+  if has('patch-7.4.1674')
     packadd! editexisting
   else
     runtime macros/editexisting.vim
@@ -286,6 +287,10 @@ nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
 
 " ウィンドウの左側の余白の幅 "{{{
 function! s:winleftpad() abort
+  if exists('*getwininfo')
+    return getwininfo(win_getid())[0]['textoff']
+  endif
+
   if &number
     let lnrwidth = max([strlen(string(line('$'))) + 1, &numberwidth])
   elseif &relativenumber
@@ -301,8 +306,13 @@ function! s:winleftpad() abort
   elseif &signcolumn ==# 'number' && &number
     let signwidth = 0
   else
-    " TODO: 表示されない場合
-    let signwidth = 2
+    " [{'signs': [...], 'bufnr': 2}]
+    let signs = sign_getplaced(bufname(), {'group': '*'})
+    if empty(signs[0]['signs'])
+      let signwidth = 0
+    else
+      let signwidth = 2
+    endif
   endif
 
   return lnrwidth + signwidth + &foldcolumn
@@ -469,14 +479,14 @@ endif
 AutocmdFT vim
     \ syntax keyword vimAutoCmd Autocmd skipwhite nextgroup=vimAutoEventList
 AutocmdFT vim
-    \ syntax keyword vimAutoCmd AutocmdFT skipwhite nextgroup=vimAutoCmdSpace
+    \ syntax keyword vimAutoCmd AutocmdFT nextgroup=vimAutoCmdSpace
 AutocmdFT vim
     \ syntax keyword vimHighlight Highlight skipwhite nextgroup=vimHiBang,@vimHighlightCluster
 AutocmdFT vim
     \ syntax keyword vimCommand contained SetG
 AutocmdFT vim
-    \ syntax region vimSet matchgroup=vimCommand start='\<\%(SetG\)\>' skip='\%(\\\\\)*\\.' end='$' matchgroup=vimNotation end='<[cC][rR]>' keepend oneline contains=vimSetEqual,vimOption,vimErrSetting,vimComment,vimSetString,vimSetMod
- "}}}
+    \ syntax region vimSet matchgroup=vimCommand start="\<\%(SetG\)\>" skip="\%(\\\\\)*\\.\n\@!" end="$" matchgroup=vimNotation end="<[cC][rR]>" keepend oneline contains=vimSetEqual,vimOption,vimErrSetting,vimComment,vim9Comment,vimSetString,vimSetMod
+"}}}
 "}}}
 
 " シンボリックリンク先のファイルを開く "{{{
@@ -539,6 +549,7 @@ set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
 set shortmess+=mrx shortmess-=t shortmess-=T
 set showcmd
 set showtabline=2
+SetG signcolumn=auto
 set splitbelow splitright
 set nostartofline
 set switchbuf=useopen,usetab
@@ -575,11 +586,11 @@ endif
 if exists('+termguicolors') && !g:vimrc#is_windows
   set termguicolors
 endif
-if exists('+ttymouse')
-  set ttymouse=xterm2
+if exists('+termwinsize')
+  SetG termwinsize=15x0
 endif
 
-if has('nvim')
+if g:vimrc#is_nvim
   set clipboard=
 elseif g:vimrc#is_wsl
   set clipboard=exclude:.*
@@ -844,7 +855,7 @@ execute 'set fileencodings-=' . &encoding
 execute 'set fileencodings+=' . &encoding
 
 " 日本語を含まない場合は fileencoding に encoding を使うようにする
-Autocmd BufReadPost,FileReadPost *
+Autocmd BufReadPost,FileReadPost,FilterReadPost *
     \ if &fileencoding=~#'iso-2022-jp' && search("[^\x01-\x7e]", 'n')==0 |
     \   let &fileencoding = &encoding | endif "}}}
 
@@ -853,27 +864,52 @@ Autocmd BufReadPost,FileReadPost *
 if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " set t_Co=256
 
-  " modifyOtherKeys "{{{
-  if !has('nvim')
-    " let &t_TI = "\<Esc>[>4;1m"
-    " let &t_TE = "\<Esc>[>4;m"
-    map <special> <Esc>[27;2;13~ <S-CR>
-    map! <special> <Esc>[27;2;13~ <S-CR>
-    map <special> <Esc>[27;5;13~ <C-CR>
-    map! <special> <Esc>[27;5;13~ <C-CR>
-    map <special> <Esc>[27;2;9~ <S-Tab>
-    imap <special> <Esc>[27;2;9~ <S-Tab>
-    cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
-    map <special> <Esc>[27;2;8~ <S-BS>
-    map! <special> <Esc>[27;2;8~ <S-BS>
-    map <special> <Esc>[27;5;8~ <C-BS>
-    map! <special> <Esc>[27;5;8~ <C-BS>
-  endif "}}}
+  " for RLogin
+  if &term ==# 'rlogin-color' && !g:vimrc#is_nvim
+    if g:vimrc#is_starting
+      let &t_8f = "\e[38:2:%lu:%lu:%lum"
+      let &t_8b = "\e[48:2:%lu:%lu:%lum"
+      let &t_BE = "\e[?2004h"
+      let &t_BD = "\e[?2004l"
+      let &t_PS = "\e[200~"
+      let &t_PE = "\e[201~"
+      let &t_ts = "\e]2;"
+      let &t_fs = "\x07"
+      let &t_ST = "\e[22;0;0t"
+      let &t_RT = "\e[23;0;0t"
+    endif
+
+    set ttymouse=sgr
+
+    " modifyOtherKeys "{{{
+    " modifyCursorKeysとmodifyStringKeysも有効にする
+    if g:vimrc#is_starting
+      " let &t_TI = "\e[>1;2m\e[>4;2m\e[>5;2m"
+      " let &t_TE = "\e[>1;m\e[>4;m\e[>5;m"
+
+      " 一旦無効化
+      let &t_TI = ""
+      let &t_TE = ""
+    endif
+
+    " map <special> <Esc>[27;2;13~ <S-CR>
+    " map! <special> <Esc>[27;2;13~ <S-CR>
+    " map <special> <Esc>[27;5;13~ <C-CR>
+    " map! <special> <Esc>[27;5;13~ <C-CR>
+    " map <special> <Esc>[27;2;9~ <S-Tab>
+    " imap <special> <Esc>[27;2;9~ <S-Tab>
+    " cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
+    " map <special> <Esc>[27;2;8~ <S-BS>
+    " map! <special> <Esc>[27;2;8~ <S-BS>
+    " map <special> <Esc>[27;5;8~ <C-BS>
+    " map! <special> <Esc>[27;5;8~ <C-BS>
+    "}}}
+  endif
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
   " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
   " https://qiita.com/kefir_/items/415a30930a80b9b42adb
-  if !has("patch-8.0.238") && !has('nvim')
+  if !has("patch-8.0.238") && !g:vimrc#is_nvim
     if g:vimrc#is_starting
       if has("patch-8.0.210")
           set t_BE=
@@ -903,8 +939,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " OSC52でのコピー "{{{
   function s:paste64(text) abort
     let l:s = join(systemlist('base64', a:text), '')
-    call writefile([printf("\e]52;;%s\e\\", l:s)], '/dev/tty', 'a')
-    redraw! " カーソルがずれるので
+    call writefile(list2blob(str2list(printf("\e]52;;%s\e\\", l:s))), '/dev/tty', 'a')
   endfunction
 
   nnoremap <silent> <Space>y :<C-u>call <SID>paste64(@")<CR>
@@ -912,7 +947,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " 挿入モードを出るときにIMEを自動で切る "{{{
   " https://qiita.com/U25CE/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
-  if g:vimrc#is_starting && !has('nvim')
+  if g:vimrc#is_starting && !g:vimrc#is_nvim
     let &t_SI .= "\e[<r"
     let &t_EI .= "\e[<s\e[<0t"
     let &t_te .= "\e[<0\e[<s"
@@ -921,8 +956,11 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " 挿入モードでのESCキーの待ちをなくす "{{{
   inoremap <special> <Esc>O[ <Esc>
   inoremap <special> <C-V><Esc>O[ <C-V><Esc>
+  inoremap <special> <C-r><Esc>O[ <Nop>
+  noremap <special> r<Esc>O[ <Nop>
+  noremap <special> r<C-v><Esc>O[ r<Esc>
 
-  if g:vimrc#is_starting && !has('nvim')
+  if g:vimrc#is_starting && !g:vimrc#is_nvim
     let &t_SI .= "\e[?7727h"
     let &t_EI .= "\e[?7727l"
   endif "}}}
@@ -955,7 +993,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     map <Esc>[3;3R <t_F9>
     map <expr> <t_F9> <SID>enableVsplitMode()
 
-    if g:vimrc#is_starting && !has('nvim')
+    if g:vimrc#is_starting && !g:vimrc#is_nvim
       let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
   endif "}}}
@@ -1029,7 +1067,7 @@ AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
-if has('nvim')
+if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
 elseif has('terminal')
   if exists('##TerminalWinOpen')
@@ -1056,7 +1094,7 @@ augroup END
 "}}}
 
 " plugin "{{{
-if has('patch-7.4.1674')
+if has('patch-7.4.1649')
   packadd! matchit
 else
   runtime macros/matchit.vim

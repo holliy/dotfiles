@@ -65,7 +65,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('vim-jp/vimdoc-ja')
 
   if g:vimrc#is_windows
-    call dein#add('mattn/vimtweak', {'if': !has('nvim') && g:vimrc#is_gui})
+    call dein#add('mattn/vimtweak', {'if': !g:vimrc#is_nvim && g:vimrc#is_gui})
   endif
 
   call dein#end()
@@ -84,6 +84,8 @@ if !isdirectory(dein#util#_get_runtime_path()) ||
     \   glob(dein#util#_get_runtime_path() . '/*', 0, 1)))
   call dein#recache_runtimepath()
 endif
+
+Autocmd VimEnter * call dein#call_hook('source')
 
 " caw "{{{
 if dein#tap('caw')
@@ -382,11 +384,32 @@ endif "}}}
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
+  " let g:gitgutter_set_sign_backgrounds = 0
 
   if &encoding !=# 'utf-8'
     let g:gitgutter_sign_removed_first_line = '_'
     let g:gitgutter_sign_removed_above_and_below = '_'
   endif
+
+  if g:vimrc#is_windows
+    " shellescape()するとexecutable()が通らない
+    let g:gitgutter_git_executable = 'C:\Program Files\Git\bin\git.exe'
+
+    " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
+    Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' . expand('%:p:h')
+  endif
+
+  Autocmd BufWritePost * GitGutter
+
+  function! s:gitgutter_sourced() abort
+    if g:vimrc#is_windows
+      " shellescape()しないと実行できないのでスクリプトを読み込んだ後に変更する
+      let g:gitgutter_git_executable = shellescape(g:gitgutter_git_executable)
+    endif
+
+    " autocmd! gitgutter CursorHold,CursorHoldI
+  endfunction
+  call dein#set_hook('gitgutter', 'hook_source', function('s:gitgutter_sourced'))
 endif "}}}
 
 " vim-haskell-indent "{{{
@@ -426,7 +449,7 @@ if dein#tap('lsp')
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
   " https://github.com/prabirshrestha/vim-lsp/issues/1281
-  if has('nvim')
+  if g:vimrc#is_nvim
     " Autocmd User lsp_float_opened
     "    \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
     Autocmd User lsp_float_opened
@@ -442,6 +465,4 @@ if dein#tap('lsp')
         \   lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
   endif
 endif "}}}
-
-call dein#call_hook('source')
 

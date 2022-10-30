@@ -3,8 +3,8 @@ if has('win32')
 endif
 
 execute 'source' expand('$HOME') . '/.vimrc'
-Autocmd UIEnter *
-    \ if g:vimrc#is_gui |
-    \   execute 'source' expand('$HOME') . '/.gvimrc' |
-    \ endif
+
+if g:vimrc#is_gui
+  Autocmd UIEnter * execute 'source' expand('$HOME') . '/.gvimrc'
+endif
 
