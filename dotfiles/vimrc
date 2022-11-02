@@ -177,6 +177,10 @@ function! s:ignore(...) abort
     return 1
   endif
 
+  if bt ==# 'terminal'
+    return 1
+  endif
+
   if !(wt ==# '' || wt ==# 'unknown')
     return 1
   endif
@@ -195,7 +199,7 @@ function! HighlightTrailingSpace() abort
   if s:ignore()
     if get(w:, 'spaceid', 0)
       call matchdelete(w:spaceid)
-      let w:spaceid = 0
+      unlet w:spaceid
     endif
   else
     highlight TrailingWhiteSpace ctermbg=darkred guibg=#ff0000
@@ -456,7 +460,7 @@ if g:vimrc#is_gui
   cnoreabbrev <expr> sgvimrc Cmdwhen(':', 'sgvimrc', 'Sgvimrc')
 endif "}}}
 
-" SetG, Autocmd, AutocmgFT, Highlight "{{{
+" setglobal, autocmd, highlight のラッパー "{{{
 command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
 command! -bar -complete=highlight -nargs=*
     \ Highlight Autocmd ColorScheme * highlight <args>
@@ -531,11 +535,12 @@ setglobal statusline =\ %{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
-setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}%<%#StatusLineNC#%=%*
+setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
+setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Normal#'%}%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
 setglobal statusline+=\ \|\ %{empty(&filetype)?'?':&filetype}
-setglobal statusline+=\ \|\ %3P
-setglobal statusline+=\ \|\ %3l:%-2c\ %#StatusLineNC#
+setglobal statusline+=\ \|\ %4P
+setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
 set lazyredraw
 SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
@@ -794,6 +799,9 @@ inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
+
+tnoremap <ScrollWheelUp> <C-\><C-n>
+tnoremap <ScrollWheelDown> <C-\><C-n>
 "}}}
 
 " エンコード "{{{
@@ -877,6 +885,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       let &t_fs = "\x07"
       let &t_ST = "\e[22;0;0t"
       let &t_RT = "\e[23;0;0t"
+      let &t_kB = "\e[Z"
     endif
 
     set ttymouse=sgr
@@ -1022,6 +1031,12 @@ Highlight DiffAdd guifg=NONE
 Highlight DiffChange guifg=NONE
 Highlight DiffDelete guifg=NONE
 Highlight DiffText guifg=NONE
+
+" コメントのハイライトがおかしいので以前のシンタックスを適用
+" https://github.com/vim/vim/issues/11307
+if has('patch-9.0.652')
+  AutocmdFT vim syntax match vimLineComment +^[ \t:]*".*$+ contains=@vimCommentGroup,vimCommentString,vimCommentTitle
+endif
 "}}}
 
 " autocmd "{{{
