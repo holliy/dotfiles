@@ -531,14 +531,14 @@ set history=1000
 set hlsearch ignorecase incsearch smartcase | nohlsearch
 SetG iminsert=0 imsearch=-1
 set laststatus=2
-setglobal statusline =\ %{Mode()}%{&paste?'\ \ \|\ p':''}
+setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
 setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Normal#'%}%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
-setglobal statusline+=\ \|\ %{empty(&filetype)?'?':&filetype}
+setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':'?':&filetype}
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
 set lazyredraw
@@ -595,13 +595,6 @@ if exists('+termwinsize')
   SetG termwinsize=15x0
 endif
 
-if g:vimrc#is_nvim
-  set clipboard=
-elseif g:vimrc#is_wsl
-  set clipboard=exclude:.*
-else
-  set clipboard=exclude:console\|linux
-endif
 if has('unnamedplus')
   set clipboard^=unnamedplus
 else
@@ -615,6 +608,17 @@ if has('patch-8.1.360')
 endif
 if has('patch-8.2.4325')
   set wildoptions=pum
+endif
+
+if g:vimrc#is_nvim
+  set clipboard=
+elseif g:vimrc#is_wsl
+  set clipboard=exclude:.*
+else
+  set clipboard=exclude:console\|linux
+endif
+if g:vimrc#is_unix
+  set shell=bash
 endif "}}}
 
 " バックアップフォルダ等を作成 "{{{

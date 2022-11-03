@@ -44,6 +44,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
+  call dein#add('kana/vim-repeat')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
   call dein#add('prabirshrestha/vim-lsp')
@@ -90,6 +91,8 @@ Autocmd VimEnter * call dein#call_hook('source')
 " caw "{{{
 if dein#tap('caw')
   let g:caw_dollarpos_sp_left = ' '
+  let g:caw_hatpos_align = 0
+  let g:caw_hatpos_skip_blank_line = 1
   " let g:caw_no_default_keymappings = 1
   let g:caw_operator_keymappings = 1
 
@@ -98,15 +101,14 @@ if dein#tap('caw')
 
   " nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
-  nmap <C-_> <Space>cc
-  nnoremap <silent> <Space>ct :normal 1 cc<CR>
+  vmap <Space>cc <Plug>(caw:hatpos:toggle)
+  noremap <silent> <Space>ct :normal 1 cc<CR>
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
   nmap <Space>ca <Plug>(caw:dollarpos:toggle)
   nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
+  vmap <Space>cw <Plug>(caw:wrap:toggle)
   nmap <Space>co <Plug>(caw:jump:comment-next)
   nmap <Space>cO <Plug>(caw:jump:comment-prev)
-  vmap <Space>cc <Plug>(caw:hatpos:toggle)
-  vmap <Space>cw <Plug>(caw:wrap:toggle)
 endif "}}}
 
 " ddc.vim "{{{
@@ -157,6 +159,18 @@ endif "}}}
 " lexima "{{{
 if dein#tap('lexima')
   let g:lexima_map_escape = 'jk'
+
+  inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
+
+  if g:vimrc#is_nvim
+    Autocmd TermOpen * let b:lexima_disabled = 1
+  elseif has('terminal')
+    if exists('##TerminalWinOpen')
+      Autocmd TerminalWinOpen * let b:lexima_disabled = 1
+    else
+      Autocmd TerminalOpen * let b:lexima_disabled = 1
+    endif
+  endif
 
   function! s:lexima_sourced(...) abort "{{{
     let quotes = [
@@ -371,14 +385,14 @@ if dein#tap('lexima')
     imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
-
-  inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
 endif "}}}
 
 " vim-fugitive "{{{
 if dein#tap('fugitive')
   " コミットメッセージ入力時に先頭の行へ移動
   Autocmd BufWinEnter COMMIT_EDITMSG goto 1
+
+  AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
 endif "}}}
 
 " vim-gitgutter "{{{
