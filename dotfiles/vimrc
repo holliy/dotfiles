@@ -173,11 +173,15 @@ function! s:ignore(...) abort
     let wt = exists('*win_gettype') ? win_gettype() : ''
   endif
 
-  if !(bl && empty(bt) && (bh ==# '' ? &hidden : bh ==# 'hide'))
+  if !bl
     return 1
   endif
 
-  if bt ==# 'terminal'
+  if !empty(bt)
+    return 1
+  endif
+
+  if !(bh ==# '' ? &hidden : bh ==# 'hide')
     return 1
   endif
 
@@ -323,44 +327,34 @@ function! s:winleftpad() abort
 endfunction "}}}
 
 function! Foldtext() abort "{{{
-  let save_cursor = getcurpos()
-  call cursor(v:foldstart, 1)
-
-  let indentstart = 0
-  let pattern = '^\S'
-  while indentstart == 0
-    let indentstart = search(pattern, 'bcnW')
-    let pattern = '^\s' . strpart(pattern, 1)
-  endwhile
-  let shift = repeat(' ', v:foldlevel -
-      \ (indentstart == v:foldstart ? 1 : foldlevel(indentstart) + 1))
-
-  call setpos('.', save_cursor)
-
-  let linelen = winwidth('.') - s:winleftpad()
-  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
-  let range = foldclosedend(v:foldstart) - foldclosed(v:foldstart) + 1
-
   let comment = split(substitute(&commentstring, '\s', '', 'g'), '%s')
   let commentstart = len(comment) < 1 ? '' : comment[0]
   let commentend = len(comment) < 2 ? '' : comment[1]
 
   let left = getline(v:foldstart)
-  let pattern = printf('\V\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)',
-      \ commentstart, marker, commentend)
+  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
+
+  " (コメント用の文字も含めて) マーカーを削除
+  let pattern = printf('\V\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)', commentstart, marker, commentend)
   let left = substitute(left, pattern, '', '')
+
+  " コメント行の場合、コメント文字列のみにする
   let pattern = printf('\V\^\s\*\zs\(%s\)\?\s\*', commentstart)
   let left = substitute(left, pattern, '', '')
+
+  " タブ文字を同じ幅のスペースに変換 (vartabstopには未対応)
   let left = substitute(left, '\t', repeat(' ', &tabstop), 'g')
-  let left = shift . left
   let leftlen = strdisplaywidth(left)
 
-  let right = range . ' [' . v:foldlevel . ']'
+  let foldlinecount = foldclosedend(v:foldstart) - foldclosed(v:foldstart) + 1
+  let right = foldlinecount . ' [' . v:foldlevel . '] '
   let rightlen = len(right)
 
+  let linelen = winwidth('.') - s:winleftpad()
   let tmp = strpart(left, 0, linelen - rightlen)
   let tmplen = len(tmp)
 
+  " 表示する文字列が収まらないときに後ろの文字を畳む
   if leftlen > tmplen
     let left = strpart(tmp, 0, tmplen - 4) . '... '
     let leftlen = tmplen
@@ -395,6 +389,7 @@ function! OpenSymbolicTarget() abort "{{{
 
   let view = winsaveview()
 
+  " TODO: 別のタブも
   if winnr('$') > 1
     " すべてのウィンドウに対して閉じないようにしつつ対象のバッファを変更
     let bn = bufnr()
@@ -1088,11 +1083,14 @@ execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
 if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+  Autocmd TermOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
 elseif has('terminal')
   if exists('##TerminalWinOpen')
     Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+    Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   else
     Autocmd TerminalOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+    Autocmd TerminalOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   endif
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()

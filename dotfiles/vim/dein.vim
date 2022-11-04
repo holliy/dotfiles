@@ -53,15 +53,17 @@ if dein#load_state(s:dein_dir)
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
   " call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
-  call dein#add('Shougo/ddc.vim', {'depends': ['denops']})
+  call dein#add('Shougo/ddc.vim', {'depends': ['denops'], 'rev': 'v2.5.1'})
   call dein#add('Shougo/ddc-around', {'depends': ['ddc']})
   call dein#add('Shougo/ddc-matcher_head', {'depends': ['ddc']})
   call dein#add('Shougo/ddc-sorter_rank', {'depends': ['ddc']})
+  " call dein#add('Shougo/ddc-ui-native', {'depends': ['ddc']})
+  " call dein#add('Shougo/ddc-ui-none', {'depends': ['ddc']})
   call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tpope/vim-fugitive')
   call dein#add('tpope/vim-surround')
-  call dein#add('tyru/caw.vim')
+  call dein#add('tyru/caw.vim', {'depends': ['operator-user', 'repeat']})
   call dein#add('vim-denops/denops.vim', {'if': executable('deno')})
   call dein#add('vim-jp/vimdoc-ja')
 
@@ -115,6 +117,7 @@ endif "}}}
 if dein#tap('ddc')
   function s:ddc_sourced() abort "{{{
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
+    " call ddc#custom#patch_global('ui', 'none')
 
     call ddc#custom#patch_global('sourceOptions', {
         \ '_': {
@@ -139,6 +142,8 @@ if dein#tap('ddc')
 
   inoremap <silent><expr> <C-n> ddc#map#pum_visible() ? '<C-n>' : ddc#map#manual_complete()
   inoremap <silent><expr> <C-p> ddc#map#pum_visible() ? '<C-p>' : ddc#map#manual_complete()
+  " inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
+  " inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
   " imap <C-Space> <C-n>
 endif "}}}
 
@@ -389,6 +394,8 @@ endif "}}}
 
 " vim-fugitive "{{{
 if dein#tap('fugitive')
+  call add(g:vimrc#generate_filetypes, 'fugitive')
+
   " コミットメッセージ入力時に先頭の行へ移動
   Autocmd BufWinEnter COMMIT_EDITMSG goto 1
 
