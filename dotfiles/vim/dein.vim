@@ -400,12 +400,14 @@ if dein#tap('fugitive')
   Autocmd BufWinEnter COMMIT_EDITMSG goto 1
 
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
+  AutocmdFT fugitiveblame noremap <buffer><silent> q gq
 endif "}}}
 
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
   " let g:gitgutter_set_sign_backgrounds = 0
+  let g:gitgutter_sign_priority = 9
 
   if &encoding !=# 'utf-8'
     let g:gitgutter_sign_removed_first_line = '_'
@@ -452,6 +454,11 @@ if dein#tap('lsp')
   let g:lsp_diagnostics_signs_information = {'text': '.'}
   let g:lsp_document_code_action_signs_hint = {'text': ':'}
 
+  let g:lsp_diagnostics_signs_priority_map = {
+      \   'LspError': 12,
+      \   'LspWarning': 11
+      \ }
+
   nnoremap <Space>lh <Plug>(lsp-hover)
   nnoremap <Space>ls <Plug>(lsp-signature-help)
   nnoremap <Space>ld <Plug>(lsp-peek-definition)
@@ -461,6 +468,8 @@ if dein#tap('lsp')
   nnoremap <Space>lr <Plug>(lsp-rename)
   nnoremap <Space>lc <Plug>(lsp-code-action)
 
+  Highlight link LspHintText Question
+
   Autocmd User lsp_buffer_enabled
       \ if &filetype !=# 'vim' |
       \   setlocal foldmethod=expr |
@@ -469,21 +478,12 @@ if dein#tap('lsp')
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
 
-  " https://github.com/prabirshrestha/vim-lsp/issues/1281
   if g:vimrc#is_nvim
-    " Autocmd User lsp_float_opened
-    "    \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
     Autocmd User lsp_float_opened
-        \ call nvim_win_set_option(lsp#ui#vim#output#getpreviewwinid() is v:false ?
-        \   g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() :
-        \   lsp#ui#vim#output#getpreviewwinid(), 'winhighlight', 'MatchParen')
+        \ call nvim_win_set_option(lsp#internal#document_hover#under_cursor#getpreviewwinid(), 'winhighlight', 'MatchParen')
   else
-    " Autocmd User lsp_float_opened
-    "    \ call setwinvar(lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
     Autocmd User lsp_float_opened
-        \ call setwinvar(lsp#ui#vim#output#getpreviewwinid() is v:false ?
-        \   g:CallInternalFunc('lsp/internal/document_hover/under_cursor.vim:get_doc_win()').get_winid() :
-        \   lsp#ui#vim#output#getpreviewwinid(), '&wincolor', 'MatchParen')
+        \ call setwinvar(lsp#internal#document_hover#under_cursor#getpreviewwinid(), '&wincolor', 'MatchParen')
   endif
 endif "}}}
 

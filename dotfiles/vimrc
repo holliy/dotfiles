@@ -38,7 +38,7 @@ endif "}}}
 " https://gist.github.com/thinca/1518874#file-vimrc-L20
 if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
-  " :redraw hides intro screen
+  " :redraw hides intro message
   augroup vimrc-startuptime
     if has('patch-8.1.1113')
       autocmd! VimEnter * ++once
@@ -247,7 +247,6 @@ function! Concat(type) abort
   let startline = line("'[")
   let endline = line("']")
 
-  let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
   if startline ==# endline
     let endline += 1
   endif
@@ -257,6 +256,7 @@ function! Concat(type) abort
     let lines = getline(startline + 1, endline)
 
     if &filetype !~# '\v(\.|^)text(\.|$)'
+      let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
       if synname !~# '\v(Comment|String)$'
         set nojoinspaces
       else
@@ -265,12 +265,20 @@ function! Concat(type) abort
     endif
 
     if &filetype =~# '\v(\.|^)vim(\.|$)'
+      " 行継続を削除
       call map(lines, "substitute(v:val, '^\\s*\\\\', '', '')")
+
+      " foldmarkerのコメント文字は残す
+      let [foldstart, foldend] = split(&foldmarker, ',')
+      call map(lines, printf("substitute(v:val, '\\ze\"\\s*%s', '\" ', '')", foldstart)) " not vim9script
       let lines = [getline(startline)] + lines
     else
       let lastline = lines[-1]
       let lines = [getline(startline)] + lines[:-2]
+
+      " 行継続を削除
       call map(lines, "substitute(v:val, '\\\\$', '', '')")
+
       let lines += [lastline]
     endif
 
@@ -490,6 +498,13 @@ AutocmdFT vim
 
 " シンボリックリンク先のファイルを開く "{{{
 command! -bar OpenSymbolicTarget call OpenSymbolicTarget()
+"}}}
+
+" Terminal "{{{
+if g:vimrc#is_nvim
+  command! -bar Terminal execute 'belowright 15new term://' . &shell
+  cnoreabbrev <expr> terminal Cmdwhen(':', 'terminal', 'Terminal')
+endif
 "}}}
 
 if !exists(':DiffOrig') "{{{
@@ -892,7 +907,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       " let &t_TI = "\e[>1;2m\e[>4;2m\e[>5;2m"
       " let &t_TE = "\e[>1;m\e[>4;m\e[>5;m"
 
-      " 一旦無効化
+      " 有効にすると一部のキーで問題があるので一旦無効化
       let &t_TI = ""
       let &t_TE = ""
     endif
@@ -943,8 +958,20 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " OSC52でのコピー "{{{
   function s:paste64(text) abort
-    let l:s = join(systemlist('base64', a:text), '')
-    call writefile(list2blob(str2list(printf("\e]52;;%s\e\\", l:s))), '/dev/tty', 'a')
+    let str = join(systemlist('base64 --wrap=0', a:text), '')
+
+    let seq = printf("\e]52;;%s\e\\", str)
+    if g:vimrc#is_nvim
+      let blob = [seq]
+    else
+      let blob = list2blob(str2list(seq))
+    endif
+
+    call writefile(blob, '/dev/tty', 'a')
+
+    if g:vimrc#is_nvim
+      redraw!
+    endif
   endfunction
 
   nnoremap <silent> <Space>y :<C-u>call <SID>paste64(@")<CR>
@@ -1002,6 +1029,69 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
   endif "}}}
+
+  " Vim終了時にウィンドウタイトルを起動前の状態に戻す "{{{
+  if !has("patch-8.1.0253") && g:vimrc#is_starting && !g:vimrc#is_nvim
+    let &t_ti .= "\e[22;0t"
+    let &t_te .= "\e[23;0t"
+  endif "}}}
+
+  " バージョン情報を取得 "{{{
+  " 応答が DCS (ESC P) > | VERSION ST (ESC \)で返ってくるのでどうにかして取得
+  " Neovimだと応答が取れない?
+  function! GetXTVersion() abort
+    " unmap <Esc>P><Bar>
+    " let &t_ti = substitute(&t_ti, "\e[>0q", '', '')
+
+    if exists('g:xtversion')
+      return g:xtversion
+    endif
+
+    call writefile(list2blob(str2list("\e[>0q")), '/dev/tty', 'a')
+    sleep 200m
+    call s:parse_response()
+
+    return g:xtversion
+  endfunction
+
+  function! s:parse_response() abort
+    let res = []
+    let i = 1
+    while 1
+      let c = getchar(0)
+      " echomsg printf("%d, %s", i, string(c))
+      if !c
+        break
+      elseif i ==# 1 && c ==# char2nr("\e")
+        let i += 1
+      elseif i ==# 2 && c ==# char2nr('P')
+        let i += 1
+      elseif i ==# 3 && c ==# char2nr('>')
+        let i += 1
+      elseif i ==# 4 && c ==# char2nr('|')
+        let i += 1
+      elseif i ==# 5
+        if c ==# char2nr("\e")
+          let i += 1
+        else
+          let res += [c]
+        endif
+      elseif i ==# 6 && c ==# char2nr('\')
+        break
+      else
+        echomsg 'wrong response'
+        while getchar(0) | endwhile
+        break
+      endif
+    endwhile
+
+    let g:xtversion = list2str(res)
+  endfunction
+
+  " if g:vimrc#is_starting && !g:vimrc#is_nvim
+    " nnoremap <special><expr> <Esc>P><Bar> GetXTVersion()
+    " let &t_ti .= "\e[>0q"
+  " endif "}}}
 endif "}}}
 
 " ColorScheme "{{{
@@ -1072,7 +1162,7 @@ AutocmdFT * if &omnifunc ==# '' |
 AutocmdFT git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf
-    \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc' line('.')<CR>
+    \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc!' line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
@@ -1081,6 +1171,8 @@ execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
   Autocmd TermOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+  Autocmd TermOpen * startinsert
+  Autocmd TermClose * if !v:event.status | execute 'bdelete! ' . expand('<abuf>') | endif
 elseif has('terminal')
   if exists('##TerminalWinOpen')
     Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
