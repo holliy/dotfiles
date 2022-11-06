@@ -3,6 +3,9 @@
 # スクリプトが置かれている場所をカレントディレクトリにする
 cd $(dirname $0)
 
+# terminfoファイルのコンパイル
+ls -1 terminfo/* | xargs -n1 tic
+
 DOTTER=dotter
 
 if ! { which $DOTTER >/dev/null 2>&1; }; then
