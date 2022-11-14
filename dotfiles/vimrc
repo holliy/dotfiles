@@ -886,20 +886,62 @@ Autocmd BufReadPost,FileReadPost,FilterReadPost *
 if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " set t_Co=256
 
-  " for RLogin
+  " for RLogin "{{{
   if &term ==# 'rlogin-color' && !g:vimrc#is_nvim
     if g:vimrc#is_starting
+      " true color
       let &t_8f = "\e[38:2:%lu:%lu:%lum"
       let &t_8b = "\e[48:2:%lu:%lu:%lum"
+      " let &t_8u = ""
+
+      " 端末へ情報を要求
+      let &t_RF = "\e]10;?\x07"
+      let &t_RB = "\e]11;?\x07"
+
+      " 下線
+      " let &t_AU = ""
+      " let &t_Ce = ""
+      " let &t_Cs = ""
+
+      " 打ち消し線
+      let &t_Ts = "\e[9m"
+      let &t_Te = "\e[29m"
+
+      " カーソル
+      let &t_RC = "\e[?12$p"
+      let &t_VS = "\e[?12h"
+      let &t_vs = "\e[?12l"
+      " let &t_RS = ""
+      " let &t_SC = "\e[<"
+      " let &t_EC = "!q"
+      let &t_SH = "\e[%p1%d q"
+
+      " ウィンドウサイズ
+      let &t_WS = "\e[8;%p1%d;%p2%dt"
+
+      " ウィンドウタイトル
+      let &t_ST = "\e[22;0t"
+      let &t_RT = "\e[23;0t"
+
+      " アイコンテキスト
+      let &t_IS = "\e]1;"
+      let &t_IE = "\x07"
+      let &t_Si = "\e[22;0t"
+      let &t_Ri = "\e[23;0t"
+
+      " blacketed paste mode
       let &t_BE = "\e[?2004h"
       let &t_BD = "\e[?2004l"
       let &t_PS = "\e[200~"
       let &t_PE = "\e[201~"
-      let &t_ST = "\e[22;0;0t"
-      let &t_RT = "\e[23;0;0t"
+
+      " フォーカスイベント
+      let &t_fe = "\e[?1004h"
+      let &t_fd = "\e[?1004l"
     endif
 
-    set ttymouse=sgr
+    execute "set <FocusGained>=\e[I"
+    execute "set <FocusLost>=\e[O"
 
     " modifyOtherKeys "{{{
     " modifyCursorKeysとmodifyStringKeysも有効にする
@@ -924,7 +966,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     " map <special> <Esc>[27;5;8~ <C-BS>
     " map! <special> <Esc>[27;5;8~ <C-BS>
     "}}}
-  endif
+  endif "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
   " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
@@ -1183,6 +1225,7 @@ elseif has('terminal')
   endif
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
+AutocmdFT diff setlocal vartabstop=9,8
 
 augroup Vimrc_bin
   autocmd!

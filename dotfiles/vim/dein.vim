@@ -40,25 +40,28 @@ if dein#load_state(s:dein_dir)
   " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
   " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
   " call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
-  call dein#add('gamoutatsumi/ddc-sorter_ascii', {'depends': ['ddc']})
+  " call dein#add('gamoutatsumi/ddc-sorter_ascii', {'depends': ['ddc']})
+  call dein#add('holliy/ddc-sorter_ascii', {'depends': ['ddc'], 'rev': 'bump-ddc'})
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
+  call dein#add('mbbill/undotree')
   call dein#add('prabirshrestha/vim-lsp')
   call dein#add('rbtnn/vim-ambiwidth')
+  call dein#add('rhysd/conflict-marker.vim')
   " call dein#add('Shougo/neocomplete.vim')
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
   " call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
-  call dein#add('Shougo/ddc.vim', {'depends': ['denops'], 'rev': 'v2.5.1'})
+  call dein#add('Shougo/ddc.vim', {'depends': ['denops']})
   call dein#add('Shougo/ddc-around', {'depends': ['ddc']})
   call dein#add('Shougo/ddc-matcher_head', {'depends': ['ddc']})
   call dein#add('Shougo/ddc-sorter_rank', {'depends': ['ddc']})
-  " call dein#add('Shougo/ddc-ui-native', {'depends': ['ddc']})
-  " call dein#add('Shougo/ddc-ui-none', {'depends': ['ddc']})
+  call dein#add('Shougo/ddc-ui-native', {'depends': ['ddc']})
+  call dein#add('Shougo/ddc-ui-none', {'depends': ['ddc']})
   call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tpope/vim-fugitive')
@@ -105,6 +108,8 @@ if dein#tap('caw')
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
   vmap <Space>cc <Plug>(caw:hatpos:toggle)
   noremap <silent> <Space>ct :normal 1 cc<CR>
+  nmap <Space>cu <Plug>(caw:hatpos:uncomment)
+  vmap <Space>cu <Plug>(caw:hatpos:uncomment)
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
   nmap <Space>ca <Plug>(caw:dollarpos:toggle)
   nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
@@ -113,17 +118,41 @@ if dein#tap('caw')
   nmap <Space>cO <Plug>(caw:jump:comment-prev)
 endif "}}}
 
+" conflict-marker.vim "{{{
+if dein#tap('conflict-marker')
+  let g:conflict_marker_highlight_group = ''
+
+  Highlight link ConflictMarkerBegin Error
+  Highlight link ConflictMarkerEnd Error
+  Highlight link ConflictMarkerOurs DiffDelete
+  Highlight link ConflictMarkerCommonAncestors Error
+  Highlight link ConflictMarkerCommonAncestorsHunk Folded
+  Highlight link ConflictMarkerTheirs DiffAdd
+
+  Autocmd BufReadPost *
+      \ if conflict_marker#detect#markers() |
+      \   GitGutterLineHighlightsDisable |
+      \ endif
+  Autocmd BufWritePost *
+      \ if !conflict_marker#detect#markers() |
+      \   GitGutterLineHighlightsEnable |
+      \ endif
+endif "}}}
+
 " ddc.vim "{{{
 if dein#tap('ddc')
   function s:ddc_sourced() abort "{{{
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
-    " call ddc#custom#patch_global('ui', 'none')
+    call ddc#custom#patch_global('ui', 'none')
 
     call ddc#custom#patch_global('sourceOptions', {
         \ '_': {
+        \   'dup': 'keep',
         \   'ignoreCase': v:true,
         \   'matchers': ['matcher_head'],
-        \   'sorters': ['sorter_rank']
+        \   'minAutoCompleteLength': 0,
+        \   'sorters': ['sorter_rank'],
+        \   'timeout': 5000
         \ }})
     call ddc#custom#patch_global('sourceOptions', {
         \ 'around': {'mark': 'A'},
@@ -134,16 +163,13 @@ if dein#tap('ddc')
         \ })
 
     " call ddc#custom#patch_global('autoCompleteDelay', 50)
-    call ddc#custom#patch_global('completionMode', 'manual')
 
     call ddc#enable()
   endfunction "}}}
   call dein#set_hook('ddc', 'hook_source', function('s:ddc_sourced'))
 
-  inoremap <silent><expr> <C-n> ddc#map#pum_visible() ? '<C-n>' : ddc#map#manual_complete()
-  inoremap <silent><expr> <C-p> ddc#map#pum_visible() ? '<C-p>' : ddc#map#manual_complete()
-  " inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
-  " inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
+  inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
+  inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
   " imap <C-Space> <C-n>
 endif "}}}
 
@@ -392,6 +418,18 @@ if dein#tap('lexima')
   call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
 endif "}}}
 
+" undotree "{{{
+if dein#tap('undotree')
+  let g:undotree_DiffpanelHeight = 8
+  let g:undotree_SetFocusWhenToggle = 1
+  let g:undotree_WindowLayout = 2
+
+  nmap <Space>u :<C-u>UndotreeToggle<CR>
+
+  Autocmd BufWinEnter undotree_* GitGutterLineHighlightsDisable
+  Autocmd BufWinLeave undotree_* GitGutterLineHighlightsEnable
+endif "}}}
+
 " vim-fugitive "{{{
 if dein#tap('fugitive')
   call add(g:vimrc#generate_filetypes, 'fugitive')
@@ -444,6 +482,7 @@ endif "}}}
 if dein#tap('lsp')
   let g:lsp_completion_documentation_enabled = 0
   let g:lsp_diagnostics_echo_cursor = 1
+  let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
   " let g:lsp_hover_ui = 'preview'
