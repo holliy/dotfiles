@@ -255,6 +255,7 @@ function! Concat(type) abort
   if startline < endline
     let lines = getline(startline + 1, endline)
 
+    " ソースコード中では結合時に空白を入れない
     if &filetype !~# '\v(\.|^)text(\.|$)'
       let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
       if synname !~# '\v(Comment|String)$'
@@ -442,14 +443,17 @@ endfunction "}}}
 "}}}
 
 " コマンド "{{{
-" vimrc等を読み込む "{{{
 cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
 cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
 cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 
-command! -bar -nargs=0 Evimrc edit $MYVIMRC
-command! -bar -nargs=0 Egvimrc edit $MYGVIMRC
-command! -bar -nargs=0 Svimrc source $MYVIMRC
+" vimrc等を開く "{{{
+let s:vimrc = expand('<sfile>')
+let s:gvimrc = expand('<sfile>:h') . '/.gvimrc'
+
+command! -bar -nargs=0 Evimrc edit `=s:vimrc`
+command! -bar -nargs=0 Egvimrc edit `=s:gvimrc`
+command! -bar -nargs=0 Svimrc source `=s:vimrc`
 cnoreabbrev <expr> ev Cmdwhen(':', 'ev', 'Evimrc')
 cnoreabbrev <expr> evimrc Cmdwhen(':', 'evimrc', 'Evimrc')
 cnoreabbrev <expr> egv Cmdwhen(':', 'egv', 'Egvimrc')
@@ -458,7 +462,7 @@ cnoreabbrev <expr> sv Cmdwhen(':', 'sv', 'Svimrc')
 cnoreabbrev <expr> svimrc Cmdwhen(':', 'svimrc', 'Svimrc')
 
 if g:vimrc#is_gui
-  command! -bar -nargs=0 Sgvimrc source $MYGVIMRC
+  command! -bar -nargs=0 Sgvimrc source `=s:gvimrc`
   cnoreabbrev <expr> sgv Cmdwhen(':', 'sgv', 'Sgvimrc')
   cnoreabbrev <expr> sgvimrc Cmdwhen(':', 'sgvimrc', 'Sgvimrc')
 endif "}}}
@@ -1041,7 +1045,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " 縦分割時のスクロールの高速化 "{{{
   " https://qiita.com/kefir_/items/c725731d33de4d8fb096
-  if 0
+  if 0 && !g:vimrc#is_nvim
     set nottyfast
     function! s:enableVsplitMode() abort "{{{
       " enable origin mode and left/right margins
@@ -1067,7 +1071,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     map <Esc>[3;3R <t_F9>
     map <expr> <t_F9> <SID>enableVsplitMode()
 
-    if g:vimrc#is_starting && !g:vimrc#is_nvim
+    if g:vimrc#is_starting
       let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
   endif "}}}
@@ -1173,10 +1177,10 @@ Autocmd WinLeave * setlocal nocursorline
 Autocmd WinEnter,BufWinEnter * setlocal cursorline
 "}}}
 
-" カーソル位置や折りたたみの状態を保存 "{{{
+" 保存したときのカーソル位置へ移動 "{{{
 Autocmd BufReadPost ?*
     \ if line("'\"") > 0 && line ("'\"") <= line('$') |
-    \   execute "normal! g'\"zzzv" |
+    \   execute "normal! g'\"zv" |
     \ endif
 "}}}
 

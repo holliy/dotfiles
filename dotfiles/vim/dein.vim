@@ -1,5 +1,4 @@
-if v:version < 704
-  echomsg 'dein.vim works on Vim 7.4'
+if v:version < 802
   finish
 endif
 
@@ -11,28 +10,20 @@ if !isdirectory(s:dein_repo_dir)
     finish
   endif
 
-  if v:version >= 802
-    let s:arg_branch = ''
-  elseif v:version > 704
-    let s:arg_branch = '-b 2.2 '
-  else
-    let s:arg_branch = '-b 1.5 '
-  endif
-
   call system('git clone https://github.com/Shougo/dein.vim ' .
-      \ s:arg_branch . shellescape(s:dein_repo_dir))
+      \ shellescape(s:dein_repo_dir))
   execute 'helptags' s:dein_repo_dir . '/doc'
-  unlet s:arg_branch
 endif
 let &runtimepath = s:dein_repo_dir .",". &runtimepath
 
+let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
 " let g:dein#install_process_timeout = 60
 let g:dein#install_progress_type = 'tabline'
 let g:dein#install_message_type = 'echo'
 
 if dein#load_state(s:dein_dir)
-  call dein#begin(s:dein_dir, [g:vimrc#dotvim . '/dein.vim'])
+  call dein#begin(s:dein_dir, [expand('<sfile>')])
 
   call dein#add(s:dein_repo_dir)
   call dein#add('airblade/vim-gitgutter')
@@ -76,22 +67,16 @@ if dein#load_state(s:dein_dir)
 
   call dein#end()
 
+  if g:vimrc#is_starting && dein#check_install()
+    call dein#install()
+  endif
+
   if !(g:vimrc#is_unix && $USER ==# 'root')
     call dein#save_state()
   endif
 endif
 
-if g:vimrc#is_starting && dein#check_install()
-  call dein#install()
-endif
-
-if !isdirectory(dein#util#_get_runtime_path()) ||
-    \ (empty(has('*readdir') ? readdir(dein#util#_get_runtime_path()) :
-    \   glob(dein#util#_get_runtime_path() . '/*', 0, 1)))
-  call dein#recache_runtimepath()
-endif
-
-Autocmd VimEnter * call dein#call_hook('source')
+Autocmd VimEnter * call dein#call_hook('post_source')
 
 " caw "{{{
 if dein#tap('caw')
@@ -166,7 +151,7 @@ if dein#tap('ddc')
 
     call ddc#enable()
   endfunction "}}}
-  call dein#set_hook('ddc', 'hook_source', function('s:ddc_sourced'))
+  call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
 
   inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
   inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
@@ -415,7 +400,7 @@ if dein#tap('lexima')
 
     imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   endfunction "}}}
-  call dein#set_hook('lexima', 'hook_source', function('s:lexima_sourced'))
+  call dein#set_hook('lexima', 'hook_post_source', function('s:lexima_sourced'))
 endif "}}}
 
 " undotree "{{{
@@ -470,7 +455,7 @@ if dein#tap('gitgutter')
 
     " autocmd! gitgutter CursorHold,CursorHoldI
   endfunction
-  call dein#set_hook('gitgutter', 'hook_source', function('s:gitgutter_sourced'))
+  call dein#set_hook('gitgutter', 'hook_post_source', function('s:gitgutter_sourced'))
 endif "}}}
 
 " vim-haskell-indent "{{{
