@@ -901,6 +901,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       " 端末へ情報を要求
       let &t_RF = "\e]10;?\x07"
       let &t_RB = "\e]11;?\x07"
+      let &t_RV = "\e[>c"
 
       " 下線
       " let &t_AU = ""
@@ -1253,7 +1254,15 @@ else
   runtime macros/matchit.vim
 endif
 
-execute 'source' g:vimrc#dotvim . '/dein.vim'
+" 画面切り替え前のメッセージを遅延させる
+redir => g:msg
+silent execute 'source' g:vimrc#dotvim . '/dein.vim'
+silent runtime! plugin/**/*.vim
+redir END
+Autocmd VimEnter *
+    \ for line in split(g:msg, "\n") |
+    \   echomsg line |
+    \ endfor
 "}}}
 
 Autocmd VimEnter * doautocmd Vimrc FileType

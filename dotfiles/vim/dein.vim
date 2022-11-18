@@ -1,4 +1,5 @@
 if v:version < 802
+  echomsg 'no plugins loaded.'
   finish
 endif
 
@@ -196,6 +197,12 @@ if dein#tap('lexima')
         \   {'start': '(', 'end': ')'}, {'start': '{', 'end': '}'},
         \   {'start': '[', 'end': ']'}
         \ ]
+    let comments = [
+        \   {'start': '/*', 'end': '*/', 'head': '*',
+        \     'filetype': ['c', 'cpp', 'cs', 'java', 'rust', 'scala']},
+        \   {'start': '{-', 'end': '-}', 'with_bracket': 1, 'filetype': ['haskell']},
+        \   {'start': '{-#', 'end': '#-}', 'filetype': ['haskell']},
+        \ ]
 
     " call filter(g:lexima#default_rules,
     "    \ '!has_key(v:val, "at") || v:val.at !=# "\\\\\\%#"')
@@ -221,122 +228,59 @@ if dein#tap('lexima')
         \ }) "}}}
 
     " comment{{{
-    " C style "{{{
-    call lexima#add_rule({
-        \   'at': '/\%#$',
-        \   'char': '*',
-        \   'input_after': '*/',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '/\*\%#\*/',
-        \   'char': '<Space>',
-        \   'input_after': '<Space>',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '/\*\%#\*/',
-        \   'char': '<BS>',
-        \   'input': '<BS><BS>',
-        \   'delete': 2,
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '/\* \%# \*/',
-        \   'char': '<BS>',
-        \   'delete': 1,
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '/\*\%#\*/',
-        \   'char': '<BS>',
-        \   'delete': 2,
-        \   'input': '<BS><BS>',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '^ \* \%# \?\*/',
-        \   'char': '<BS>',
-        \   'input': '<BS><BS>',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '^ \%#',
-        \   'char': '<Space>',
-        \   'input': '*<Space>',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala'],
-        \   'syntax': ['Comment']
-        \ }) "}}}
+    for c in comments
+      call lexima#add_rule({
+          \   'at': '\V' . c.start[:-2] . '\%#\$',
+          \   'char': c.start[-1:],
+          \   'input_after': c.end,
+          \   'filetype': c.filetype
+          \ })
+      call lexima#add_rule({
+          \   'at': '\V' . c.start . '\%#' . c.end,
+          \   'char': '<Space>',
+          \   'input_after': '<Space>',
+          \   'filetype': c.filetype
+          \ })
+      call lexima#add_rule({
+          \   'at': '\V' . c.start . '\%#' . c.end,
+          \   'char': '<BS>',
+          \   'input': repeat('<BS>', len(c.start)),
+          \   'delete': len(c.end),
+          \   'filetype': c.filetype
+          \ })
+      call lexima#add_rule({
+          \   'at': '\V' . c.start . ' \%# ' . c.end,
+          \   'char': '<BS>',
+          \   'delete': 1,
+          \   'filetype': c.filetype
+          \ })
 
-    " Haskell "{{{
-    call lexima#add_rule({
-        \   'at': '{\%#$',
-        \   'char': '-',
-        \   'input_after': '-}',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{\%#}$',
-        \   'char': '-',
-        \   'input_after': '-',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-\%#-}',
-        \   'char': '#',
-        \   'input_after': '#',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-\%#-}',
-        \   'char': '<Space>',
-        \   'input_after': '<Space>',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-#\%##-}',
-        \   'char': '<Space>',
-        \   'input_after': '<Space>',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-\%#-}',
-        \   'char': '<BS>',
-        \   'input': '<BS><BS>',
-        \   'delete': 2,
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-#\%##-}',
-        \   'char': '<BS>',
-        \   'delete': 1,
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{- \%# -}',
-        \   'char': '<BS>',
-        \   'delete': 1,
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '{-# \%# #-}',
-        \   'char': '<BS>',
-        \   'delete': 1,
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '^ - \%# \?-}',
-        \   'char': '<BS>',
-        \   'input': '<BS><BS>',
-        \   'filetype': ['haskell']
-        \ })
-    call lexima#add_rule({
-        \   'at': '^ \%#',
-        \   'char': '<Space>',
-        \   'input': '-<Space>',
-        \   'filetype': ['haskell'],
-        \   'syntax': ['Comment']
-        \ }) "}}}
+      if has_key(c, 'head')
+        call lexima#add_rule({
+            \   'at': '\V\^ ' . c.head . ' \%# \?' . c.end,
+            \   'char': '<BS>',
+            \   'input': '<BS><BS>',
+            \   'filetype': c.filetype
+            \ })
+        call lexima#add_rule({
+            \   'at': '^ \%#',
+            \   'char': '<Space>',
+            \   'input': c.head . '<Space>',
+            \   'filetype': c.filetype,
+            \   'syntax': ['Comment']
+            \ })
+      endif
+
+      if get(c, 'with_bracket', 0)
+        call lexima#add_rule({
+            \   'at': '\V' . c.start[:-2] . '\%#' . c.end[1:] . '\$',
+            \   'char': c.start[-1:],
+            \   'input_after': c.end[:0],
+            \   'filetype': c.filetype
+            \ })
+      endif
+
+    endfor
     "}}}
 
     " bracket "{{{
@@ -375,27 +319,24 @@ if dein#tap('lexima')
         \   'filetype': ['vim']
         \ }) "}}}
 
-    " <Tab>で補完した文字の後ろに移動 "{{{
+    " 補完した文字の後ろに<Tab>で移動 "{{{
     for pair in brackets + quotes
       call lexima#add_rule({
-          \   'at': '\S\%# \?' . pair.end,
+          \   'at': '\V\S\%# \?' . pair.end,
           \   'char': '<Tab>',
           \   'leave': pair.end
           \ })
     endfor
 
-    call lexima#add_rule({
-        \   'at': '\%# \?\*/',
-        \   'char': '<Tab>',
-        \   'leave': '/',
-        \   'filetype': ['c', 'cpp', 'cs', 'java', 'scala']
-        \ })
-    call lexima#add_rule({
-        \   'at': '\%# \?-}',
-        \   'char': '<Tab>',
-        \   'leave': '}',
-        \   'filetype': ['haskell']
-        \ })
+    for c in comments
+      call lexima#add_rule({
+          \   'at': '\V\S\%# \?' . c.end,
+          \   'char': '<Tab>',
+          \   'leave': c.end,
+          \   'filetype': c.filetype,
+          \   'syntax': ['Comment']
+          \ })
+    endfor
     "}}}
 
     imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
