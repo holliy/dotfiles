@@ -1,4 +1,4 @@
-if v:version < 802
+if !(g:vimrc#is_nvim || v:version >= 802)
   echomsg 'no plugins loaded.'
   finish
 endif
@@ -292,6 +292,7 @@ if dein#tap('lexima')
           \   'input_after': '<CR>\ ',
           \   'filetype': ['vim']
           \ })
+      " () の間に改行を入力時、継続行にして3行に展開
       call lexima#add_rule({
           \   'at': pair.start . '\%#$',
           \   'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
@@ -300,6 +301,7 @@ if dein#tap('lexima')
           \   'input_after': '<CR>\ ' . pair.end,
           \   'filetype': ['vim']
           \ })
+      " ↑の展開後の途中の改行でも行継続
       call lexima#add_rule({
           \   'at': '\C\v^(\s*)\S.*\' . pair.start . '%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
           \   'char': '<CR>',
@@ -445,10 +447,14 @@ if dein#tap('lsp')
 
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened
-        \ call nvim_win_set_option(lsp#internal#document_hover#under_cursor#getpreviewwinid(), 'winhighlight', 'MatchParen')
+        \ if lsp#document_hover_preview_winid() isnot v:null |
+        \   call nvim_win_set_option(lsp#document_hover_preview_winid(), 'winhighlight', 'MatchParen') |
+        \ endif
   else
     Autocmd User lsp_float_opened
-        \ call setwinvar(lsp#internal#document_hover#under_cursor#getpreviewwinid(), '&wincolor', 'MatchParen')
+        \ if lsp#document_hover_preview_winid() isnot v:null |
+        \   call setwinvar(lsp#document_hover_preview_winid(), '&wincolor', 'MatchParen') |
+        \ endif
   endif
 endif "}}}
 

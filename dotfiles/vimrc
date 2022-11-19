@@ -304,7 +304,7 @@ nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
 
 " ウィンドウの左側の余白の幅 "{{{
 function! s:winleftpad() abort
-  if exists('*getwininfo')
+  if g:vimrc#is_nvim || has('patch-8.2.3627')
     return getwininfo(win_getid())[0]['textoff']
   endif
 
@@ -550,7 +550,11 @@ setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
-setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Normal#'%}%=%*
+if has('patch-8.2.2854')
+  setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Normal#'%}%=%*
+else
+  setglobal statusline+=%<%#StatusLineNC#%=%*
+endif
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
 setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':'?':&filetype}
 setglobal statusline+=\ \|\ %4P
@@ -1255,12 +1259,12 @@ else
 endif
 
 " 画面切り替え前のメッセージを遅延させる
-redir => g:msg
+redir => s:msg
 silent execute 'source' g:vimrc#dotvim . '/dein.vim'
 silent runtime! plugin/**/*.vim
 redir END
 Autocmd VimEnter *
-    \ for line in split(g:msg, "\n") |
+    \ for line in split(s:msg, "\n") |
     \   echomsg line |
     \ endfor
 "}}}
