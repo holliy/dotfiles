@@ -381,9 +381,6 @@ if dein#tap('gitgutter')
   endif
 
   if g:vimrc#is_windows
-    " shellescape()するとexecutable()が通らない
-    let g:gitgutter_git_executable = 'C:\Program Files\Git\bin\git.exe'
-
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
     Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' . expand('%:p:h')
   endif
@@ -391,11 +388,6 @@ if dein#tap('gitgutter')
   Autocmd BufWritePost * GitGutter
 
   function! s:gitgutter_sourced() abort
-    if g:vimrc#is_windows
-      " shellescape()しないと実行できないのでスクリプトを読み込んだ後に変更する
-      let g:gitgutter_git_executable = shellescape(g:gitgutter_git_executable)
-    endif
-
     " autocmd! gitgutter CursorHold,CursorHoldI
   endfunction
   call dein#set_hook('gitgutter', 'hook_post_source', function('s:gitgutter_sourced'))

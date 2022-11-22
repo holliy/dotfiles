@@ -11,18 +11,18 @@ elseif g:vimrc#is_unix
   silent! set guifont=MyricaM\ M\ 12 guifontwide=MyricaM\ M\ 12
 endif
 
-if has('kaoriya')
-  Autocmd GUIEnter * set transparency=235
-elseif has('nvim')
+if !g:vimrc#is_nvim
+  if g:vimrc#is_windows
+    if has('kaoriya')
+      Autocmd GUIEnter * set transparency=235
+    elseif exists(':VimTweak') > 0
+      Autocmd GUIEnter * VimTweakSetAlpha 235
+    endif
+  endif
+else
   if exists(':GuiWindowOpacity') ==# 2
     GuiWindowOpacity 0.9
   endif
-else
-  " autocmd中にコマンド呼び出しだとE116
-  Autocmd GUIEnter *
-      \ if exists(':VimTweakSetAlpha') ==# 2 |
-      \   call libcallnr(g:vimtweak_dll_path, "SetAlpha", 235) |
-      \ endif
 endif
 
 if get(g:, 'colors_name', 'desert') ==# 'desert' || g:colors_name ==# 'morning'
