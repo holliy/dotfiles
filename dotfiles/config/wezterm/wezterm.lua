@@ -32,8 +32,12 @@ local config = {
     use_resize_increments = true,
     use_ime = true,
 
-    -- disable_default_key_bindings = true,
+    disable_default_key_bindings = true,
     -- disable_default_mouse_bindings = true,
+    keys = {
+      { key = 'Insert', mods = 'SHIFT', action = act.PasteFrom 'PrimarySelection' },
+      { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
+    },
     mouse_bindings = {
         {
             event = {Up = {streak = 1, button = 'Left'}},
@@ -49,9 +53,12 @@ local config = {
             action = act.OpenLinkAtMouseCursor
         }
     },
+    -- for modifyOtherKeys
+    enable_csi_u_key_encoding = false,
+    allow_win32_input_mode = false,
 
     use_fancy_tab_bar = false,
-    window_background_opacity = 0.9,
+    window_background_opacity = 0.85,
     text_background_opacity = 0.6,
 
     window_padding = {
@@ -63,7 +70,7 @@ local config = {
 }
 
 if wezterm.target_triple == 'x86_64-pc-windows-msvc' then
-    config.default_prog = {"wsl.exe", "~", --[[ "-e", ]] "/usr/libexec/nslogin", "/bin/bash", "--login"}
+    config.default_prog = {"wsl.exe", "~", --[[ "-e", ]] "/bin/bash", "--login"}
     config.ssh_backend = "Ssh2"
 else
     config.default_prog = {"bash", "--login"}
