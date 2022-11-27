@@ -40,17 +40,10 @@ if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
   " :redraw hides intro message
   augroup vimrc-startuptime
-    if has('patch-8.1.1113')
-      autocmd! VimEnter * ++once
-          \ let s:startuptime = reltime(s:startuptime) |
-          \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
-          \ unlet s:startuptime
-    else
-      autocmd! VimEnter *
-          \ let s:startuptime = reltime(s:startuptime) |
-          \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
-          \ unlet s:startuptime | autocmd! vimrc-startuptime
-    endif
+    autocmd! VimEnter *
+        \ let s:startuptime = reltime(s:startuptime) |
+        \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
+        \ unlet s:startuptime | autocmd! vimrc-startuptime
   augroup END
 endif "}}}
 
@@ -407,7 +400,7 @@ function! OpenSymbolicTarget() abort "{{{
     let tmpbn = buflist[0]
     let restwins = []
 
-    for wn in range(winnr('$'))
+    for wn in range(1, winnr('$'))
       if winbufnr(wn) ==# bn
         call insert(restwins, wn)
         execute wn . 'windo' 'buffer' tmpbn
@@ -610,7 +603,7 @@ if exists('+termguicolors') && !g:vimrc#is_windows
   set termguicolors
 endif
 if exists('+termwinsize')
-  SetG termwinsize=15x0
+  SetG termwinsize=15*0
 endif
 
 if has('unnamedplus')
@@ -700,6 +693,10 @@ nunmap iq
 nunmap iQ
 sunmap iq
 sunmap iQ
+
+" マッチした文字列を選択
+" TODO: マッチした文字列内か判定
+onoremap / //e<CR>
 
 noremap j gj
 noremap k gk
@@ -951,31 +948,50 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
     execute "set <FocusGained>=\e[I"
     execute "set <FocusLost>=\e[O"
+  " endif
 
-    " modifyOtherKeys "{{{
+  " modifyOtherKeys "{{{
+  " if GetXTVersion() =~# '^RLogin'
     " modifyCursorKeysとmodifyStringKeysも有効にする
     if g:vimrc#is_starting
+      " 有効にすると一部のキー(DD, <C-r>")で問題があるのでmodifyOtherKeys以外を一旦無効化
       " let &t_TI = "\e[>1;2m\e[>4;2m\e[>5;2m"
       " let &t_TE = "\e[>1;m\e[>4;m\e[>5;m"
-
-      " 有効にすると一部のキーで問題があるので一旦無効化
-      let &t_TI = ""
-      let &t_TE = ""
+      let &t_TI = "\e[>4;2m"
+      let &t_TE = "\e[>4;m"
     endif
 
-    " map <special> <Esc>[27;2;13~ <S-CR>
-    " map! <special> <Esc>[27;2;13~ <S-CR>
-    " map <special> <Esc>[27;5;13~ <C-CR>
-    " map! <special> <Esc>[27;5;13~ <C-CR>
-    " map <special> <Esc>[27;2;9~ <S-Tab>
-    " imap <special> <Esc>[27;2;9~ <S-Tab>
-    " cnoremap <special><expr> <Esc>[27;2;9~ wildmenumode() ? '<C-p>' : '<Tab>'
-    " map <special> <Esc>[27;2;8~ <S-BS>
-    " map! <special> <Esc>[27;2;8~ <S-BS>
-    " map <special> <Esc>[27;5;8~ <C-BS>
-    " map! <special> <Esc>[27;5;8~ <C-BS>
-    "}}}
+    " Seen modifyOtherKeys: true にならないようにキーコードに対してマッピングする
+    let s:modifers = [
+        \   {'name': 'S', 'code': 2},
+        \   {'name': 'A', 'code': 3},
+        \   {'name': 'A-S', 'code': 4},
+        \   {'name': 'C', 'code': 5},
+        \   {'name': 'C-S', 'code': 6},
+        \   {'name': 'A-C', 'code': 7},
+        \   {'name': 'A-C-S', 'code': 8}
+        \ ]
+    let s:keys = [
+        \   {'name': 'BS', 'code': 8},
+        \   {'name': 'Tab', 'code': 9},
+        \   {'name': 'CR', 'code': 13}
+        \ ]
+
+    for s:modifer in s:modifers
+      for s:key in s:keys
+        execute 'map <special>'
+            \ printf('<Esc>[27;%d;%d~', s:modifer['code'], s:key['code'])
+            \ printf('<%s-%s>', s:modifer['name'], s:key['name'])
+        execute 'map! <special>'
+            \ printf('<Esc>[27;%d;%d~', s:modifer['code'], s:key['code'])
+            \ printf('<%s-%s>', s:modifer['name'], s:key['name'])
+      endfor
+    endfor
+    unlet s:modifers s:modifer s:keys s:key
+
+    cnoremap <special><expr> <S-Tab> wildmenumode() ? '<C-p>' : '<Tab>'
   endif "}}}
+  "}}}
 
   " Shift-Insertのペースト時に自動でpastetoggle "{{{
   " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b

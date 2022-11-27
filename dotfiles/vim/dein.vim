@@ -128,6 +128,11 @@ endif "}}}
 " ddc.vim "{{{
 if dein#tap('ddc')
   function s:ddc_sourced() abort "{{{
+    if execute('augroup') !~# '\<denops_plugin_internal\>'
+      " denopsがサポートされてない
+      return
+    endif
+
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
     call ddc#custom#patch_global('ui', 'none')
 
@@ -151,12 +156,12 @@ if dein#tap('ddc')
     " call ddc#custom#patch_global('autoCompleteDelay', 50)
 
     call ddc#enable()
+
+    inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
+    inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
+    " imap <C-Space> <C-n>
   endfunction "}}}
   call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
-
-  inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
-  inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
-  " imap <C-Space> <C-n>
 endif "}}}
 
 " ghcmod-vim "{{{
