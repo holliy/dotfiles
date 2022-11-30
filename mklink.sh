@@ -4,7 +4,7 @@
 cd $(dirname $0)
 
 # terminfoファイルのコンパイル
-ls -1 terminfo/* | xargs -n1 tic
+ls -1 terminfo/* | xargs -n1 tic -x
 
 DOTTER=dotter
 
@@ -20,8 +20,8 @@ cd dotfiles/
 FORCE=0
 
 if [ "$FORCE" = "1" ]; then
-  $DOTTER deploy --force --local-config .dotter/linux.toml
+  $DOTTER --force --local-config .dotter/linux.toml --cache-file .dotter/$(hostname).toml deploy
 else
-  $DOTTER deploy --local-config .dotter/linux.toml
+  $DOTTER --local-config .dotter/linux.toml --cache-file .dotter/$(hostname).toml deploy
 fi
 
