@@ -160,6 +160,20 @@ if dein#tap('ddc')
     inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
     inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
     " imap <C-Space> <C-n>
+
+    " 進捗表示などで高速で画面を書き換えるコマンドを実行しているとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
+    if g:vimrc#is_nvim
+      Autocmd TermOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
+      Autocmd TermOpen * autocmd! ddc TextChangedT
+    elseif has('terminal')
+      if exists('##TerminalWinOpen')
+        Autocmd TerminalWinOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
+        Autocmd TerminalWinOpen * autocmd! ddc TextChangedT
+      else
+        Autocmd TerminalOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
+        Autocmd TerminalOpen * autocmd! ddc TextChangedT
+      endif
+    endif
   endfunction "}}}
   call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
 endif "}}}
