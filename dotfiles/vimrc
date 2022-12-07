@@ -337,7 +337,7 @@ function! Foldtext() abort "{{{
   let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
 
   " (コメント用の文字も含めて) マーカーを削除
-  let pattern = printf('\V\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)', commentstart, marker, commentend)
+  let pattern = printf('\V\s\*\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)', commentstart, marker, commentend)
   let left = substitute(left, pattern, '', '')
 
   " コメント行の場合、コメント文字列のみにする
@@ -346,20 +346,23 @@ function! Foldtext() abort "{{{
 
   " タブ文字を同じ幅のスペースに変換 (vartabstopには未対応)
   let left = substitute(left, '\t', repeat(' ', &tabstop), 'g')
-  let leftlen = strdisplaywidth(left)
+  let leftlen = strwidth(left)
 
   let foldlinecount = foldclosedend(v:foldstart) - foldclosed(v:foldstart) + 1
-  let right = foldlinecount . ' [' . v:foldlevel . '] '
+  let right = printf(' %d [%d] ', foldlinecount, v:foldlevel)
   let rightlen = len(right)
 
   let linelen = winwidth('.') - s:winleftpad()
-  let tmp = strpart(left, 0, linelen - rightlen)
-  let tmplen = len(tmp)
 
   " 表示する文字列が収まらないときに後ろの文字を畳む
-  if leftlen > tmplen
-    let left = strpart(tmp, 0, tmplen - 4) . '... '
-    let leftlen = tmplen
+  if leftlen + rightlen > linelen
+    let leftlen = linelen - rightlen - 3
+    while strwidth(left) > leftlen
+      let left = strcharpart(left, 0, strchars(left) - 1)
+    endwhile
+
+    let left = left . '...'
+    let leftlen = strwidth(left)
   endif
 
   let fill = repeat(' ', linelen - (leftlen + rightlen))
@@ -818,6 +821,7 @@ inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
+inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<C-f>' : '<C-x><C-f>'
 
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
