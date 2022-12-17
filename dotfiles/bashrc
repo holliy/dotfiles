@@ -81,10 +81,6 @@ if ! shopt -oq posix; then
     . /usr/share/bash-completion/bash_completion
   elif [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
-  else
-    __git_ps1() {
-      :
-    }
   fi
 fi
 
@@ -102,6 +98,36 @@ __fzf_compgen_dir() {
 
 if [ -f ~/.fzf.bash ]; then
   . ~/.fzf.bash
+else
+  if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+    . /usr/share/doc/fzf/examples/key-bindings.bash
+  fi
+  if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+    . /usr/share/doc/fzf/examples/completion.bash
+  fi
+fi
+
+GIT_PS1_STATESEPARATOR=""
+GIT_PS1_SHOWDIRTYSTATE=1
+GIT_PS1_SHOWSTASHSTATE=
+GIT_PS1_SHOWUNTRACKEDFILES=
+GIT_PS1_SHOWUPSTREAM="auto"
+GIT_PS1_COMPRESSSPARSESTATE=
+GIT_PS1_OMITSPARSESTATE=1
+GIT_PS1_DESCRIBE_STYLE="default"
+GIT_PS1_SHOWCOLORHINTS=1
+GIT_PS1_HIDE_IF_PWD_IGNORED=
+
+if [ -f ~/.git-completion.bash ]; then
+  . ~/.git-completion.bash
+fi
+if [ -f ~/.git-prompt.sh ]; then
+  . ~/.git-prompt.sh
+fi
+if [ "$(type -t __git_ps1)" != "function" ]; then
+  __git_ps1() {
+    :
+  }
 fi
 
 # set variable identifying the chroot you work in (used in the prompt below)
@@ -129,17 +155,6 @@ if [ -n "$force_color_prompt" ]; then
         color_prompt=
     fi
 fi
-
-GIT_PS1_STATESEPARATOR=""
-GIT_PS1_SHOWDIRTYSTATE=1
-GIT_PS1_SHOWSTASHSTATE=
-GIT_PS1_SHOWUNTRACKEDFILES=
-GIT_PS1_SHOWUPSTREAM="auto"
-GIT_PS1_COMPRESSSPARSESTATE=
-GIT_PS1_OMITSPARSESTATE=1
-GIT_PS1_DESCRIBE_STYLE="default"
-GIT_PS1_SHOWCOLORHINTS=1
-GIT_PS1_HIDE_IF_PWD_IGNORED=
 
 if [ "$color_prompt" = yes ]; then
     PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;36m\]$(__git_ps1 "(%s)")\[\033[00m\]\$ '
