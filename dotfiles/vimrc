@@ -392,7 +392,10 @@ function! OpenSymbolicTarget() abort "{{{
     return
   endif
 
-  let view = winsaveview()
+  " バッファを開いてからカーソルを動かしていないときはカーソル位置を保存しない
+  if getpos('.') !=# getpos("'\"")
+    let view = winsaveview()
+  endif
 
   " TODO: 別のタブも
   if winnr('$') > 1
@@ -422,8 +425,10 @@ function! OpenSymbolicTarget() abort "{{{
     execute 'edit' filepath
   endif
 
-  call winrestview(view)
-  normal! zv
+  if exists('l:view')
+    call winrestview(view)
+    normal! zv
+  endif
 endfunction "}}}
 
 function! Mode() abort "{{{
@@ -547,10 +552,14 @@ setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
 if has('patch-8.2.2854')
-  setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Normal#'%}%=%*
+  setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Comment#'%}
 else
-  setglobal statusline+=%<%#StatusLineNC#%=%*
+  setglobal statusline+=%<%#StatusLineNC#
 endif
+if exists('+showcmdloc')
+  setglobal statusline+=\ %S
+endif
+setglobal statusline+=%=%*
 setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
 setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':'?':&filetype}
 setglobal statusline+=\ \|\ %4P
@@ -585,7 +594,6 @@ set viminfo-=<50 viminfo+=<100
 set virtualedit+=block
 set wildcharm=<Tab> wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
 set winaltkeys=yes
-" set <xUp>=OA <xDown>=OB <xRight>=OC <xLeft>=OD
 
 if exists('+ballooneval')
   set ballooneval
@@ -601,6 +609,9 @@ if exists('+fixendofline')
 endif
 if exists('+packpath')
   let &packpath .= ',' . g:vimrc#dotvim . '/pack'
+endif
+if exists('+showcmdloc')
+  set showcmdloc=statusline
 endif
 if exists('+termguicolors') && !g:vimrc#is_windows
   set termguicolors
@@ -955,7 +966,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " endif
 
   " modifyOtherKeys "{{{
-  " if GetXTVersion() =~# '^RLogin'
+  " if GetXTVersion() =~# '^RLogin' " 応答がキー入力扱いになってしまうので無効化
     " modifyCursorKeysとmodifyStringKeysも有効にする
     if g:vimrc#is_starting
       " 有効にすると一部のキー(DD, <C-r>")で問題があるのでmodifyOtherKeys以外を一旦無効化
