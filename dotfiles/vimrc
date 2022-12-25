@@ -192,7 +192,7 @@ function! s:ignore(...) abort
 endfunction "}}}
 
 " 行末の空白をハイライト "{{{
-function! HighlightTrailingSpace() abort
+function! s:highlight_trailing_space() abort
   if s:ignore()
     if get(w:, 'spaceid', 0)
       call matchdelete(w:spaceid)
@@ -441,6 +441,20 @@ function! Mode() abort "{{{
 
   return toupper(mode[0]) . mode[1:]
 endfunction "}}}
+
+" 画面の81桁目にcolorcolumnを表示 "{{{
+function! s:set_colorcolumn() abort
+  if s:ignore()
+    setlocal colorcolumn&
+  else
+    let &l:colorcolumn = 81 - s:winleftpad()
+  endif
+endfunction "}}}
+
+function! Highlights() abort "{{{
+  call s:highlight_trailing_space()
+  call s:set_colorcolumn()
+endfunction "}}}
 "}}}
 
 " コマンド "{{{
@@ -615,9 +629,6 @@ if exists('+showcmdloc')
 endif
 if exists('+termguicolors') && !g:vimrc#is_windows
   set termguicolors
-endif
-if exists('+termwinsize')
-  SetG termwinsize=15*0
 endif
 
 if has('unnamedplus')
@@ -836,6 +847,10 @@ inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<C-f>' : '<C-x>
 
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
+
+if g:vimrc#is_nvim
+  tnoremap <C-w> <C-\><C-n><C-w>
+endif
 "}}}
 
 " エンコード "{{{
@@ -1220,13 +1235,6 @@ Autocmd BufReadPost ?*
     \ endif
 "}}}
 
-" 画面の81桁目にcolorcolumnを表示 "{{{
-Autocmd BufEnter,BufWinEnter,ColorScheme,FileType *
-    \ let &colorcolumn = 81 - s:winleftpad()
-Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
-    \ let &colorcolumn = 81 - s:winleftpad()
-"}}}
-
 " その他 "{{{
 " Autocmd QuickfixCmdPost make call QfMakeConv(&fileencoding, &encoding)
 " if g:vimrc#is_windows
@@ -1255,17 +1263,35 @@ if g:vimrc#is_nvim
   Autocmd TermOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   Autocmd TermOpen * startinsert
   Autocmd TermClose * if !v:event.status | execute 'bdelete! ' . expand('<abuf>') | endif
+  Autocmd TermOpen * resize 15
 elseif has('terminal')
   if exists('##TerminalWinOpen')
     Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
     Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+    Autocmd TerminalWinOpen * if empty(&termwinsize) | resize 15 | endif
   else
     Autocmd TerminalOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
     Autocmd TerminalOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+    Autocmd TerminalOpen *
+        \ if empty(&termwinsize) && bufwinnr(bufnr()) !=# -1 |
+        \   resize 15 |
+        \ endif
   endif
 endif
-Autocmd BufWinEnter,ColorScheme,FileType * call HighlightTrailingSpace()
+Autocmd BufWinEnter,ColorScheme,FileType * call Highlights()
+if g:vimrc#is_nvim
+  Autocmd TermOpen * call Highlights()
+elseif has('terminal')
+  if exists('##TerminalWinOpen')
+    Autocmd TerminalWinOpen * call Highlights()
+  else
+    Autocmd TerminalOpen * call Highlights()
+  endif
+endif
+Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
+    \ call s:set_colorcolumn()
 AutocmdFT diff setlocal vartabstop=9,8
+Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 
 augroup Vimrc_bin
   autocmd!
@@ -1295,8 +1321,8 @@ silent execute 'source' g:vimrc#dotvim . '/dein.vim'
 silent runtime! plugin/**/*.vim
 redir END
 Autocmd VimEnter *
-    \ for line in split(s:msg, "\n") |
-    \   echomsg line |
+    \ for s:line in split(s:msg, "\n") |
+    \   echomsg s:line |
     \ endfor
 "}}}
 
