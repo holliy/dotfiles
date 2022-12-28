@@ -38,6 +38,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
+  call dein#add('LumaKernel/ddc-source-file')
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
   call dein#add('mbbill/undotree')
@@ -144,12 +145,23 @@ if dein#tap('ddc')
         \   'minAutoCompleteLength': 0,
         \   'sorters': ['sorter_rank'],
         \   'timeout': 5000
-        \ }})
-    call ddc#custom#patch_global('sourceOptions', {
+        \ },
         \ 'around': {'mark': 'A'},
         \ 'vim-lsp': {
         \   'mark': 'L',
         \   'sorters': ['sorter_rank', 'sorter_ascii']
+        \ },
+        \ 'file': {
+        \   'sorters': ['sorter_ascii']
+        \ }
+        \ })
+    call ddc#custom#patch_global('sourceParams', {
+        \ 'around': {
+        \   'maxSize': 500
+        \ },
+        \ 'file': {
+        \   'displayCwd': 'c',
+        \   'displayBuf': 'b',
         \ }
         \ })
 
@@ -159,6 +171,7 @@ if dein#tap('ddc')
 
     inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
     inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
+    inoremap <silent><expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<C-f>' : ddc#map#manual_complete('file', 'native')
     " imap <C-Space> <C-n>
 
     " 進捗表示などで高速で画面を書き換えるコマンドを実行しているとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
