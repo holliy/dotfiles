@@ -171,7 +171,7 @@ if dein#tap('ddc')
 
     inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
     inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
-    inoremap <silent><expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<C-f>' : ddc#map#manual_complete('file', 'native')
+    inoremap <silent><expr> <Plug>(vimrc_complete-file) ddc#map#manual_complete('file', 'native')
     " imap <C-Space> <C-n>
 
     " 進捗表示などで高速で画面を書き換えるコマンドを実行しているとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
