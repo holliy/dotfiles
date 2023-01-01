@@ -466,9 +466,9 @@ cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 let s:vimrc = expand('<sfile>')
 let s:gvimrc = expand('<sfile>:h') . '/.gvimrc'
 
-command! -bar -nargs=0 Evimrc edit `=s:vimrc`
-command! -bar -nargs=0 Egvimrc edit `=s:gvimrc`
-command! -bar -nargs=0 Svimrc source `=s:vimrc`
+execute 'command! -bar -nargs=0 Evimrc edit' s:vimrc
+execute 'command! -bar -nargs=0 Egvimrc edit' s:gvimrc
+execute 'command! -bar -nargs=0 Svimrc source' s:vimrc
 cnoreabbrev <expr> ev Cmdwhen(':', 'ev', 'Evimrc')
 cnoreabbrev <expr> evimrc Cmdwhen(':', 'evimrc', 'Evimrc')
 cnoreabbrev <expr> egv Cmdwhen(':', 'egv', 'Egvimrc')
@@ -477,10 +477,13 @@ cnoreabbrev <expr> sv Cmdwhen(':', 'sv', 'Svimrc')
 cnoreabbrev <expr> svimrc Cmdwhen(':', 'svimrc', 'Svimrc')
 
 if g:vimrc#is_gui
-  command! -bar -nargs=0 Sgvimrc source `=s:gvimrc`
+  execute 'command! -bar -nargs=0 Sgvimrc source' s:gvimrc
   cnoreabbrev <expr> sgv Cmdwhen(':', 'sgv', 'Sgvimrc')
   cnoreabbrev <expr> sgvimrc Cmdwhen(':', 'sgvimrc', 'Sgvimrc')
-endif "}}}
+endif
+
+unlet s:vimrc s:gvimrc
+"}}}
 
 " setglobal, autocmd, highlight のラッパー "{{{
 command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
@@ -493,9 +496,9 @@ if g:vimrc#is_starting
   command -bar -complete=option -nargs=* SetG set <args>
 
   Autocmd VimEnter * command! -complete=filetype -nargs=*
-      \   AutocmdFT Autocmd FileType <args>
+      \ AutocmdFT Autocmd FileType <args>
   Autocmd VimEnter * command! -bar -complete=option -nargs=*
-      \   SetG setglobal <args>
+      \ SetG setglobal <args>
 else
   command! -complete=filetype -nargs=* AutocmdFT Autocmd FileType <args>
   command! -bar -complete=option -nargs=* SetG setglobal <args>
@@ -589,6 +592,7 @@ set pastetoggle=<F2>
 set scrolloff=2
 set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
 set shortmess+=mrx shortmess-=t shortmess-=T
+set showbreak==>
 set showcmd
 set showtabline=2
 SetG signcolumn=auto
@@ -616,7 +620,7 @@ if exists('+balloonevalterm')
   set balloonevalterm
 endif
 if exists('+breakindent')
-  SetG breakindent breakindentopt=shift:2
+  SetG breakindent breakindentopt=shift:2,sbr
 endif
 if exists('+fixendofline')
   SetG nofixendofline
@@ -626,6 +630,9 @@ if exists('+packpath')
 endif
 if exists('+showcmdloc')
   set showcmdloc=statusline
+endif
+if exists('+smoothscroll')
+  SetG smoothscroll
 endif
 if exists('+termguicolors') && !g:vimrc#is_windows
   set termguicolors
@@ -763,8 +770,13 @@ sunmap #
 sunmap g*
 sunmap g#
 
-noremap <C-e> <C-e>j
-noremap <C-y> <C-y>k
+if exists('+smoothscroll')
+  noremap <C-e> <C-e>gj
+  noremap <C-y> <C-y>gk
+else
+  noremap <C-e> <C-e>j
+  noremap <C-y> <C-y>k
+endif
 noremap <C-u> <C-u>zz
 noremap <C-d> <C-d>zz
 noremap <C-f> <C-f>zz
@@ -1197,6 +1209,7 @@ endif "}}}
 set background=dark
 Highlight ColorColumn ctermbg=233 guibg=#181818
 " Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
+Highlight NonText ctermfg=blue guifg=blue
 
 Highlight CursorLineNr ctermbg=NONE guibg=NONE
 " Highlight LineNr ctermfg=darkgreen guifg=#00c000
