@@ -35,16 +35,21 @@ if dein#load_state(s:dein_dir)
   " call dein#add('gamoutatsumi/ddc-sorter_ascii', {'depends': ['ddc']})
   call dein#add('holliy/ddc-sorter_ascii', {'depends': ['ddc'], 'rev': 'bump-ddc'})
   call dein#add('itchyny/landscape.vim')
+  call dein#add('itchyny/lightline.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
+  call dein#add('kana/vim-textobj-user')
   call dein#add('LumaKernel/ddc-source-file')
+  call dein#add('nathanaelkane/vim-indent-guides') " unmaintained
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
   call dein#add('mbbill/undotree')
   call dein#add('prabirshrestha/vim-lsp')
   call dein#add('rbtnn/vim-ambiwidth')
   call dein#add('rhysd/conflict-marker.vim')
+  call dein#add('rhysd/vim-operator-surround', {'depends': ['operator-user']})
+  call dein#add('rhysd/vim-textobj-word-column', {'depends': ['textobj-user']})
   " call dein#add('Shougo/neocomplete.vim')
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
@@ -56,9 +61,10 @@ if dein#load_state(s:dein_dir)
   call dein#add('Shougo/ddc-ui-native', {'depends': ['ddc']})
   call dein#add('Shougo/ddc-ui-none', {'depends': ['ddc']})
   call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
+  call dein#add('thinca/vim-ft-help_fold', {'name': 'help-fold'})
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tpope/vim-fugitive')
-  call dein#add('tpope/vim-surround')
+  " call dein#add('tpope/vim-surround')
   call dein#add('tyru/caw.vim', {'depends': ['operator-user', 'repeat']})
   call dein#add('vim-denops/denops.vim', {'if': executable('deno')})
   call dein#add('vim-jp/vimdoc-ja')
@@ -378,6 +384,186 @@ if dein#tap('lexima')
   call dein#set_hook('lexima', 'hook_post_source', function('s:lexima_sourced'))
 endif "}}}
 
+" lightline "{{{
+if dein#tap('lightline')
+  " g:lightline "{{{
+  let g:lightline = {
+      \ 'colorscheme' : 'landscape',
+      \ 'active' : {
+      \   'left' : [['mode', 'paste'], ['bufnum', 'directory', 'filename', 'readonly', 'modified']],
+      \   'right' : [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
+      \ },
+      \ 'inactive' : {
+      \   'left' : [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
+      \   'right' : [['lineinfo'], ['percent']]
+      \ },
+      \ 'tabline' : {
+      \   'left' : [['tabs']],
+      \   'right' : [['close']]
+      \ },
+      \ 'tab' : {
+      \   'active' : ['tabnum', 'filename', 'modified'],
+      \   'inactive' : ['bufnum', 'filename', 'modified'],
+      \ },
+      \ 'component' : {
+      \   'close' : '%999X x ',
+      \   'directory' : '%{&filetype!~"netrw"?pathshorten(fnamemodify(expand("%:h"),":~")):""}',
+      \   'lineinfo' : "L %3l:%-2v",
+      \   'paste' : '%{&paste?"P":""}',
+      \   'percent' : '%2p%%'
+      \ },
+      \ 'component_function' : {
+      \   'filename' : 'MyFilename',
+      \   'fileinfo' : 'MyFileinfo',
+      \   'filetype' : 'MyFiletype',
+      \   'mode' : 'MyMode',
+      \   'modified' : 'MyModified',
+      \   'readonly' : 'MyReadonly'
+      \ },
+      \ 'component_expand' : {
+      \   'trailing' : 'MyTrailingSpaceWarning'
+      \ },
+      \ 'component_visible_condition' : {'directory' : '&filetype!~"netrw\\|vimshell\\|vimfiler"'},
+      \ 'component_type' : {
+      \   'trailing' : 'error'
+      \ },
+      \ 'tab_component_function' : {
+      \   'modified' : 'MyModifiedT', 'bufnum' : 'MyBufnumber'
+      \ },
+      \ 'buf_component' : {},
+      \ 'buf_component_function' : {
+      \   'modified' : 'MyModifiedB', 'bufnum' : 'bufnr',
+      \   'filename' : 'MyFilenameB', 'tabnum' : 'MyTabnum'
+      \ },
+      \ 'separator' : {'left' : "", 'right' : ""},
+      \ 'subseparator' : {'left' : "|", 'right' : "|"},
+      \ }
+  "}}}
+
+  function s:ignore(...) abort "{{{
+    return 0
+  endfunction "}}}
+
+  " タブラインにバッファを表示 "{{{
+  function! s:lightline_sourced() "{{{
+    function! lightline#tabs() abort "{{{
+      " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
+      let [l:t, l:l, l:x, l:y, l:z, l:u, l:d] = [bufnr('%'), bufnr('$'), [], [], [], '...', min([max([&columns / 40, 2]), 8])]
+
+      for l:i in range(1, l:l)
+        if l:i ==# l:t
+          call add(l:y, '%' . l:i . 'T%{lightline#onetab(' . l:i . ', 1)}')
+        elseif bufexists(l:i) && !s:ignore(l:i) && (getbufvar(l:i, '&bufhidden') ==# 'hide' || empty(getbufvar(l:i, '&buftype'))) && getbufvar(l:i, '&buflisted')
+          call add(l:i < l:t ? (l:x) : l:z, '%' . l:i . 'T%{lightline#onetab(' . l:i . ', 0)}' . (l:i ==# l:l ? '%T' : ''))
+        endif
+      endfor
+
+      let [l:a, l:b, l:c] = [len(l:x), len(l:z), l:d * 2]
+      " return [l:a > l:d && l:b > l:d ? extend(add(l:x[ : l:d/2 - 1], l:u), l:x[-(l:d + 1)/2 : ]) :
+      "     \ l:a + l:b > l:c && l:a > l:d ? extend(add(l:x[ : (l:c - l:b)/2 - 1], l:u), l:x[-(l:c - l:b + 1)/2 : ]) : l:x, l:y,
+      "     \ l:a > l:d && l:b > l:d ? extend(add(l:z[ : (l:d + 1)/2 - 1], l:u), l:z[-l:d / 2 : ]) :
+      "     \ l:a + l:b > l:c && l:b > l:d ? extend(add(l:z[ : (l:c - l:a + 1)/2 - 1], l:u), l:z[-(l:c - l:a)/2 : ]) : l:z]
+      return l:a > l:d && l:b > l:d ? [extend(add(l:x[ : l:d/2 - 1], l:u), l:x[-(l:d + 1)/2 : ]), l:y, extend(add(l:z[ : (l:d + 1)/2 - 1], l:u), l:z[-l:d / 2 : ])] :
+          \ l:a + l:b > l:c && l:a > l:d ? [extend(add(l:x[ : (l:c - l:b)/2 - 1], l:u), l:x[-(l:c - l:b + 1)/2 : ]), l:y,
+          \   extend(add(l:z[ : (l:c - l:a + 1)/2 - 1], l:u), l:z[-(l:c - l:a)/2 : ])] : [l:x, l:y, l:z]
+    endfunction "}}}
+
+    function! lightline#onetab(n, active) abort "{{{
+      let [l:_, l:a] = ['', g:lightline.tab[a:active ? 'active' : 'inactive']]
+      let [l:c, l:f] = [g:lightline.buf_component, g:lightline.buf_component_function]
+
+      for l:i in range(len(l:a))
+        let l:s = has_key(l:f, l:a[l:i]) ? eval(l:f[l:a[l:i]] . '(' . a:n . ')') : get(l:c, l:a[l:i], '')
+        if strlen(l:s)
+          let l:_ .= (len(l:_) ? ' ' : '') . l:s
+        endif
+      endfor
+
+      return l:_
+    endfunction "}}}
+
+    augroup lightline
+      " autocmd!
+      " autocmd WinEnter,BufWinEnter,FileType,ColorScheme,SessionLoadPost * call lightline#update()
+      " autocmd ColorScheme,SessionLoadPost * call lightline#highlight()
+      " autocmd CursorMoved,BufUnload * call lightline#update_once()
+      autocmd BufWinEnter,WinEnter,SessionLoadPost * set tabline=%!CallInternalFunc('autoload/lightline.vim:line(1,0)')
+    augroup END
+  endfunction "}}}
+  call dein#set_hook('lightline', 'hook_post_source', function('s:lightline_sourced'))
+  "}}}
+
+  function! MyModifiedB(bufnr) "{{{
+    return s:ignore(a:bufnr) ? '' : getbufvar(a:bufnr, '&modified') ? '+' : getbufvar(a:bufnr, '&modifiable') ? '' : '-'
+  endfunction "}}}
+
+  function! MyFilenameB(bufnr) "{{{
+    let l:fname = fnamemodify(bufname(a:bufnr), ':t')
+    return empty(l:fname) ? '[No Name]' : l:fname
+  endfunction "}}}
+
+  function! MyTabnum(...) "{{{
+    return tabpagenr()
+  endfunction "}}}
+
+  function! MyBufnumber(tabnr) "{{{
+    return get(tabpagebuflist(a:tabnr), tabpagewinnr(a:tabnr) - 1)
+  endfunction "}}}
+
+  function! MyModifiedT(tabnr) "{{{
+    let l:bufnr = MyBufnumber(a:tabnr)
+    return s:ignore(l:bufnr) ? '' : getbufvar(l:bufnr, '&modified') ? '+' : getbufvar(l:bufnr, '&modifiable') ? '' : '-'
+  endfunction "}}}
+
+  function! MyModified() "{{{
+    return s:ignore() ? '' : &modified ? '+' : &modifiable ? '' : '-'
+  endfunction "}}}
+
+  let s:readonlychar = 'x'
+  function! MyReadonly() "{{{
+    return &readonly && !s:ignore() ? s:readonlychar : ''
+  endfunction "}}}
+
+  function! MyFilename() "{{{
+    let l:fname = expand('%:t')
+    return l:fname =~# '\[Command Line\]' ? '' :
+        \ &filetype ==? 'netrw' ? fnamemodify(b:netrw_curdir, ':~') :
+        \ empty(l:fname) ? '[No Name]' : l:fname
+  endfunction "}}}
+
+  function! MyFiletype() "{{{
+    return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : '?') : ''
+  endfunction "}}}
+
+  function! MyFileinfo() "{{{
+    return !s:ignore() && winwidth(0) > 75 ? (strlen(&fileencoding) ? &fileencoding : &encoding) . '/' . &fileformat : ''
+  endfunction "}}}
+
+  function! MyMode() "{{{
+    let l:fname = expand('%:t')
+    return l:fname ==# '[Command Line]' ? 'Ex' :
+        \ &filetype ==? 'help' ? 'Help' :
+        \ &filetype ==? 'qf' ? 'QuickFix' :
+        \ (winwidth(0) > 60 ? lightline#mode() : '')
+  endfunction "}}}
+
+  function! MyTrailingSpaceWarning() "{{{
+    if !s:ignore()
+      let l:space_line = search('\S\zs\s\+$', 'nw')
+      " if l:space_line != 0
+
+      "   return 'space: L' . l:space_line
+      " endif
+      " return ''
+      return l:space_line != 0 ? 'Space: L' . l:space_line : ''
+    endif
+    return ''
+  endfunction
+
+  autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
+  "}}}
+endif "}}}
+
 " undotree "{{{
 if dein#tap('undotree')
   let g:undotree_DiffpanelHeight = 8
@@ -430,6 +616,35 @@ if dein#tap('haskell-indent')
   let g:haskell_indent_disable_case = 1
 endif "}}}
 
+" vim-indent-guides "{{{
+if dein#tap('indent-guides')
+  let g:indent_guides_auto_colors = 0
+  let g:indent_guides_enable_on_vim_startup = 1
+  let g:indent_guides_exclude_filetypes = ['help']
+  let g:indent_guides_indent_levels = 15
+  let g:indent_guides_start_level = 1
+
+  function! s:indent_guides_sourced() "{{{
+    augroup indent_guides
+      autocmd!
+      autocmd BufEnter,WinEnter,FileType,VimEnter * let g:indent_guides_guide_size = &shiftwidth
+      autocmd BufEnter,WinEnter,FileType,ColorScheme * call indent_guides#process_autocmds()
+
+      autocmd ColorScheme landscape highlight IndentGuidesOdd ctermbg=240 ctermfg=208 guifg=orange guibg=#606060
+      autocmd ColorScheme landscape highlight IndentGuidesEven ctermbg=235 ctermfg=208 guifg=orange guibg=#353535
+      autocmd ColorScheme desert highlight IndentGuidesOdd term=bold ctermbg=240 ctermfg=5 guifg=navajowhite guibg=#606060
+      autocmd ColorScheme desert highlight IndentGuidesEven term=bold ctermbg=235 ctermfg=5 guifg=navajowhite guibg=#353535
+    augroup end
+
+    if exists('g:colors_name')
+      execute 'doautocmd indent_guides ColorScheme ' . g:colors_name
+    endif
+
+    call indent_guides#enable()
+  endfunction "}}}
+  call dein#set_hook('indent-guides', 'hook_post_source', function('s:indent_guides_sourced'))
+endif "}}}
+
 " vim-lsp "{{{
 if dein#tap('lsp')
   let g:lsp_completion_documentation_enabled = 0
@@ -480,5 +695,15 @@ if dein#tap('lsp')
         \   call setwinvar(lsp#document_hover_preview_winid(), '&wincolor', 'MatchParen') |
         \ endif
   endif
+endif "}}}
+
+" vim-operator-surround "{{{
+if dein#tap('operator-surround')
+  nmap ys <Plug>(operator-surround-append)
+  xmap ys <Plug>(operator-surround-append)
+  nmap ds <Plug>(operator-surround-delete)a
+  nmap dsi <Plug>(operator-surround-delete)i
+  nmap cs <Plug>(operator-surround-replace)a
+  nmap csi <Plug>(operator-surround-replace)i
 endif "}}}
 
