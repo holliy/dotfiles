@@ -26,6 +26,8 @@ else
   endif
 endif
 
+nnoremap <silent> <Space>y :<C-u>let @* = @"<CR>
+
 if get(g:, 'colors_name', 'desert') ==# 'desert' || g:colors_name ==# 'morning'
   colorscheme torte
 endif
