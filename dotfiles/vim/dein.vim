@@ -84,6 +84,21 @@ if dein#load_state(s:dein_dir)
   endif
 endif
 
+if !g:vimrc#is_starting
+  " post source フックの関数に変更があったときに反映できるように読み込み済みフラグを消す
+  for s:p in values(dein#_plugins)
+    if !has_key(s:p, 'called')
+      continue
+    endif
+
+    for s:f in keys(s:p['called'])
+      if string(s:f) =~# expand('<SID>') . '.\+_sourced'
+        call remove(s:p['called'], s:f)
+      endif
+    endfor
+  endfor
+endif
+
 Autocmd VimEnter * call dein#call_hook('post_source')
 
 " caw "{{{
@@ -111,7 +126,7 @@ if dein#tap('caw')
   nmap <Space>cO <Plug>(caw:jump:comment-prev)
 endif "}}}
 
-" conflict-marker.vim "{{{
+" conflict-marker "{{{
 if dein#tap('conflict-marker')
   let g:conflict_marker_highlight_group = ''
 
@@ -132,7 +147,7 @@ if dein#tap('conflict-marker')
       \ endif
 endif "}}}
 
-" ddc.vim "{{{
+" ddc "{{{
 if dein#tap('ddc')
   function s:ddc_sourced() abort "{{{
     if execute('augroup') !~# '\<denops_plugin_internal\>'
@@ -388,147 +403,145 @@ endif "}}}
 if dein#tap('lightline')
   " g:lightline "{{{
   let g:lightline = {
-      \ 'colorscheme' : 'landscape',
-      \ 'active' : {
-      \   'left' : [['mode', 'paste'], ['bufnum', 'directory', 'filename', 'readonly', 'modified']],
-      \   'right' : [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
+      \ 'colorscheme': 'landscape',
+      \ 'active': {
+      \   'left': [['mode', 'paste'], ['bufnum', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \   'right': [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
       \ },
-      \ 'inactive' : {
-      \   'left' : [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
-      \   'right' : [['lineinfo'], ['percent']]
+      \ 'inactive': {
+      \   'left': [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
+      \   'right': [['lineinfo'], ['percent']]
       \ },
-      \ 'tabline' : {
-      \   'left' : [['tabs']],
-      \   'right' : [['close']]
+      \ 'tabline': {
+      \   'left': [['buffers']],
+      \   'right': [['close']]
       \ },
-      \ 'tab' : {
-      \   'active' : ['tabnum', 'filename', 'modified'],
-      \   'inactive' : ['bufnum', 'filename', 'modified'],
+      \ 'tab': {
+      \   'active': ['tabnum', 'filename', 'modified'],
+      \   'inactive': ['bufnum', 'filename', 'modified'],
       \ },
-      \ 'component' : {
-      \   'close' : '%999X x ',
-      \   'directory' : '%{&filetype!~"netrw"?pathshorten(fnamemodify(expand("%:h"),":~")):""}',
-      \   'lineinfo' : "L %3l:%-2v",
-      \   'paste' : '%{&paste?"P":""}',
-      \   'percent' : '%2p%%'
+      \ 'component': {
+      \   'close': '%999X x ',
+      \   'directory': '%{&filetype!~"netrw"?pathshorten(fnamemodify(expand("%:h"),":~")):""}',
+      \   'lineinfo': "L %3l:%-2v",
+      \   'paste': '%{&paste?"P":""}',
+      \   'percent': '%4P',
+      \   'showcmd': exists('+showcmdloc') ? '%S' : ''
       \ },
-      \ 'component_function' : {
-      \   'filename' : 'MyFilename',
-      \   'fileinfo' : 'MyFileinfo',
-      \   'filetype' : 'MyFiletype',
-      \   'mode' : 'MyMode',
-      \   'modified' : 'MyModified',
-      \   'readonly' : 'MyReadonly'
+      \ 'component_function': {
+      \   'filename': 'MyFilename',
+      \   'fileinfo': 'MyFileinfo',
+      \   'filetype': 'MyFiletype',
+      \   'mode': 'MyMode',
+      \   'modified': 'MyModified',
+      \   'readonly': 'MyReadonly'
       \ },
-      \ 'component_expand' : {
-      \   'trailing' : 'MyTrailingSpaceWarning'
+      \ 'component_expand': {
+      \   'buffers': 'MyTabs',
+      \   'trailing': 'MyTrailingSpaceWarning'
       \ },
-      \ 'component_visible_condition' : {'directory' : '&filetype!~"netrw\\|vimshell\\|vimfiler"'},
-      \ 'component_type' : {
-      \   'trailing' : 'error'
+      \ 'component_visible_condition': {
+      \   'directory': '&filetype!~"netrw"'
       \ },
-      \ 'tab_component_function' : {
-      \   'modified' : 'MyModifiedT', 'bufnum' : 'MyBufnumber'
+      \ 'component_type': {
+      \   'buffers': 'tabsel',
+      \   'trailing': 'error'
       \ },
-      \ 'buf_component' : {},
-      \ 'buf_component_function' : {
-      \   'modified' : 'MyModifiedB', 'bufnum' : 'bufnr',
-      \   'filename' : 'MyFilenameB', 'tabnum' : 'MyTabnum'
+      \ 'tab_component_function': {
+      \   'bufnum': 'lightline#tab#tabnum',
+      \   'filename': 'MyFilenameB',
+      \   'modified': 'MyModified',
+      \   'tabnum': 'MyTabnum'
       \ },
-      \ 'separator' : {'left' : "", 'right' : ""},
-      \ 'subseparator' : {'left' : "|", 'right' : "|"},
+      \ 'separator': {'left': "", 'right': ""},
+      \ 'subseparator': {'left': "|", 'right': "|"},
       \ }
   "}}}
 
-  function s:ignore(...) abort "{{{
-    return 0
-  endfunction "}}}
-
-  " タブラインにバッファを表示 "{{{
-  function! s:lightline_sourced() "{{{
-    function! lightline#tabs() abort "{{{
+  " タブラインにバッファ一覧を表示 "{{{
+  function! s:lightline_sourced() abort "{{{
+    function! MyTabs() abort "{{{
       " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
-      let [l:t, l:l, l:x, l:y, l:z, l:u, l:d] = [bufnr('%'), bufnr('$'), [], [], [], '...', min([max([&columns / 40, 2]), 8])]
+      let [active_bn, alt_bn, last_bn, tn] = [bufnr(), bufnr(0), bufnr('$'), tabpagenr()]
+      let [left, mid, right] = [[], [], []]
+      let fold = '...'
+      let max_side_tabs = min([max([&columns/40, 2]), 8]) " left, rightそれぞれから表示する数
 
-      for l:i in range(1, l:l)
-        if l:i ==# l:t
-          call add(l:y, '%' . l:i . 'T%{lightline#onetab(' . l:i . ', 1)}')
-        elseif bufexists(l:i) && !s:ignore(l:i) && (getbufvar(l:i, '&bufhidden') ==# 'hide' || empty(getbufvar(l:i, '&buftype'))) && getbufvar(l:i, '&buflisted')
-          call add(l:i < l:t ? (l:x) : l:z, '%' . l:i . 'T%{lightline#onetab(' . l:i . ', 0)}' . (l:i ==# l:l ? '%T' : ''))
+      if IgnoreBuffer(active_bn)
+        let active_bn = alt_bn
+      endif
+
+      for bn in range(1, last_bn)
+        if bn ==# active_bn
+          call add(mid, printf('%%%dT%%{lightline#onetab(%d, 1)}', tn, bn))
+          continue
         endif
+
+        if IgnoreBuffer(bn)
+          continue
+        endif
+
+        call add(bn < active_bn ? left : right, printf('%%%dT%%{lightline#onetab(%d, 0)}', tn, bn) . (bn ==# last_bn ? '%T' : ''))
       endfor
 
-      let [l:a, l:b, l:c] = [len(l:x), len(l:z), l:d * 2]
-      " return [l:a > l:d && l:b > l:d ? extend(add(l:x[ : l:d/2 - 1], l:u), l:x[-(l:d + 1)/2 : ]) :
-      "     \ l:a + l:b > l:c && l:a > l:d ? extend(add(l:x[ : (l:c - l:b)/2 - 1], l:u), l:x[-(l:c - l:b + 1)/2 : ]) : l:x, l:y,
-      "     \ l:a > l:d && l:b > l:d ? extend(add(l:z[ : (l:d + 1)/2 - 1], l:u), l:z[-l:d / 2 : ]) :
-      "     \ l:a + l:b > l:c && l:b > l:d ? extend(add(l:z[ : (l:c - l:a + 1)/2 - 1], l:u), l:z[-(l:c - l:a)/2 : ]) : l:z]
-      return l:a > l:d && l:b > l:d ? [extend(add(l:x[ : l:d/2 - 1], l:u), l:x[-(l:d + 1)/2 : ]), l:y, extend(add(l:z[ : (l:d + 1)/2 - 1], l:u), l:z[-l:d / 2 : ])] :
-          \ l:a + l:b > l:c && l:a > l:d ? [extend(add(l:x[ : (l:c - l:b)/2 - 1], l:u), l:x[-(l:c - l:b + 1)/2 : ]), l:y,
-          \   extend(add(l:z[ : (l:c - l:a + 1)/2 - 1], l:u), l:z[-(l:c - l:a)/2 : ])] : [l:x, l:y, l:z]
-    endfunction "}}}
-
-    function! lightline#onetab(n, active) abort "{{{
-      let [l:_, l:a] = ['', g:lightline.tab[a:active ? 'active' : 'inactive']]
-      let [l:c, l:f] = [g:lightline.buf_component, g:lightline.buf_component_function]
-
-      for l:i in range(len(l:a))
-        let l:s = has_key(l:f, l:a[l:i]) ? eval(l:f[l:a[l:i]] . '(' . a:n . ')') : get(l:c, l:a[l:i], '')
-        if strlen(l:s)
-          let l:_ .= (len(l:_) ? ' ' : '') . l:s
+      let left_len = len(left)
+      let right_len = len(right)
+      if left_len + right_len > max_side_tabs*2
+        " let max_left_tabs = max([left_len])
+        if left_len > max_side_tabs
+          let left = [fold] + left[-max_side_tabs:]
         endif
-      endfor
 
-      return l:_
+        if right_len > max_side_tabs
+          let right = right[:max_side_tabs - 1] + [fold]
+        endif
+      endif
+      return [left, mid, right]
     endfunction "}}}
 
-    augroup lightline
-      " autocmd!
-      " autocmd WinEnter,BufWinEnter,FileType,ColorScheme,SessionLoadPost * call lightline#update()
-      " autocmd ColorScheme,SessionLoadPost * call lightline#highlight()
-      " autocmd CursorMoved,BufUnload * call lightline#update_once()
-      autocmd BufWinEnter,WinEnter,SessionLoadPost * set tabline=%!CallInternalFunc('autoload/lightline.vim:line(1,0)')
-    augroup END
+    if !g:vimrc#is_starting
+      doautocmd lightline BufWinEnter
+    endif
   endfunction "}}}
   call dein#set_hook('lightline', 'hook_post_source', function('s:lightline_sourced'))
   "}}}
 
-  function! MyModifiedB(bufnr) "{{{
-    return s:ignore(a:bufnr) ? '' : getbufvar(a:bufnr, '&modified') ? '+' : getbufvar(a:bufnr, '&modifiable') ? '' : '-'
+  function! MyModified(...) "{{{
+    if a:0
+      let bn = a:1
+    else
+      let bn = bufnr()
+    endif
+
+    return IgnoreBuffer(bn) ? '' :
+        \ getbufvar(bn, '&filetype') =~# 'netrw' ? '' :
+        \ getbufvar(bn, '&modified') ? '+' :
+        \ getbufvar(bn, '&modifiable') ? '' : '-'
   endfunction "}}}
 
   function! MyFilenameB(bufnr) "{{{
     let l:fname = fnamemodify(bufname(a:bufnr), ':t')
-    return empty(l:fname) ? '[No Name]' : l:fname
+    let l:alt_fname = fnamemodify(bufname(0), ':t')
+    return IsCommandLineWindow(a:bufnr) ? l:alt_fname :
+        \ empty(l:fname) ? '[無名]' : l:fname
   endfunction "}}}
 
   function! MyTabnum(...) "{{{
     return tabpagenr()
   endfunction "}}}
 
-  function! MyBufnumber(tabnr) "{{{
-    return get(tabpagebuflist(a:tabnr), tabpagewinnr(a:tabnr) - 1)
-  endfunction "}}}
-
-  function! MyModifiedT(tabnr) "{{{
-    let l:bufnr = MyBufnumber(a:tabnr)
-    return s:ignore(l:bufnr) ? '' : getbufvar(l:bufnr, '&modified') ? '+' : getbufvar(l:bufnr, '&modifiable') ? '' : '-'
-  endfunction "}}}
-
-  function! MyModified() "{{{
-    return s:ignore() ? '' : &modified ? '+' : &modifiable ? '' : '-'
-  endfunction "}}}
-
   let s:readonlychar = 'x'
   function! MyReadonly() "{{{
-    return &readonly && !s:ignore() ? s:readonlychar : ''
+    return IgnoreBuffer() ? '' :
+        \ &filetype =~# 'netrw' ? '' :
+        \ &readonly ? s:readonlychar : ''
   endfunction "}}}
 
   function! MyFilename() "{{{
     let l:fname = expand('%:t')
-    return l:fname =~# '\[Command Line\]' ? '' :
+    return IsCommandLineWindow() ? '' :
         \ &filetype ==? 'netrw' ? fnamemodify(b:netrw_curdir, ':~') :
-        \ empty(l:fname) ? '[No Name]' : l:fname
+        \ empty(l:fname) ? '[無名]' : l:fname
   endfunction "}}}
 
   function! MyFiletype() "{{{
@@ -536,19 +549,18 @@ if dein#tap('lightline')
   endfunction "}}}
 
   function! MyFileinfo() "{{{
-    return !s:ignore() && winwidth(0) > 75 ? (strlen(&fileencoding) ? &fileencoding : &encoding) . '/' . &fileformat : ''
+    return !IgnoreBuffer() && winwidth(0) > 75 ? (strlen(&fileencoding) ? &fileencoding : &encoding) . '/' . &fileformat : ''
   endfunction "}}}
 
   function! MyMode() "{{{
-    let l:fname = expand('%:t')
-    return l:fname ==# '[Command Line]' ? 'Ex' :
+    return IsCommandLineWindow() ? 'Ex' :
         \ &filetype ==? 'help' ? 'Help' :
         \ &filetype ==? 'qf' ? 'QuickFix' :
         \ (winwidth(0) > 60 ? lightline#mode() : '')
   endfunction "}}}
 
   function! MyTrailingSpaceWarning() "{{{
-    if !s:ignore()
+    if !IgnoreBuffer()
       let l:space_line = search('\S\zs\s\+$', 'nw')
       " if l:space_line != 0
 
@@ -562,6 +574,12 @@ if dein#tap('lightline')
 
   autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
   "}}}
+
+  if !g:vimrc#is_starting
+    call lightline#init()
+    call lightline#colorscheme()
+    call lightline#update()
+  endif
 endif "}}}
 
 " undotree "{{{
@@ -581,7 +599,7 @@ if dein#tap('fugitive')
   call add(g:vimrc#generate_filetypes, 'fugitive')
 
   " コミットメッセージ入力時に先頭の行へ移動
-  Autocmd BufWinEnter COMMIT_EDITMSG goto 1
+  Autocmd BufWinEnter COMMIT_EDITMSG normal! gg
 
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
@@ -618,27 +636,21 @@ endif "}}}
 
 " vim-indent-guides "{{{
 if dein#tap('indent-guides')
-  let g:indent_guides_auto_colors = 0
+  let g:indent_guides_auto_colors = 1
   let g:indent_guides_enable_on_vim_startup = 1
   let g:indent_guides_exclude_filetypes = ['help']
   let g:indent_guides_indent_levels = 15
   let g:indent_guides_start_level = 1
 
+  " Highlight link IndentGuidesOdd Comment
+  " Highlight link IndentGuidesEven Folded
+
   function! s:indent_guides_sourced() "{{{
-    augroup indent_guides
-      autocmd!
-      autocmd BufEnter,WinEnter,FileType,VimEnter * let g:indent_guides_guide_size = &shiftwidth
-      autocmd BufEnter,WinEnter,FileType,ColorScheme * call indent_guides#process_autocmds()
-
-      autocmd ColorScheme landscape highlight IndentGuidesOdd ctermbg=240 ctermfg=208 guifg=orange guibg=#606060
-      autocmd ColorScheme landscape highlight IndentGuidesEven ctermbg=235 ctermfg=208 guifg=orange guibg=#353535
-      autocmd ColorScheme desert highlight IndentGuidesOdd term=bold ctermbg=240 ctermfg=5 guifg=navajowhite guibg=#606060
-      autocmd ColorScheme desert highlight IndentGuidesEven term=bold ctermbg=235 ctermfg=5 guifg=navajowhite guibg=#353535
-    augroup end
-
-    if exists('g:colors_name')
-      execute 'doautocmd indent_guides ColorScheme ' . g:colors_name
-    endif
+    " augroup indent_guides
+    "   autocmd!
+    "   autocmd BufEnter,WinEnter,FileType,VimEnter * let g:indent_guides_guide_size = &shiftwidth
+    "   autocmd BufEnter,WinEnter,FileType,ColorScheme * call indent_guides#process_autocmds()
+    " augroup end
 
     call indent_guides#enable()
   endfunction "}}}

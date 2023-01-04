@@ -148,37 +148,29 @@ endfunction "}}}
 " 自動で生成されるバッファか判定 "{{{
 let g:vimrc#generate_filetypes = ['git', 'help', 'netrw', 'qf']
 
-" a:1 - バッファ番号 (0のとき現在のバッファに対して判定)
-function! s:ignore(...) abort
+" a:1 - バッファ番号 (0か省略されたとき現在のバッファに対して判定)
+function! IgnoreBuffer(...) abort
   if a:0 && a:1 !=# 0
-    let bh = getbufvar(a:1, '&bufhidden')
-    let bl = getbufvar(a:1, '&buflisted')
-    let bname = fnamemodify(bufname(a:1), ':t')
-    let bt = getbufvar(a:1, '&buftype')
-    let fts = getbufvar(a:1, '&filetype')
-    let wt = exists('*win_gettype') ? win_gettype(bufwinnr(a:1)) : ''
+    let bn = a:1
   else
-    let bh = &bufhidden
-    let bl = &buflisted
-    let bname = expand('%:t')
-    let bt = &buftype
-    let fts = &filetype
-    let wt = exists('*win_gettype') ? win_gettype() : ''
+    let bn = bufnr()
   endif
 
-  if !bl
+  let bh = getbufvar(bn, '&bufhidden')
+  let bname = fnamemodify(bufname(bn), ':t')
+  let bt = getbufvar(bn, '&buftype')
+  let fts = getbufvar(bn, '&filetype')
+  let wt = exists('*win_gettype') ? win_gettype(bufwinnr(bn)) : ''
+
+  if !bufexists(bn)
     return 1
-  endif
-
-  if !empty(bt)
+  elseif !buflisted(bn)
     return 1
-  endif
-
-  if !(bh ==# '' ? &hidden : bh ==# 'hide')
+  elseif !empty(bt)
     return 1
-  endif
-
-  if !(wt ==# '' || wt ==# 'unknown')
+  elseif !(empty(bh) || bh ==# 'hide')
+    return 1
+  elseif !(wt ==# '' || wt ==# 'unknown')
     return 1
   endif
 
@@ -188,12 +180,12 @@ function! s:ignore(...) abort
     endif
   endfor
 
-  return bname =~# '^\[Command\ Line\]$'
+  return IsCommandLineWindow(bn)
 endfunction "}}}
 
 " 行末の空白をハイライト "{{{
 function! s:highlight_trailing_space() abort
-  if s:ignore()
+  if IgnoreBuffer()
     if get(w:, 'spaceid', 0)
       call matchdelete(w:spaceid)
       unlet w:spaceid
@@ -444,7 +436,7 @@ endfunction "}}}
 
 " 画面の81桁目にcolorcolumnを表示 "{{{
 function! s:set_colorcolumn() abort
-  if s:ignore()
+  if IgnoreBuffer()
     setlocal colorcolumn&
   else
     let &l:colorcolumn = 81 - s:winleftpad()
@@ -454,6 +446,21 @@ endfunction "}}}
 function! Highlights() abort "{{{
   call s:highlight_trailing_space()
   call s:set_colorcolumn()
+endfunction "}}}
+
+function! IsCommandLineWindow(...) abort "{{{
+  if a:0 && a:1 !=# 0
+    let bn = a:1
+  else
+    let bn = bufnr()
+  endif
+
+  if exists('*win_gettype')
+    return win_gettype(bufwinnr(bn)) ==# 'command'
+  endif
+
+  let fname = bufname(bn)
+  return fname =~# '\[Command Line\]\|\[コマンドライン\]'
 endfunction "}}}
 "}}}
 
@@ -566,7 +573,7 @@ set laststatus=2
 setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
-setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?expand('%:t'):''}
+setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?empty(bufname())?'[無名]':expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
 if has('patch-8.2.2854')
   setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Comment#'%}
@@ -581,6 +588,7 @@ setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fi
 setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':'?':&filetype}
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
+"  N | 1 | ~/ | .vimrc +  <1b>          utf-8/unix | vim |  30% | 338:20
 set lazyredraw
 SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
