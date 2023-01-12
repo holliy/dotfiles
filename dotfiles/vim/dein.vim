@@ -454,56 +454,49 @@ if dein#tap('lightline')
       \   'tabnum': 'MyTabnum'
       \ },
       \ 'separator': {'left': "", 'right': ""},
-      \ 'subseparator': {'left': "|", 'right': "|"},
+      \ 'subseparator': {'left': "│", 'right': "│"},
       \ }
   "}}}
 
   " タブラインにバッファ一覧を表示 "{{{
-  function! s:lightline_sourced() abort "{{{
-    function! MyTabs() abort "{{{
-      " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
-      let [active_bn, alt_bn, last_bn, tn] = [bufnr(), bufnr(0), bufnr('$'), tabpagenr()]
-      let [left, mid, right] = [[], [], []]
-      let fold = '...'
-      let max_side_tabs = min([max([&columns/40, 2]), 8]) " left, rightそれぞれから表示する数
+  function! MyTabs() abort "{{{
+    " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
+    let [active_bn, alt_bn, last_bn, tn] = [bufnr(), bufnr(0), bufnr('$'), tabpagenr()]
+    let [left, mid, right] = [[], [], []]
+    let fold = '...'
+    let max_side_tabs = min([max([&columns/25, 2]), 8]) " left, rightそれぞれから表示する数
 
-      if IgnoreBuffer(active_bn)
-        let active_bn = alt_bn
-      endif
-
-      for bn in range(1, last_bn)
-        if bn ==# active_bn
-          call add(mid, printf('%%%dT%%{lightline#onetab(%d, 1)}', tn, bn))
-          continue
-        endif
-
-        if IgnoreBuffer(bn)
-          continue
-        endif
-
-        call add(bn < active_bn ? left : right, printf('%%%dT%%{lightline#onetab(%d, 0)}', tn, bn) . (bn ==# last_bn ? '%T' : ''))
-      endfor
-
-      let left_len = len(left)
-      let right_len = len(right)
-      if left_len + right_len > max_side_tabs*2
-        " let max_left_tabs = max([left_len])
-        if left_len > max_side_tabs
-          let left = [fold] + left[-max_side_tabs:]
-        endif
-
-        if right_len > max_side_tabs
-          let right = right[:max_side_tabs - 1] + [fold]
-        endif
-      endif
-      return [left, mid, right]
-    endfunction "}}}
-
-    if !g:vimrc#is_starting
-      doautocmd lightline BufWinEnter
+    if IgnoreBuffer(active_bn)
+      let active_bn = alt_bn
     endif
+
+    for bn in range(1, last_bn)
+      if bn ==# active_bn
+        call add(mid, printf('%%%dT%%{lightline#onetab(%d, 1)}', tn, bn))
+        continue
+      endif
+
+      if IgnoreBuffer(bn)
+        continue
+      endif
+
+      call add(bn < active_bn ? left : right, printf('%%%dT%%{lightline#onetab(%d, 0)}', tn, bn) . (bn ==# last_bn ? '%T' : ''))
+    endfor
+
+    let left_len = len(left)
+    let right_len = len(right)
+    if left_len + right_len > max_side_tabs*2
+      " let max_left_tabs = max([left_len])
+      if left_len > max_side_tabs
+        let left = [fold] + left[-max_side_tabs:]
+      endif
+
+      if right_len > max_side_tabs
+        let right = right[:max_side_tabs - 1] + [fold]
+      endif
+    endif
+    return [left, mid, right]
   endfunction "}}}
-  call dein#set_hook('lightline', 'hook_post_source', function('s:lightline_sourced'))
   "}}}
 
   function! MyModified(...) "{{{
@@ -602,6 +595,7 @@ if dein#tap('fugitive')
   Autocmd BufWinEnter COMMIT_EDITMSG normal! gg
 
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
+  AutocmdFT fugitive resize 15
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
 endif "}}}
 

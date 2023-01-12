@@ -778,13 +778,10 @@ sunmap #
 sunmap g*
 sunmap g#
 
-if exists('+smoothscroll')
-  noremap <C-e> <C-e>gj
-  noremap <C-y> <C-y>gk
-else
-  noremap <C-e> <C-e>j
-  noremap <C-y> <C-y>k
-endif
+noremap <expr> <C-e>
+    \ '<C-e>' . (exists('+smoothscroll') && &smoothscroll ? 'g' : '') . 'j'
+noremap <expr> <C-y>
+    \ '<C-y>' . (exists('+smoothscroll') && &smoothscroll ? 'g' : '') . 'k'
 noremap <C-u> <C-u>zz
 noremap <C-d> <C-d>zz
 noremap <C-f> <C-f>zz
@@ -854,7 +851,7 @@ nnoremap <silent> <Space>lp :<C-u><C-r>=v:count<CR>lprevious<CR>
 nnoremap <silent> <Space>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),'synIDattr(v:val,"name")')<CR>
 
-let g:foldmethods = ['marker', 'indent', 'expr']
+let g:foldmethods = ['marker', 'expr', 'indent']
 call add(g:foldmethods, g:foldmethods[0])
 nnoremap <silent> <Space>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
