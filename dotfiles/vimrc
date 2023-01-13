@@ -572,7 +572,7 @@ SetG iminsert=0 imsearch=-1
 set laststatus=2
 setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
-setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p'),':.:h').'/')}
+setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'.(g:vimrc#is_windows&&!&shellslash?'\\':'/').'?'))}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?empty(bufname())?'[無名]':expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
 if has('patch-8.2.2854')
