@@ -422,13 +422,13 @@ if dein#tap('lightline')
       \ },
       \ 'component': {
       \   'close': '%999X x ',
-      \   'directory': '%{&filetype!~"netrw"?pathshorten(fnamemodify(expand("%:h"),":~")):""}',
       \   'lineinfo': "L %3l:%-2v",
       \   'paste': '%{&paste?"P":""}',
       \   'percent': '%4P',
       \   'showcmd': exists('+showcmdloc') ? '%S' : ''
       \ },
       \ 'component_function': {
+      \   'directory': 'MyDirectory',
       \   'filename': 'MyFilename',
       \   'fileinfo': 'MyFileinfo',
       \   'filetype': 'MyFiletype',
@@ -440,8 +440,8 @@ if dein#tap('lightline')
       \   'buffers': 'MyTabs',
       \   'trailing': 'MyTrailingSpaceWarning'
       \ },
-      \ 'component_visible_condition': {
-      \   'directory': '&filetype!~"netrw"'
+      \ 'component_function_visible_condition': {
+      \   'directory': '&filetype!=#"netrw"'
       \ },
       \ 'component_type': {
       \   'buffers': 'tabsel',
@@ -531,10 +531,19 @@ if dein#tap('lightline')
   endfunction "}}}
 
   function! MyFilename() "{{{
-    let l:fname = expand('%:t')
-    return IsCommandLineWindow() ? '' :
-        \ &filetype ==? 'netrw' ? fnamemodify(b:netrw_curdir, ':~') :
-        \ empty(l:fname) ? '[無名]' : l:fname
+    if &filetype ==# 'netrw'
+      let save_shellslash = &shellslash
+      set shellslash
+
+      let curdir = fnamemodify(b:netrw_curdir, ':~:.:s?[^/]\zs$?/?')
+
+      let &shellslash = save_shellslash
+      return curdir
+    else
+      let l:fname = expand('%:t')
+      return IsCommandLineWindow() ? '' :
+          \ empty(l:fname) ? '[無名]' : l:fname
+    endif
   endfunction "}}}
 
   function! MyFiletype() "{{{
@@ -567,6 +576,21 @@ if dein#tap('lightline')
 
   autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
   "}}}
+
+  function! MyDirectory() "{{{
+    if &filetype ==# 'netrw'
+      return ''
+    endif
+
+    let save_shellslash = &shellslash
+    set shellslash
+
+    let dir = expand('%:p:h')
+    let short_dir = pathshorten(fnamemodify(dir, ':~:.:s?[^/]\zs$?/?'))
+
+    let &shellslash = save_shellslash
+    return substitute(short_dir, '[^/]\zs$', '/', '')
+  endfunction "}}}
 
   if !g:vimrc#is_starting
     call lightline#init()
