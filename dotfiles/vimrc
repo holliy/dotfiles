@@ -27,7 +27,7 @@ augroup END "}}}
 " use Vim with singleton "{{{
 if has('clientserver') && !exists('g:loaded_editexisting')
   let g:loaded_editexisting = 1
-  if has('patch-7.4.1674')
+  if has('patch-7.4.1674') || g:vimrc#is_nvim
     packadd! editexisting
   else
     runtime macros/editexisting.vim
@@ -289,7 +289,7 @@ nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
 
 " ウィンドウの左側の余白の幅 "{{{
 function! s:winleftpad() abort
-  if g:vimrc#is_nvim || has('patch-8.2.3627')
+  if has('patch-8.2.3627') || has('nvim-0.6.0')
     return getwininfo(win_getid())[0]['textoff']
   endif
 
@@ -375,7 +375,7 @@ function! OpenSymbolicTarget() abort "{{{
   let filepath = resolve(expand('%:p'))
 
   " Windowsではgetftype()からlinkが返らない
-  " 8.1.894以前だとresolve()でのパス解決もWindowsでは動かない
+  " Vim 8.1.894, Neovim 0.5.0より前だとresolve()でのパス解決もWindowsでは動かない
   if filepath ==# expand('%:p')
     echohl Error
     echo 'not symbolic link'
@@ -531,8 +531,11 @@ command! -bar OpenSymbolicTarget call OpenSymbolicTarget()
 
 " Terminal "{{{
 if g:vimrc#is_nvim
-  command! -bar Terminal execute 'belowright 15new term://' . &shell
+  command! -bar Terminal execute 'belowright new term://' . &shell
+  command! -bar -nargs=? -addr=windows Resize execute 'resize <args> | set cmdheight=' . &cmdheight
+
   cnoreabbrev <expr> terminal Cmdwhen(':', 'terminal', 'Terminal')
+  cnoreabbrev <expr> resize Cmdwhen(':', 'resize', 'Resize')
 endif
 "}}}
 
@@ -575,7 +578,7 @@ setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'.(g:vimrc#is_windows&&!&shellslash?'\\':'/').'?'))}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?empty(bufname())?'[無名]':expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
-if has('patch-8.2.2854')
+if has('patch-8.2.2854') || has('nvim-0.5.0')
   setglobal statusline+=%<%{%g:actual_curwin==#win_getid()?'%#StatusLineNC#':'%#Comment#'%}
 else
   setglobal statusline+=%<%#StatusLineNC#
@@ -651,13 +654,13 @@ if has('unnamedplus')
 else
   set clipboard^=unnamed
 endif
-if has('patch-7.4.314')
+if has('patch-7.4.314') || g:vimrc#is_nvim
   set shortmess+=c
 endif
-if has('patch-8.1.360')
+if has('patch-8.1.360') || has('nvim-0.3.2')
   set diffopt+=algorithm:histogram
 endif
-if has('patch-8.2.4325')
+if has('patch-8.2.4325') || has('nvim-0.8.0')
   set wildoptions=pum
 endif
 
@@ -1329,7 +1332,7 @@ augroup END
 "}}}
 
 " plugin "{{{
-if has('patch-7.4.1649')
+if has('patch-7.4.1649') || g:vimrc#is_nvim
   packadd! matchit
 else
   runtime macros/matchit.vim
