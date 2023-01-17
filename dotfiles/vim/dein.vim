@@ -229,6 +229,7 @@ endif "}}}
 " lexima "{{{
 if dein#tap('lexima')
   let g:lexima_map_escape = 'jk'
+  let g:lexima_accept_pum_with_enter = 1
 
   inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
 
@@ -278,9 +279,10 @@ if dein#tap('lexima')
         \   'leave': 1,
         \   'filetype': ['lisp', 'scheme'],
         \   'syntax': ['Comment', 'Constant', 'String']
-        \ }) "}}}
+        \ })
+    "}}}
 
-    " comment{{{
+    " comment "{{{
     for c in comments
       call lexima#add_rule({
           \   'at': '\V' . c.start[:-2] . '\%#\$',
@@ -332,9 +334,7 @@ if dein#tap('lexima')
             \   'filetype': c.filetype
             \ })
       endif
-
-    endfor
-    "}}}
+    endfor "}}}
 
     " bracket "{{{
     for pair in brackets
@@ -372,7 +372,8 @@ if dein#tap('lexima')
         \   'char': '(',
         \   'input_after': '\)',
         \   'filetype': ['vim']
-        \ }) "}}}
+        \ })
+    "}}}
 
     " 補完した文字の後ろに<Tab>で移動 "{{{
     for pair in brackets + quotes
@@ -393,8 +394,6 @@ if dein#tap('lexima')
           \ })
     endfor
     "}}}
-
-    imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_post_source', function('s:lexima_sourced'))
 endif "}}}
@@ -437,7 +436,7 @@ if dein#tap('lightline')
       \   'readonly': 'MyReadonly'
       \ },
       \ 'component_expand': {
-      \   'buffers': 'MyTabs',
+      \   'buffers': 'MyBuffers',
       \   'trailing': 'MyTrailingSpaceWarning'
       \ },
       \ 'component_function_visible_condition': {
@@ -459,14 +458,14 @@ if dein#tap('lightline')
   "}}}
 
   " タブラインにバッファ一覧を表示 "{{{
-  function! MyTabs() abort "{{{
+  function! MyBuffers() abort "{{{
     " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
     let [active_bn, alt_bn, last_bn, tn] = [bufnr(), bufnr(0), bufnr('$'), tabpagenr()]
     let [left, mid, right] = [[], [], []]
     let fold = '...'
     let max_side_tabs = min([max([&columns/25, 2]), 8]) " left, rightそれぞれから表示する数
 
-    if IgnoreBuffer(active_bn)
+    if IgnoreBuffer(active_bn) && !IgnoreBuffer(alt_bn)
       let active_bn = alt_bn
     endif
 
@@ -551,13 +550,15 @@ if dein#tap('lightline')
   endfunction "}}}
 
   function! MyFileinfo() "{{{
-    return !IgnoreBuffer() && winwidth(0) > 75 ? (strlen(&fileencoding) ? &fileencoding : &encoding) . '/' . &fileformat : ''
+    return IgnoreBuffer() || winwidth(0) <= 75 ? '' :
+        \ (strlen(&fileencoding) ? &fileencoding : &encoding) .
+        \ '/' . &fileformat
   endfunction "}}}
 
   function! MyMode() "{{{
     return IsCommandLineWindow() ? 'Ex' :
-        \ &filetype ==? 'help' ? 'Help' :
-        \ &filetype ==? 'qf' ? 'QuickFix' :
+        \ &filetype ==# 'help' ? 'Help' :
+        \ &filetype ==# 'qf' ? 'QuickFix' :
         \ (winwidth(0) > 60 ? lightline#mode() : '')
   endfunction "}}}
 
@@ -585,11 +586,11 @@ if dein#tap('lightline')
     let save_shellslash = &shellslash
     set shellslash
 
-    let dir = expand('%:p:h')
-    let short_dir = pathshorten(fnamemodify(dir, ':~:.:s?[^/]\zs$?/?'))
+    let dir = fnamemodify(expand('%:p:h'), ':~:.')
+    let dir = substitute(dir, '[^/]\zs$', '/', '')
 
     let &shellslash = save_shellslash
-    return substitute(short_dir, '[^/]\zs$', '/', '')
+    return pathshorten(dir)
   endfunction "}}}
 
   if !g:vimrc#is_starting
