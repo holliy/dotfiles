@@ -368,12 +368,20 @@ if dein#tap('lexima')
     endfor
 
     call lexima#add_rule({
-        \   'at': '\\\%#',
+        \   'at': '\\%\?\%#',
         \   'char': '(',
         \   'input_after': '\)',
         \   'filetype': ['vim']
         \ })
     "}}}
+
+    call lexima#add_rule({
+        \   'at': '^\s*\\\(\s*\)\%(\S.*\|\).*\%#',
+        \   'char': '<CR>',
+        \   'input': '<CR>\\\1',
+        \   'with_submatch': 1,
+        \   'filetype': ['vim']
+        \ })
 
     " 補完した文字の後ろに<Tab>で移動 "{{{
     for pair in brackets + quotes
@@ -393,6 +401,13 @@ if dein#tap('lexima')
           \   'syntax': ['Comment']
           \ })
     endfor
+
+    call lexima#add_rule({
+        \   'at': '\%#\\)',
+        \   'char': '<Tab>',
+        \   'leave': '\\)',
+        \   'filetype': ['vim']
+        \ })
     "}}}
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_post_source', function('s:lexima_sourced'))
