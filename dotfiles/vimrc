@@ -470,8 +470,8 @@ cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
 cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 
 " vimrc等を開く "{{{
-let s:vimrc = expand('<sfile>')
-let s:gvimrc = expand('<sfile>:h') . '/.gvimrc'
+let s:vimrc = resolve(expand('<sfile>'))
+let s:gvimrc = resolve(expand('<sfile>:h') . '/.gvimrc')
 
 execute 'command! -bar -nargs=0 Evimrc edit' s:vimrc
 execute 'command! -bar -nargs=0 Egvimrc edit' s:gvimrc
@@ -560,7 +560,7 @@ set browsedir=buffer
 SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
-SetG cursorline
+SetG nocursorline
 set diffopt+=context:2,vertical
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
@@ -1248,7 +1248,8 @@ endif
 " autocmd "{{{
 " カレントウィンドウのみカーソル行を強調 "{{{
 Autocmd WinLeave * setlocal nocursorline
-Autocmd WinEnter,BufWinEnter * setlocal cursorline
+Autocmd WinEnter,BufWinEnter *
+    \ if !&previewwindow | setlocal cursorline | endif
 "}}}
 
 " 保存したときのカーソル位置へ移動 "{{{
@@ -1272,10 +1273,10 @@ AutocmdFT * setlocal formatoptions-=o
 AutocmdFT c setlocal omnifunc=ccomplete#Complete
 AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
-AutocmdFT git,help,netrw,qf
+AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf
-    \ nnoremap <buffer><silent> <CR> :<C-u>execute 'cc!' line('.')<CR>
+    \ nnoremap <buffer><silent> <CR> :<C-u>execute (win_gettype() ==# 'loclist' ? 'll!' : 'cc!') line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
@@ -1315,6 +1316,9 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
     \ call s:set_colorcolumn()
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
+
+" TODO: マウスクリックを判定
+Autocmd WinEnter * stopinsert
 
 augroup Vimrc_bin
   autocmd!

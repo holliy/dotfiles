@@ -37,6 +37,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/lightline.vim')
   call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
+  call dein#add('junegunn/fzf.vim', {'if': executable('fzf')})
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('kana/vim-textobj-user')
@@ -217,6 +218,11 @@ if dein#tap('ddc')
   call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
 endif "}}}
 
+" fzf "{{{
+if dein#tap('fzf')
+  " そのうち
+endif "}}}
+
 " ghcmod-vim "{{{
 if dein#tap('ghcmod')
   Autocmd Filetype haskell nnoremap <buffer><silent> <Space>ft :<C-u>GhcModType!<CR>
@@ -381,7 +387,7 @@ if dein#tap('lexima')
     "}}}
 
     call lexima#add_rule({
-        \   'at': '^\s*\\\(\s*\)\%(\S.*\|\).*\%#',
+        \   'at': '^\s*\\\(\s*\).\{-}\%#',
         \   'char': '<CR>',
         \   'input': '<CR>\\\1',
         \   'with_submatch': 1,
@@ -642,6 +648,8 @@ if dein#tap('fugitive')
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
   AutocmdFT fugitive resize 15
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
+
+  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted
 endif "}}}
 
 " vim-gitgutter "{{{
@@ -654,6 +662,9 @@ if dein#tap('gitgutter')
     let g:gitgutter_sign_removed_first_line = '_'
     let g:gitgutter_sign_removed_above_and_below = '_'
   endif
+
+  nnoremap <silent> <Space>gp :<C-u>GitGutterPreviewHunk<CR>
+  nnoremap <silent> <Space>gs :<C-u>GitGutterStageHunk<CR>
 
   if g:vimrc#is_windows
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
@@ -703,7 +714,11 @@ if dein#tap('lsp')
   let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
-  " let g:lsp_hover_ui = 'preview'
+  let g:lsp_inlay_hints_enabled = 1
+  let g:lsp_inlay_hints_mode = { 'normal': ['curline'], 'insert': [] }
+  let g:lsp_hover_ui = 'preview'
+  let g:lsp_preview_float = 0
+  let g:lsp_preview_keep_focus = 1
 
   let g:lsp_diagnostics_signs_error = {'text': '!'}
   let g:lsp_diagnostics_signs_warning = {'text': '*'}
