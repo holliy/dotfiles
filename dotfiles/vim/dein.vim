@@ -430,7 +430,7 @@ if dein#tap('lightline')
   let g:lightline = {
       \ 'colorscheme': 'landscape',
       \ 'active': {
-      \   'left': [['mode', 'paste'], ['bufnum', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \   'left': [['mode', 'paste'], ['bufnum', 'branch', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
       \   'right': [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
       \ },
       \ 'inactive': {
@@ -453,6 +453,7 @@ if dein#tap('lightline')
       \   'showcmd': exists('+showcmdloc') ? '%S' : ''
       \ },
       \ 'component_function': {
+      \   'branch': 'FugitiveHead',
       \   'directory': 'MyDirectory',
       \   'filename': 'MyFilename',
       \   'fileinfo': 'MyFileinfo',
@@ -522,6 +523,9 @@ if dein#tap('lightline')
     endif
     return [left, mid, right]
   endfunction "}}}
+
+  " 更新されないので再度セットすることで更新
+  Autocmd BufAdd,BufDelete * execute 'set tabline=' . &tabline
   "}}}
 
   function! MyModified(...) "{{{
@@ -567,6 +571,9 @@ if dein#tap('lightline')
     else
       let l:fname = expand('%:t')
       return IsCommandLineWindow() ? '' :
+          \ &filetype ==# 'qf' ?
+          \   win_gettype() ==# 'loclist' ? '[Location List]' : '[Quickfix List]' :
+          \ &filetype =~# '\<lsp-hover\>' ? '[LSP Hover Information]' :
           \ empty(l:fname) ? '[無名]' : l:fname
     endif
   endfunction "}}}
@@ -589,16 +596,12 @@ if dein#tap('lightline')
   endfunction "}}}
 
   function! MyTrailingSpaceWarning() "{{{
-    if !IgnoreBuffer()
-      let l:space_line = search('\S\zs\s\+$', 'nw')
-      " if l:space_line != 0
-
-      "   return 'space: L' . l:space_line
-      " endif
-      " return ''
-      return l:space_line != 0 ? 'Space: L' . l:space_line : ''
+    if IgnoreBuffer()
+      return ''
     endif
-    return ''
+
+    let l:space_line = search('\S\zs\s\+$', 'nw')
+    return l:space_line != 0 ? 'Space: L' . l:space_line : ''
   endfunction
 
   autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
