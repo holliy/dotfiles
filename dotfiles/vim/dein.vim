@@ -3,19 +3,23 @@ if !(g:vimrc#is_nvim || v:version >= 802)
   finish
 endif
 
-let s:dein_dir = g:vimrc#dotvim . '/dein'
-let s:dein_repo_dir = s:dein_dir . '/repos/github.com/Shougo/dein.vim'
+if !g:vimrc#is_nvim
+  scriptversion 4
+endif
+
+let s:dein_dir = g:vimrc#dotvim .. '/dein'
+let s:dein_repo_dir = s:dein_dir .. '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
   if !executable('git')
     echomsg 'no plugins installed.'
     finish
   endif
 
-  call system('git clone https://github.com/Shougo/dein.vim ' .
+  call system('git clone https://github.com/Shougo/dein.vim ' ..
       \ shellescape(s:dein_repo_dir))
-  execute 'helptags' s:dein_repo_dir . '/doc'
+  execute 'helptags' s:dein_repo_dir .. '/doc'
 endif
-let &runtimepath = s:dein_repo_dir .",". &runtimepath
+let &runtimepath = s:dein_repo_dir .. ',' .. &runtimepath
 
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
@@ -29,49 +33,49 @@ if dein#load_state(s:dein_dir)
   call dein#add(s:dein_repo_dir)
   call dein#add('airblade/vim-gitgutter')
   call dein#add('cohama/lexima.vim')
-  " call dein#add('derekwyatt/vim-scala', {'on_ft': 'scala'})
-  " call dein#add('eagletmt/ghcmod-vim', {'on_ft': 'haskell'})
-  " call dein#add('eagletmt/neco-ghc', {'on_ft': 'haskell'})
-  " call dein#add('gamoutatsumi/ddc-sorter_ascii', {'depends': ['ddc']})
-  call dein#add('holliy/ddc-sorter_ascii', {'depends': ['ddc'], 'rev': 'bump-ddc'})
+  " call dein#add('derekwyatt/vim-scala', #{ on_ft: 'scala' })
+  " call dein#add('eagletmt/ghcmod-vim', #{ on_ft: 'haskell' })
+  " call dein#add('eagletmt/neco-ghc', #{ on_ft: 'haskell' })
+  " call dein#add('gamoutatsumi/ddc-sorter_ascii', #{ depends: ['ddc'] })
+  call dein#add('holliy/ddc-sorter_ascii', #{ depends: ['ddc'], rev: 'bump-ddc' })
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/lightline.vim')
-  call dein#add('itchyny/vim-haskell-indent', {'on_ft': 'haskell'})
-  call dein#add('junegunn/fzf.vim', {'if': executable('fzf')})
+  call dein#add('itchyny/vim-haskell-indent', #{ on_ft: 'haskell' })
+  call dein#add('junegunn/fzf.vim', #{ if: executable('fzf') })
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('kana/vim-textobj-user')
   call dein#add('LumaKernel/ddc-source-file')
   call dein#add('nathanaelkane/vim-indent-guides') " unmaintained
   call dein#add('mattn/benchvimrc-vim')
-  call dein#add('mattn/vim-lsp-settings', {'depends': ['lsp']})
+  call dein#add('mattn/vim-lsp-settings', #{ depends: ['lsp'] })
   call dein#add('mbbill/undotree')
   call dein#add('prabirshrestha/vim-lsp')
   call dein#add('rbtnn/vim-ambiwidth')
   call dein#add('rhysd/conflict-marker.vim')
-  call dein#add('rhysd/vim-operator-surround', {'depends': ['operator-user']})
-  call dein#add('rhysd/vim-textobj-word-column', {'depends': ['textobj-user']})
+  call dein#add('rhysd/vim-operator-surround', #{ depends: ['operator-user'] })
+  call dein#add('rhysd/vim-textobj-word-column', #{ depends: ['textobj-user'] })
   " call dein#add('Shougo/neocomplete.vim')
   " call dein#add('Shougo/neosnippet.vim')
   " call dein#add('Shougo/neosnippet-snippets')
-  " call dein#add('Shougo/vimproc.vim', {'build': 'make', 'if': !g:vimrc#is_windows})
-  call dein#add('Shougo/ddc.vim', {'depends': ['denops']})
-  call dein#add('Shougo/ddc-around', {'depends': ['ddc']})
-  call dein#add('Shougo/ddc-matcher_head', {'depends': ['ddc']})
-  call dein#add('Shougo/ddc-sorter_rank', {'depends': ['ddc']})
-  call dein#add('Shougo/ddc-ui-native', {'depends': ['ddc']})
-  call dein#add('Shougo/ddc-ui-none', {'depends': ['ddc']})
-  call dein#add('shun/ddc-vim-lsp', {'depends': ['ddc', 'lsp']})
-  call dein#add('thinca/vim-ft-help_fold', {'name': 'help-fold'})
+  " call dein#add('Shougo/vimproc.vim', #{ build: 'make', if: !g:vimrc#is_windows })
+  call dein#add('Shougo/ddc.vim', #{ depends: ['denops'] })
+  call dein#add('Shougo/ddc-around', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-matcher_head', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-sorter_rank', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-ui-native', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-ui-none', #{ depends: ['ddc'] })
+  call dein#add('shun/ddc-vim-lsp', #{ depends: ['ddc', 'lsp'] })
+  call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tpope/vim-fugitive')
   " call dein#add('tpope/vim-surround')
-  call dein#add('tyru/caw.vim', {'depends': ['operator-user', 'repeat']})
-  call dein#add('vim-denops/denops.vim', {'if': executable('deno')})
+  call dein#add('tyru/caw.vim', #{ depends: ['operator-user', 'repeat'] })
+  call dein#add('vim-denops/denops.vim', #{ if: executable('deno') })
   call dein#add('vim-jp/vimdoc-ja')
 
   if g:vimrc#is_windows
-    call dein#add('mattn/vimtweak', {'if': !g:vimrc#is_nvim && g:vimrc#is_gui})
+    call dein#add('mattn/vimtweak', #{ if: !g:vimrc#is_nvim && g:vimrc#is_gui })
   endif
 
   call dein#end()
@@ -93,7 +97,7 @@ if !g:vimrc#is_starting
     endif
 
     for s:f in keys(s:p['called'])
-      if string(s:f) =~# expand('<SID>') . '.\+_sourced'
+      if string(s:f) =~# expand('<SID>') .. '.\+_sourced'
         call remove(s:p['called'], s:f)
       endif
     endfor
@@ -111,9 +115,9 @@ if dein#tap('caw')
   let g:caw_operator_keymappings = 1
 
   AutocmdFT haskell let b:caw_wrap_oneline_comment = ['{-', '-}']
-  AutocmdFT haskell let b:caw_wrap_multiline_comment = {'left': '{-', 'right': '-}', 'top': '-', 'bottom': '-'}
+  AutocmdFT haskell let b:caw_wrap_multiline_comment = #{ left: '{-', right: '-}', top: '-', bottom: '-' }
 
-  " nmap <silent><expr> <Space>cc '<C-c>V' . (v:count <= 1 ? 'V' : v:count - 1 . 'gj') . '<Plug>(caw:hatpos:toggle)'
+  " nmap <silent><expr> <Space>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
   vmap <Space>cc <Plug>(caw:hatpos:toggle)
   noremap <silent> <Space>ct :normal 1 cc<CR>
@@ -159,33 +163,33 @@ if dein#tap('ddc')
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
     call ddc#custom#patch_global('ui', 'none')
 
-    call ddc#custom#patch_global('sourceOptions', {
-        \ '_': {
-        \   'dup': 'keep',
-        \   'ignoreCase': v:true,
-        \   'matchers': ['matcher_head'],
-        \   'minAutoCompleteLength': 0,
-        \   'sorters': ['sorter_rank'],
-        \   'timeout': 5000
+    call ddc#custom#patch_global('sourceOptions', #{
+        \ _: #{
+        \   dup: 'keep',
+        \   ignoreCase: v:true,
+        \   matchers: ['matcher_head'],
+        \   minAutoCompleteLength: 0,
+        \   sorters: ['sorter_rank'],
+        \   timeout: 5000
         \ },
-        \ 'around': {'mark': 'A'},
-        \ 'vim-lsp': {
-        \   'mark': 'L',
-        \   'sorters': ['sorter_rank', 'sorter_ascii']
+        \ around: #{ mark: 'A' },
+        \ vim-lsp: #{
+        \   mark: 'L',
+        \   sorters: ['sorter_rank', 'sorter_ascii']
         \ },
-        \ 'file': {
-        \   'sorters': ['sorter_ascii']
+        \ file: #{
+        \   sorters: ['sorter_ascii']
         \ }
         \ })
-    call ddc#custom#patch_global('sourceParams', {
-        \ 'around': {
-        \   'maxSize': 500
+    call ddc#custom#patch_global('sourceParams', #{
+        \ around: #{
+        \   maxSize: 500
         \ },
-        \ 'file': {
-        \   'displayCwd': 'c',
-        \   'displayBuf': 'b',
-        \   'filenameChars': '[:fname:]',
-        \   'isVolatile': v:true
+        \ file: #{
+        \   displayCwd: 'c',
+        \   displayBuf: 'b',
+        \   filenameChars: '[:fname:]',
+        \   isVolatile: v:true
         \ }
         \ })
 
@@ -196,8 +200,8 @@ if dein#tap('ddc')
     inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
     inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
     inoremap <silent><expr> <Plug>(vimrc_complete-file)
-        \ ddc#map#manual_complete({
-        \   'sources': ['file'], 'ui': 'native', 'keywordPattern': '\f*'
+        \ ddc#map#manual_complete(#{
+        \   sources: ['file'], ui: 'native', keywordPattern: '\f*'
         \ })
     " imap <C-Space> <C-n>
 
@@ -206,13 +210,8 @@ if dein#tap('ddc')
       Autocmd TermOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
       Autocmd TermOpen * autocmd! ddc TextChangedT
     elseif has('terminal')
-      if exists('##TerminalWinOpen')
-        Autocmd TerminalWinOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
-        Autocmd TerminalWinOpen * autocmd! ddc TextChangedT
-      else
-        Autocmd TerminalOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
-        Autocmd TerminalOpen * autocmd! ddc TextChangedT
-      endif
+      Autocmd TerminalWinOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
+      Autocmd TerminalWinOpen * autocmd! ddc TextChangedT
     endif
   endfunction "}}}
   call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
@@ -247,177 +246,173 @@ if dein#tap('lexima')
   if g:vimrc#is_nvim
     Autocmd TermOpen * let b:lexima_disabled = 1
   elseif has('terminal')
-    if exists('##TerminalWinOpen')
-      Autocmd TerminalWinOpen * let b:lexima_disabled = 1
-    else
-      Autocmd TerminalOpen * let b:lexima_disabled = 1
-    endif
+    Autocmd TerminalWinOpen * let b:lexima_disabled = 1
   endif
 
   function! s:lexima_sourced(...) abort "{{{
     let quotes = [
-        \   {'start': "'", 'end': "'"}, {'start': '"', 'end': '"'}
+        \   #{ start: "'", end: "'" }, #{ start: '"', end: '"' }
         \ ]
     let brackets = [
-        \   {'start': '(', 'end': ')'}, {'start': '{', 'end': '}'},
-        \   {'start': '[', 'end': ']'}
+        \   #{ start: '(', end: ')' }, #{ start: '{', end: '}' },
+        \   #{ start: '[', end: ']' }
         \ ]
     let comments = [
-        \   {'start': '/*', 'end': '*/', 'head': '*',
-        \     'filetype': ['c', 'cpp', 'cs', 'java', 'rust', 'scala']},
-        \   {'start': '{-', 'end': '-}', 'with_bracket': 1, 'filetype': ['haskell']},
-        \   {'start': '{-#', 'end': '#-}', 'filetype': ['haskell']},
+        \   #{ start: '/*', end: '*/', head: '*',
+        \     filetype: ['c', 'cpp', 'cs', 'java', 'rust', 'scala'] },
+        \   #{ start: '{-', end: '-}', with_bracket: 1, filetype: ['haskell'] },
+        \   #{ start: '{-#', end: '#-}', filetype: ['haskell'] },
         \ ]
 
     " call filter(g:lexima#default_rules,
-    "    \ '!has_key(v:val, "at") || v:val.at !=# "\\\\\\%#"')
+    "    \ { _, v -> !has_key(v, 'at') || v.at !=# '\\\%#' })
     call lexima#set_default_rules()
 
     " quote in lisp "{{{
-    call lexima#add_rule({
-        \   'char': "'",
-        \   'filetype': ['lisp', 'scheme']
+    call lexima#add_rule(#{
+        \   char: "'",
+        \   filetype: ['lisp', 'scheme']
         \ })
-    call lexima#add_rule({
-        \   'char': "'",
-        \   'input_after': "'",
-        \   'filetype': ['lisp', 'scheme'],
-        \   'syntax': ['Comment', 'Constant', 'String']
+    call lexima#add_rule(#{
+        \   char: "'",
+        \   input_after: "'",
+        \   filetype: ['lisp', 'scheme'],
+        \   syntax: ['Comment', 'Constant', 'String']
         \ })
-    call lexima#add_rule({
-        \   'at': "\\%#'",
-        \   'char': "'",
-        \   'leave': 1,
-        \   'filetype': ['lisp', 'scheme'],
-        \   'syntax': ['Comment', 'Constant', 'String']
+    call lexima#add_rule(#{
+        \   at: "\\%#'",
+        \   char: "'",
+        \   leave: 1,
+        \   filetype: ['lisp', 'scheme'],
+        \   syntax: ['Comment', 'Constant', 'String']
         \ })
     "}}}
 
     " comment "{{{
     for c in comments
-      call lexima#add_rule({
-          \   'at': '\V' . c.start[:-2] . '\%#\$',
-          \   'char': c.start[-1:],
-          \   'input_after': c.end,
-          \   'filetype': c.filetype
+      call lexima#add_rule(#{
+          \   at: '\V' .. c.start[:-2] .. '\%#\$',
+          \   char: c.start[-1:],
+          \   input_after: c.end,
+          \   filetype: c.filetype
           \ })
-      call lexima#add_rule({
-          \   'at': '\V' . c.start . '\%#' . c.end,
-          \   'char': '<Space>',
-          \   'input_after': '<Space>',
-          \   'filetype': c.filetype
+      call lexima#add_rule(#{
+          \   at: '\V' .. c.start .. '\%#' .. c.end,
+          \   char: '<Space>',
+          \   input_after: '<Space>',
+          \   filetype: c.filetype
           \ })
-      call lexima#add_rule({
-          \   'at': '\V' . c.start . '\%#' . c.end,
-          \   'char': '<BS>',
-          \   'input': repeat('<BS>', len(c.start)),
-          \   'delete': len(c.end),
-          \   'filetype': c.filetype
+      call lexima#add_rule(#{
+          \   at: '\V' .. c.start .. '\%#' .. c.end,
+          \   char: '<BS>',
+          \   input: repeat('<BS>', len(c.start)),
+          \   delete: len(c.end),
+          \   filetype: c.filetype
           \ })
-      call lexima#add_rule({
-          \   'at': '\V' . c.start . ' \%# ' . c.end,
-          \   'char': '<BS>',
-          \   'delete': 1,
-          \   'filetype': c.filetype
+      call lexima#add_rule(#{
+          \   at: '\V' .. c.start .. ' \%# ' .. c.end,
+          \   char: '<BS>',
+          \   delete: 1,
+          \   filetype: c.filetype
           \ })
 
       if has_key(c, 'head')
-        call lexima#add_rule({
-            \   'at': '\V\^ ' . c.head . ' \%# \?' . c.end,
-            \   'char': '<BS>',
-            \   'input': '<BS><BS>',
-            \   'filetype': c.filetype
+        call lexima#add_rule(#{
+            \   at: '\V\^ ' .. c.head .. ' \%# \?' .. c.end,
+            \   char: '<BS>',
+            \   input: '<BS><BS>',
+            \   filetype: c.filetype
             \ })
-        call lexima#add_rule({
-            \   'at': '^ \%#',
-            \   'char': '<Space>',
-            \   'input': c.head . '<Space>',
-            \   'filetype': c.filetype,
-            \   'syntax': ['Comment']
+        call lexima#add_rule(#{
+            \   at: '^ \%#',
+            \   char: '<Space>',
+            \   input: c.head .. '<Space>',
+            \   filetype: c.filetype,
+            \   syntax: ['Comment']
             \ })
       endif
 
       if get(c, 'with_bracket', 0)
-        call lexima#add_rule({
-            \   'at': '\V' . c.start[:-2] . '\%#' . c.end[1:] . '\$',
-            \   'char': c.start[-1:],
-            \   'input_after': c.end[:0],
-            \   'filetype': c.filetype
+        call lexima#add_rule(#{
+            \   at: '\V' .. c.start[:-2] .. '\%#' .. c.end[1:] .. '\$',
+            \   char: c.start[-1:],
+            \   input_after: c.end[:0],
+            \   filetype: c.filetype
             \ })
       endif
     endfor "}}}
 
     " bracket "{{{
     for pair in brackets
-      call lexima#add_rule({
-          \   'at': '\V' . pair.start . '\%#' . pair.end,
-          \   'char': '<CR>',
-          \   'input': '<CR>\ ',
-          \   'input_after': '<CR>\ ',
-          \   'filetype': ['vim']
+      call lexima#add_rule(#{
+          \   at: '\V' .. pair.start .. '\%#' .. pair.end,
+          \   char: '<CR>',
+          \   input: '<CR>\ ',
+          \   input_after: '<CR>\ ',
+          \   filetype: ['vim']
           \ })
-      " () の間に改行を入力時、継続行にして3行に展開
-      call lexima#add_rule({
-          \   'at': pair.start . '\%#$',
-          \   'except': '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
-          \   'char': '<CR>',
-          \   'input': '<CR>\ ',
-          \   'input_after': '<CR>\ ' . pair.end,
-          \   'filetype': ['vim']
+      " カッコの間に改行を入力時、継続行にして3行に展開
+      call lexima#add_rule(#{
+          \   at: pair.start .. '\%#$',
+          \   except: '\C\v^(\s*)\S.*%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' .. pair.end,
+          \   char: '<CR>',
+          \   input: '<CR>\ ',
+          \   input_after: '<CR>\ ' .. pair.end,
+          \   filetype: ['vim']
           \ })
       " ↑の展開後の途中の改行でも行継続
-      call lexima#add_rule({
-          \   'at': '\C\v^(\s*)\S.*\' . pair.start . '%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' . pair.end,
-          \   'char': '<CR>',
-          \   'input': '<CR>\ ',
-          \   'filetype': ['vim']
+      call lexima#add_rule(#{
+          \   at: '\C\v^(\s*)\S.*\' .. pair.start .. '%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' .. pair.end,
+          \   char: '<CR>',
+          \   input: '<CR>\ ',
+          \   filetype: ['vim']
           \ })
-      call lexima#add_rule({
-          \   'at': '\%#\w',
-          \   'char': pair.start
+      call lexima#add_rule(#{
+          \   at: '\%#\w',
+          \   char: pair.start
           \ })
     endfor
 
-    call lexima#add_rule({
-        \   'at': '\\%\?\%#',
-        \   'char': '(',
-        \   'input_after': '\)',
-        \   'filetype': ['vim']
+    call lexima#add_rule(#{
+        \   at: '\\%\?\%#',
+        \   char: '(',
+        \   input_after: '\)',
+        \   filetype: ['vim']
         \ })
     "}}}
 
-    call lexima#add_rule({
-        \   'at': '^\s*\\\(\s*\).\{-}\%#',
-        \   'char': '<CR>',
-        \   'input': '<CR>\\\1',
-        \   'with_submatch': 1,
-        \   'filetype': ['vim']
+    call lexima#add_rule(#{
+        \   at: '^\s*\\\(\s*\).\{-}\%#',
+        \   char: '<CR>',
+        \   input: '<CR>\\\1',
+        \   with_submatch: 1,
+        \   filetype: ['vim']
         \ })
 
     " 補完した文字の後ろに<Tab>で移動 "{{{
     for pair in brackets + quotes
-      call lexima#add_rule({
-          \   'at': '\V\S\%# \?' . pair.end,
-          \   'char': '<Tab>',
-          \   'leave': pair.end
+      call lexima#add_rule(#{
+          \   at: '\V\S\%# \?' .. pair.end,
+          \   char: '<Tab>',
+          \   leave: pair.end
           \ })
     endfor
 
     for c in comments
-      call lexima#add_rule({
-          \   'at': '\V\S\%# \?' . c.end,
-          \   'char': '<Tab>',
-          \   'leave': c.end,
-          \   'filetype': c.filetype,
-          \   'syntax': ['Comment']
+      call lexima#add_rule(#{
+          \   at: '\V\S\%# \?' .. c.end,
+          \   char: '<Tab>',
+          \   leave: c.end,
+          \   filetype: c.filetype,
+          \   syntax: ['Comment']
           \ })
     endfor
 
-    call lexima#add_rule({
-        \   'at': '\%#\\)',
-        \   'char': '<Tab>',
-        \   'leave': '\\)',
-        \   'filetype': ['vim']
+    call lexima#add_rule(#{
+        \   at: '\%#\\)',
+        \   char: '<Tab>',
+        \   leave: '\\)',
+        \   filetype: ['vim']
         \ })
     "}}}
   endfunction "}}}
@@ -427,60 +422,60 @@ endif "}}}
 " lightline "{{{
 if dein#tap('lightline')
   " g:lightline "{{{
-  let g:lightline = {
-      \ 'colorscheme': 'landscape',
-      \ 'active': {
-      \   'left': [['mode', 'paste'], ['bufnum', 'branch', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
-      \   'right': [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
+  let g:lightline = #{
+      \ colorscheme: 'landscape',
+      \ active: #{
+      \   left: [['mode', 'paste'], ['bufnum', 'branch', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \   right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
       \ },
-      \ 'inactive': {
-      \   'left': [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
-      \   'right': [['lineinfo'], ['percent']]
+      \ inactive: #{
+      \   left: [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
+      \   right: [['lineinfo'], ['percent']]
       \ },
-      \ 'tabline': {
-      \   'left': [['buffers']],
-      \   'right': [['close']]
+      \ tabline: #{
+      \   left: [['buffers']],
+      \   right: [['close']]
       \ },
-      \ 'tab': {
-      \   'active': ['tabnum', 'filename', 'modified'],
-      \   'inactive': ['bufnum', 'filename', 'modified'],
+      \ tab: #{
+      \   active: ['tabnum', 'filename', 'modified'],
+      \   inactive: ['bufnum', 'filename', 'modified'],
       \ },
-      \ 'component': {
-      \   'close': '%999X x ',
-      \   'lineinfo': "L %3l:%-2v",
-      \   'paste': '%{&paste?"P":""}',
-      \   'percent': '%4P',
-      \   'showcmd': exists('+showcmdloc') ? '%S' : ''
+      \ component: #{
+      \   close: '%999X x ',
+      \   lineinfo: "L %3l:%-2v",
+      \   paste: '%{&paste?"P":""}',
+      \   percent: '%4P',
+      \   showcmd: exists('+showcmdloc') ? '%S' : ''
       \ },
-      \ 'component_function': {
-      \   'branch': 'FugitiveHead',
-      \   'directory': 'MyDirectory',
-      \   'filename': 'MyFilename',
-      \   'fileinfo': 'MyFileinfo',
-      \   'filetype': 'MyFiletype',
-      \   'mode': 'MyMode',
-      \   'modified': 'MyModified',
-      \   'readonly': 'MyReadonly'
+      \ component_function: #{
+      \   branch: 'FugitiveHead',
+      \   directory: 'MyDirectory',
+      \   filename: 'MyFilename',
+      \   fileinfo: 'MyFileinfo',
+      \   filetype: 'MyFiletype',
+      \   mode: 'MyMode',
+      \   modified: 'MyModified',
+      \   readonly: 'MyReadonly'
       \ },
-      \ 'component_expand': {
-      \   'buffers': 'MyBuffers',
-      \   'trailing': 'MyTrailingSpaceWarning'
+      \ component_expand: #{
+      \   buffers: 'MyBuffers',
+      \   trailing: 'MyTrailingSpaceWarning'
       \ },
-      \ 'component_function_visible_condition': {
-      \   'directory': '&filetype!=#"netrw"'
+      \ component_function_visible_condition: #{
+      \   directory: '&filetype!=#"netrw"'
       \ },
-      \ 'component_type': {
-      \   'buffers': 'tabsel',
-      \   'trailing': 'error'
+      \ component_type: #{
+      \   buffers: 'tabsel',
+      \   trailing: 'error'
       \ },
-      \ 'tab_component_function': {
-      \   'bufnum': 'lightline#tab#tabnum',
-      \   'filename': 'MyFilenameB',
-      \   'modified': 'MyModified',
-      \   'tabnum': 'MyTabnum'
+      \ tab_component_function: #{
+      \   bufnum: 'lightline#tab#tabnum',
+      \   filename: 'MyFilenameB',
+      \   modified: 'MyModified',
+      \   tabnum: 'MyTabnum'
       \ },
-      \ 'separator': {'left': "", 'right': ""},
-      \ 'subseparator': {'left': "│", 'right': "│"},
+      \ separator: #{ left: "", right: "" },
+      \ subseparator: #{ left: "│", right: "│" },
       \ }
   "}}}
 
@@ -506,7 +501,7 @@ if dein#tap('lightline')
         continue
       endif
 
-      call add(bn < active_bn ? left : right, printf('%%%dT%%{lightline#onetab(%d, 0)}', tn, bn) . (bn ==# last_bn ? '%T' : ''))
+      call add(bn < active_bn ? left : right, printf('%%%dT%%{lightline#onetab(%d, 0)}', tn, bn) .. (bn ==# last_bn ? '%T' : ''))
     endfor
 
     let left_len = len(left)
@@ -525,7 +520,7 @@ if dein#tap('lightline')
   endfunction "}}}
 
   " 更新されないので再度セットすることで更新
-  Autocmd BufAdd,BufDelete * execute 'set tabline=' . &tabline
+  Autocmd BufAdd,BufDelete * execute 'set tabline=' .. &tabline
   "}}}
 
   function! MyModified(...) "{{{
@@ -584,8 +579,8 @@ if dein#tap('lightline')
 
   function! MyFileinfo() "{{{
     return IgnoreBuffer() || winwidth(0) <= 75 ? '' :
-        \ (strlen(&fileencoding) ? &fileencoding : &encoding) .
-        \ '/' . &fileformat
+        \ (strlen(&fileencoding) ? &fileencoding : &encoding) ..
+        \ '/' .. &fileformat
   endfunction "}}}
 
   function! MyMode() "{{{
@@ -601,7 +596,7 @@ if dein#tap('lightline')
     endif
 
     let l:space_line = search('\S\zs\s\+$', 'nw')
-    return l:space_line != 0 ? 'Space: L' . l:space_line : ''
+    return l:space_line != 0 ? 'Space: L' .. l:space_line : ''
   endfunction
 
   autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
@@ -671,7 +666,7 @@ if dein#tap('gitgutter')
 
   if g:vimrc#is_windows
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
-    Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' . expand('%:p:h')
+    Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' .. expand('%:p:h')
   endif
 
   Autocmd BufWritePost * GitGutter
@@ -718,20 +713,20 @@ if dein#tap('lsp')
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
   let g:lsp_inlay_hints_enabled = 1
-  let g:lsp_inlay_hints_mode = { 'normal': ['curline'], 'insert': [] }
+  let g:lsp_inlay_hints_mode = #{ normal: ['curline'], insert: [] }
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
 
-  let g:lsp_diagnostics_signs_error = {'text': '!'}
-  let g:lsp_diagnostics_signs_warning = {'text': '*'}
-  let g:lsp_diagnostics_signs_hint = {'text': '.'}
-  let g:lsp_diagnostics_signs_information = {'text': '.'}
-  let g:lsp_document_code_action_signs_hint = {'text': ':'}
+  let g:lsp_diagnostics_signs_error = #{ text: '!' }
+  let g:lsp_diagnostics_signs_warning = #{ text: '*' }
+  let g:lsp_diagnostics_signs_hint = #{ text: '.' }
+  let g:lsp_diagnostics_signs_information = #{ text: '.' }
+  let g:lsp_document_code_action_signs_hint = #{ text: ':' }
 
-  let g:lsp_diagnostics_signs_priority_map = {
-      \   'LspError': 12,
-      \   'LspWarning': 11
+  let g:lsp_diagnostics_signs_priority_map = #{
+      \   LspError: 12,
+      \   LspWarning: 11
       \ }
 
   nnoremap <Space>lh <Plug>(lsp-hover)

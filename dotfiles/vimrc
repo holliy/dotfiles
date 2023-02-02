@@ -19,6 +19,10 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#dotvim = expand('~/.vim')
 endif
 
+if !g:vimrc#is_nvim
+  scriptversion 4
+endif
+
 augroup Vimrc
   autocmd!
   autocmd VimEnter * let g:vimrc#is_starting = 0
@@ -27,11 +31,7 @@ augroup END "}}}
 " use Vim with singleton "{{{
 if has('clientserver') && !exists('g:loaded_editexisting')
   let g:loaded_editexisting = 1
-  if has('patch-7.4.1674') || g:vimrc#is_nvim
-    packadd! editexisting
-  else
-    runtime macros/editexisting.vim
-  endif
+  packadd! editexisting
 endif "}}}
 
 " print startup time "{{{
@@ -40,9 +40,9 @@ if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
   " :redraw hides intro message
   augroup vimrc-startuptime
-    autocmd! VimEnter *
+    autocmd! VimEnter * ++once
         \ let s:startuptime = reltime(s:startuptime) |
-        \ echomsg 'startuptime: ' . reltimestr(s:startuptime) |
+        \ echomsg 'startuptime: ' .. reltimestr(s:startuptime) |
         \ unlet s:startuptime | autocmd! vimrc-startuptime
   augroup END
 endif "}}}
@@ -86,7 +86,7 @@ function! s:mkdir(path) abort "{{{
     endif
   endfor
 
-  echoerr a:path . ' should be directory and readable.'
+  echoerr a:path .. ' should be directory and readable.'
   return 0
 endfunction "}}}
 
@@ -97,46 +97,6 @@ function! QfMakeConv(fenc, enc) abort
     let i.text = iconv(i.text, a:fenc, a:enc)
   endfor
   call setqflist(qflist, 'r')
-endfunction "}}}
-
-" 外部スクリプトのローカル関数を呼び出す "{{{
-" https://thinca.hatenablog.com/entry/20111228/1325077104
-function! CallInternalFunc(f, ...) abort
-  let [file, func] = a:f =~# ':' ?  split(a:f, ':') : [expand('%:p'), a:f]
-  let fname = matchstr(func, '^\w*')
-  let cfunc = ''
-
-  " Get sourced scripts.
-  redir => slist
-  silent scriptnames
-  redir END
-
-  let filepat = '\V' . substitute(file, '\\', '/', 'g') . '\v%(\.vim)?$'
-  for s in split(slist, "\n")
-    let p = matchlist(s, '^\s*\(\d\+\):\s*\(.*\)$')
-    if empty(p)
-      continue
-    endif
-    let [nr, sfile] = p[1 : 2]
-    let sfile = fnamemodify(sfile, ':p:gs?\\?/?')
-    if sfile =~# filepat && exists(printf("*\<SNR>%d_%s", nr, fname))
-      let cfunc = printf("\<SNR>%d_%s", nr, func)
-      break
-    endif
-  endfor
-
-  if !exists('nr')
-    echoerr 'Not sourced: ' . file
-    return
-  elseif !exists('cfunc')
-    let file = fnamemodify(file, ':p')
-    echoerr printf(
-        \ 'File found, but function is not defined: %s: %s()', file, fname)
-    return
-  endif
-
-  return 0 <= match(func, '^\w*\s*(.*)\s*$')
-      \ ? eval(cfunc) : call(cfunc, a:000)
 endfunction "}}}
 
 " マップ時のv:countを<Esc>を使わずに削除 "{{{
@@ -193,7 +153,6 @@ function! s:highlight_trailing_space() abort
   else
     highlight TrailingWhiteSpace ctermbg=darkred guibg=#ff0000
     if !get(w:, 'spaceid', 0)
-      " 行末の空白をハイライト
       let w:spaceid = matchadd('TrailingWhiteSpace', '\s\+$', 11)
     endif
   endif
@@ -210,7 +169,7 @@ function! s:delemptyline(start, last) abort
     let l = search('^$', 'c', end)
     if l <= 0 | break | endif
 
-    execute l . 'delete' '_'
+    execute l .. 'delete' '_'
     let n += 1 | let end -= 1
   endwhile
 
@@ -221,7 +180,7 @@ endfunction "}}}
 " バックスラッシュを消して結合(J) "{{{
 function! s:J() range
   set operatorfunc=Concat
-  return 'g@' . max([a:lastline - a:firstline - 1, 1]) . 'j'
+  return 'g@' .. max([a:lastline - a:firstline - 1, 1]) .. 'j'
 endfunction
 
 function! Concat(type) abort
@@ -246,24 +205,24 @@ function! Concat(type) abort
       if synname !~# '\v(Comment|String)$'
         set nojoinspaces
       else
-        " call map(lines, "substitute(v:val, '^\\s*' . substitute(&commentstring, '^\\s*\\|%s', '', 'g'), '', '')")
+        " call map(lines, { _, v -> substitute(v, '^\s*' .. substitute(&commentstring, '^\s*\|%s', '', 'g'), '', '') })
       endif
     endif
 
     if &filetype =~# '\v(\.|^)vim(\.|$)'
       " 行継続を削除
-      call map(lines, "substitute(v:val, '^\\s*\\\\', '', '')")
+      call map(lines, { _, v -> substitute(v, '^\s*\\', '', '') })
 
       " foldmarkerのコメント文字は残す
       let [foldstart, foldend] = split(&foldmarker, ',')
-      call map(lines, printf("substitute(v:val, '\\ze\"\\s*%s', '\" ', '')", foldstart)) " not vim9script
+      call map(lines, { _, v -> substitute(v, '\ze"\s*' .. foldstart, '" ', '') }) " not vim9script
       let lines = [getline(startline)] + lines
     else
       let lastline = lines[-1]
       let lines = [getline(startline)] + lines[:-2]
 
       " 行継続を削除
-      call map(lines, "substitute(v:val, '\\\\$', '', '')")
+      call map(lines, { _, v -> substitute(v, '\\$', '', '') })
 
       let lines += [lastline]
     endif
@@ -308,8 +267,8 @@ function! s:winleftpad() abort
   elseif &signcolumn ==# 'number' && &number
     let signwidth = 0
   else
-    " [{'signs': [...], 'bufnr': 2}]
-    let signs = sign_getplaced(bufname(), {'group': '*'})
+    " [#{ signs: [...], bufnr: 2 }]
+    let signs = sign_getplaced(bufname(), #{ group: '*' })
     if empty(signs[0]['signs'])
       let signwidth = 0
     else
@@ -326,7 +285,7 @@ function! Foldtext() abort "{{{
   let commentend = len(comment) < 2 ? '' : comment[1]
 
   let left = getline(v:foldstart)
-  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) . '\d\*'
+  let marker = strpart(&foldmarker, 0, stridx(&foldmarker, ',')) .. '\d\*'
 
   " (コメント用の文字も含めて) マーカーを削除
   let pattern = printf('\V\s\*\(%s\)\?\s\*%s\s\*\(%s\|\.\*\$\)', commentstart, marker, commentend)
@@ -353,13 +312,13 @@ function! Foldtext() abort "{{{
       let left = strcharpart(left, 0, strchars(left) - 1)
     endwhile
 
-    let left = left . '...'
+    let left = left .. '...'
     let leftlen = strwidth(left)
   endif
 
   let fill = repeat(' ', linelen - (leftlen + rightlen))
 
-  return left . fill . right
+  return left .. fill .. right
 endfunction "}}}
 
 " cmapやcabbrev用 "{{{
@@ -401,7 +360,7 @@ function! OpenSymbolicTarget() abort "{{{
     for wn in range(1, winnr('$'))
       if winbufnr(wn) ==# bn
         call insert(restwins, wn)
-        execute wn . 'windo' 'buffer' tmpbn
+        execute wn .. 'windo' 'buffer' tmpbn
       endif
     endfor
 
@@ -410,7 +369,7 @@ function! OpenSymbolicTarget() abort "{{{
     let bn = bufnr()
 
     for wn in restwins
-      execute wn . 'windo' 'buffer' bn
+      execute wn .. 'windo' 'buffer' bn
     endfor
   else
     bwipeout
@@ -431,7 +390,7 @@ function! Mode() abort "{{{
   let mode = substitute(mode, "\\C\<C-v>", 'vr', '')
   let mode = substitute(mode, "\\C\<C-s>", 'sr', '')
 
-  return toupper(mode[0]) . mode[1:]
+  return toupper(mode[0]) .. mode[1:]
 endfunction "}}}
 
 " 画面の81桁目にcolorcolumnを表示 "{{{
@@ -471,7 +430,7 @@ cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 
 " vimrc等を開く "{{{
 let s:vimrc = resolve(expand('<sfile>'))
-let s:gvimrc = resolve(expand('<sfile>:h') . '/.gvimrc')
+let s:gvimrc = resolve(expand('<sfile>:h') .. '/.gvimrc')
 
 execute 'command! -bar -nargs=0 Evimrc edit' s:vimrc
 execute 'command! -bar -nargs=0 Egvimrc edit' s:gvimrc
@@ -531,8 +490,8 @@ command! -bar OpenSymbolicTarget call OpenSymbolicTarget()
 
 " Terminal "{{{
 if g:vimrc#is_nvim
-  command! -bar Terminal execute 'belowright new term://' . &shell
-  command! -bar -nargs=? -addr=windows Resize execute 'resize <args> | set cmdheight=' . &cmdheight
+  command! -bar Terminal execute 'belowright new term://' .. &shell
+  command! -bar -nargs=? -addr=windows Resize execute 'resize <args> | set cmdheight=' .. &cmdheight
 
   cnoreabbrev <expr> terminal Cmdwhen(':', 'terminal', 'Terminal')
   cnoreabbrev <expr> resize Cmdwhen(':', 'resize', 'Resize')
@@ -555,15 +514,17 @@ set shiftround smarttab
 SetG autoread
 set backspace=indent,eol,start whichwrap+=h,l
 set backup backupskip+=*~,*.o
-let &backupdir = g:vimrc#dotvim . '/.backup'
+let &backupdir = g:vimrc#dotvim .. '/.backup'
+SetG breakindent breakindentopt=shift:2
 set browsedir=buffer
 SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG nocursorline
-set diffopt+=context:2,vertical
+set diffopt+=context:2,vertical,algorithm:histogram
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
+SetG nofixendofline
 SetG foldenable foldmethod=marker foldtext=Foldtext()
 SetG formatoptions+=Bjmr
 set guicursor=a:block-Cursor
@@ -575,7 +536,7 @@ SetG iminsert=0 imsearch=-1
 set laststatus=2
 setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
-setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'.(g:vimrc#is_windows&&!&shellslash?'\\':'/').'?'))}
+setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'..(g:vimrc#is_windows&&!&shellslash?'\\':'/')..'?'))}
 setglobal statusline+=\ \|\ %{&filetype!=#'netrw'?empty(bufname())?'[無名]':expand('%:t'):''}
 setglobal statusline+=\ %R%M%{&modified\|\|&readonly?'\ ':''}
 if has('patch-8.2.2854') || has('nvim-0.5.0')
@@ -587,7 +548,7 @@ if exists('+showcmdloc')
   setglobal statusline+=\ %S
 endif
 setglobal statusline+=%=%*
-setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding).'/'.&fileformat}
+setglobal statusline+=\ %{(empty(&fileencoding)?&encoding:&fileencoding)..'/'..&fileformat}
 setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':'?':&filetype}
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
@@ -599,10 +560,11 @@ SetG modeline
 set mouse=a
 SetG nrformats+=alpha
 SetG number relativenumber
+let &packpath ..= ',' .. g:vimrc#dotvim .. '/pack'
 set pastetoggle=<F2>
 set scrolloff=2
 set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
-set shortmess+=mrx shortmess-=t shortmess-=T
+set shortmess+=cmrx shortmess-=t shortmess-=T
 set showbreak==>
 set showcmd
 set showtabline=2
@@ -614,11 +576,11 @@ SetG synmaxcol=800
 set timeout ttimeout timeoutlen=700 ttimeoutlen=50
 set title
 set undoreload=20000 | SetG undofile undolevels=800
-let &undodir = g:vimrc#dotvim . '/.undo'
+let &undodir = g:vimrc#dotvim .. '/.undo'
 set updatecount=0 | SetG noswapfile
 set updatetime=2000
 set viewoptions+=localoptions,slash,unix
-let &viewdir = g:vimrc#dotvim . '/.view'
+let &viewdir = g:vimrc#dotvim .. '/.view'
 set viminfo-=<50 viminfo+=<100
 set virtualedit+=block
 set wildcharm=<Tab> wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
@@ -629,15 +591,6 @@ if exists('+ballooneval')
 endif
 if exists('+balloonevalterm')
   set balloonevalterm
-endif
-if exists('+breakindent')
-  SetG breakindent breakindentopt=shift:2,sbr
-endif
-if exists('+fixendofline')
-  SetG nofixendofline
-endif
-if exists('+packpath')
-  let &packpath .= ',' . g:vimrc#dotvim . '/pack'
 endif
 if exists('+showcmdloc')
   set showcmdloc=statusline
@@ -654,11 +607,8 @@ if has('unnamedplus')
 else
   set clipboard^=unnamed
 endif
-if has('patch-7.4.314') || g:vimrc#is_nvim
-  set shortmess+=c
-endif
-if has('patch-8.1.360') || has('nvim-0.3.2')
-  set diffopt+=algorithm:histogram
+if has('patch-8.2.0146') || has('nvim-0.5.0')
+  SetG breakindentopt+=sbr
 endif
 if has('patch-8.2.4325') || has('nvim-0.8.0')
   set wildoptions=pum
@@ -679,10 +629,10 @@ endif "}}}
 for s:d in filter(
     \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
-    \   exists('+loadplugins') && &loadplugins ? 'packpath' : '',
-    \   'viewdir'], 'v:val !=# ""')
-  if s:d != '' && !s:mkdir(eval('&' . s:d))
-    execute 'set' s:d . '&'
+    \   &loadplugins ? 'packpath' : '', 'viewdir'],
+    \ { _, v -> v !=# '' })
+  if s:d != '' && !s:mkdir(eval('&' .. s:d))
+    execute 'set' s:d .. '&'
   endif
 endfor
 unlet s:d "}}}
@@ -782,9 +732,9 @@ sunmap g*
 sunmap g#
 
 noremap <expr> <C-e>
-    \ '<C-e>' . (exists('+smoothscroll') && &smoothscroll ? 'g' : '') . 'j'
+    \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
 noremap <expr> <C-y>
-    \ '<C-y>' . (exists('+smoothscroll') && &smoothscroll ? 'g' : '') . 'k'
+    \ '<C-y>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'k'
 noremap <C-u> <C-u>zz
 noremap <C-d> <C-d>zz
 noremap <C-f> <C-f>zz
@@ -825,7 +775,7 @@ nnoremap <F1> :<C-u>help<Space>
 inoremap <F1> <Esc>:help<Space>
 
 nnoremap <CR> o<Esc>
-nnoremap <expr> <S-CR> 'O<Esc>j' . v:count . 'k'
+nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
 inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
 nnoremap <C-CR> i<CR><Esc>
@@ -834,8 +784,8 @@ inoremap <silent> <C-z> <C-o>:update<CR>
 nnoremap <silent> <Space><Tab> :<C-u>nohlsearch<CR>
 
 nnoremap <silent> <Space>tt :<C-u>tabnew<CR>
-nnoremap <expr> gt <SID>delcount(v:count) .
-    \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) . 'gt'
+nnoremap <expr> gt <SID>delcount(v:count) ..
+    \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
 nnoremap <silent> <C-n> :<C-u><C-r>=v:count<CR>bnext<CR>
 nnoremap <silent> <C-p> :<C-u><C-r>=v:count<CR>bprevious<CR>
@@ -852,7 +802,7 @@ nnoremap <silent> <Space>lN :<C-u><C-r>=v:count<CR>lNext<CR>
 nnoremap <silent> <Space>lp :<C-u><C-r>=v:count<CR>lprevious<CR>
 
 nnoremap <silent> <Space>h
-    \ :<C-u>echo map(synstack(line('.'),col('.')),'synIDattr(v:val,"name")')<CR>
+    \ :<C-u>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
 
 let g:foldmethods = ['marker', 'expr', 'indent']
 call add(g:foldmethods, g:foldmethods[0])
@@ -910,18 +860,18 @@ if has('iconv')
   " fileencodingsを構築
   if &encoding ==# 'utf-8'
     set fileencodings-=cp932 fileencodings-=sjis
-    let &fileencodings = s:enc_jis . ',' . s:enc_euc .
-        \ (g:vimrc#is_windows ? ',cp932,' : ',sjis,') . &fileencodings
+    let &fileencodings = s:enc_jis .. ',' .. s:enc_euc ..
+        \ (g:vimrc#is_windows ? ',cp932,' : ',sjis,') .. &fileencodings
   else
     set fileencodings-=utf-8 fileencodings-=ucs-2le fileencodings-=ucs-2
-    let &fileencodings .= ',' . s:enc_jis . ',utf-8,ucs-2le,ucs-2'
+    let &fileencodings ..= ',' .. s:enc_jis .. ',utf-8,ucs-2le,ucs-2'
 
     if &encoding =~# '^\(euc-jp\|euc-jisx0213\|eucjp-ms\)$'
       set fileencodings-=euc-jp fileencodings-=euc-jisx0213 fileencodings-=eucjp-ms
       let &encoding = s:enc_euc
       let &g:fileencoding = s:enc_euc
     else
-      let &fileencodings .= ',' . s:enc_euc
+      let &fileencodings ..= ',' .. s:enc_euc
     endif
   endif
 
@@ -930,8 +880,8 @@ if has('iconv')
 endif
 
 " encodingをfileencodingsの最後に移動
-execute 'set fileencodings-=' . &encoding
-execute 'set fileencodings+=' . &encoding
+execute 'set fileencodings-=' .. &encoding
+execute 'set fileencodings+=' .. &encoding
 
 " 日本語を含まない場合は fileencoding に encoding を使うようにする
 Autocmd BufReadPost,FileReadPost,FilterReadPost *
@@ -1015,18 +965,18 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
     " Seen modifyOtherKeys: true にならないようにキーコードに対してマッピングする
     let s:modifers = [
-        \   {'name': 'S', 'code': 2},
-        \   {'name': 'A', 'code': 3},
-        \   {'name': 'A-S', 'code': 4},
-        \   {'name': 'C', 'code': 5},
-        \   {'name': 'C-S', 'code': 6},
-        \   {'name': 'A-C', 'code': 7},
-        \   {'name': 'A-C-S', 'code': 8}
+        \   #{name: 'S', code: 2},
+        \   #{name: 'A', code: 3},
+        \   #{name: 'A-S', code: 4},
+        \   #{name: 'C', code: 5},
+        \   #{name: 'C-S', code: 6},
+        \   #{name: 'A-C', code: 7},
+        \   #{name: 'A-C-S', code: 8}
         \ ]
     let s:keys = [
-        \   {'name': 'BS', 'code': 8},
-        \   {'name': 'Tab', 'code': 9},
-        \   {'name': 'CR', 'code': 13}
+        \   #{name: 'BS', code: 8},
+        \   #{name: 'Tab', code: 9},
+        \   #{name: 'CR', code: 13}
         \ ]
 
     for s:modifer in s:modifers
@@ -1044,36 +994,6 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     cnoremap <special><expr> <S-Tab> wildmenumode() ? '<C-p>' : '<Tab>'
   endif "}}}
   "}}}
-
-  " Shift-Insertのペースト時に自動でpastetoggle "{{{
-  " https://qiita.com/ringo/items/bb9cf61a3ccfe6183c7b
-  " https://qiita.com/kefir_/items/415a30930a80b9b42adb
-  if !has("patch-8.0.238") && !g:vimrc#is_nvim
-    if g:vimrc#is_starting
-      if has("patch-8.0.210")
-          set t_BE=
-      endif
-
-      let &t_ti .= "\e[?2004h"
-      " let &t_te .= "\e[?2004l"
-      let &t_te = "\e[?2004l" . &t_te
-      let &pastetoggle = "\e[201~"
-    endif
-
-    function! s:xTermPasteBegin(ret) abort
-      set paste
-      return a:ret
-    endfunction
-
-    " noremap <special> <expr> <Esc>[200~ XTermPasteBegin('0i')
-    noremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('i')
-    inoremap <special> <expr> <Esc>[200~ <SID>xTermPasteBegin('')
-    cnoremap <special> <Esc>[200~ <nop>
-    cnoremap <special> <Esc>[201~ <nop>
-
-    map <F2> <Esc>[201~
-    imap <F2> <Esc>[201~
-  endif "}}}
 
   " OSC52でのコピー "{{{
   function s:paste64(text) abort
@@ -1099,9 +1019,9 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " 挿入モードを出るときにIMEを自動で切る "{{{
   " https://qiita.com/U25CE/items/0b40662a22162907efae#%E7%AB%AF%E6%9C%AB%E3%82%AA%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3
   if g:vimrc#is_starting && !g:vimrc#is_nvim
-    let &t_SI .= "\e[<r"
-    let &t_EI .= "\e[<s\e[<0t"
-    let &t_te .= "\e[<0\e[<s"
+    let &t_SI ..= "\e[<r"
+    let &t_EI ..= "\e[<s\e[<0t"
+    let &t_te ..= "\e[<0\e[<s"
   endif "}}}
 
   " 挿入モードでのESCキーの待ちをなくす "{{{
@@ -1112,8 +1032,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   noremap <special> r<C-v><Esc>O[ r<Esc>
 
   if g:vimrc#is_starting && !g:vimrc#is_nvim
-    let &t_SI .= "\e[?7727h"
-    let &t_EI .= "\e[?7727l"
+    let &t_SI ..= "\e[?7727h"
+    let &t_EI ..= "\e[?7727l"
   endif "}}}
 
   " 縦分割時のスクロールの高速化 "{{{
@@ -1124,13 +1044,13 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       " enable origin mode and left/right margins
       let &t_CS = 'y'
       let &t_CV = "\e[%i%p1%d;%p2%ds"
-      let &t_te = "\e[?6;69l" . &t_te
+      let &t_te = "\e[?6;69l" .. &t_te
       " let &t_te = "\e[?6;69l\e[999H" . &t_te
       " let &t_te = "\e7\e[?6;69l\e8" . &t_te
-      " let &t_te .= "\e[?6;69l"
-      " let &t_te .= "\e[?6;69l\e[999H"
-      " let &t_te .= "\e7\e[?6;69l\e8"
-      let &t_ti .= "\e[?6;69h"
+      " let &t_te ..= "\e[?6;69l"
+      " let &t_te ..= "\e[?6;69l\e[999H"
+      " let &t_te ..= "\e7\e[?6;69l\e8"
+      let &t_ti ..= "\e[?6;69h"
       "   call writefile(["\e[?6h\e[?69h"], '/dev/tty', 'a')
       call writefile(["\e[?6;69h"], '/dev/tty', 'a')
     endfunction "}}}
@@ -1145,14 +1065,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     map <expr> <t_F9> <SID>enableVsplitMode()
 
     if g:vimrc#is_starting
-      let &t_RV .= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
+      let &t_RV ..= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
-  endif "}}}
-
-  " Vim終了時にウィンドウタイトルを起動前の状態に戻す "{{{
-  if !has("patch-8.1.0253") && g:vimrc#is_starting && !g:vimrc#is_nvim
-    let &t_ti .= "\e[22;0t"
-    let &t_te .= "\e[23;0t"
   endif "}}}
 
   " バージョン情報を取得 "{{{
@@ -1209,7 +1123,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " if g:vimrc#is_starting && !g:vimrc#is_nvim
     " nnoremap <special><expr> <Esc>P><Bar> GetXTVersion()
-    " let &t_ti .= "\e[>0q"
+    " let &t_ti ..= "\e[>0q"
   " endif "}}}
 endif "}}}
 
@@ -1286,31 +1200,18 @@ if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
   Autocmd TermOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   Autocmd TermOpen * startinsert
-  Autocmd TermClose * if !v:event.status | execute 'bdelete! ' . expand('<abuf>') | endif
+  Autocmd TermClose * if !v:event.status | execute 'bdelete! ' .. expand('<abuf>') | endif
   Autocmd TermOpen * resize 15
 elseif has('terminal')
-  if exists('##TerminalWinOpen')
-    Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
-    Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
-    Autocmd TerminalWinOpen * if empty(&termwinsize) | resize 15 | endif
-  else
-    Autocmd TerminalOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
-    Autocmd TerminalOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
-    Autocmd TerminalOpen *
-        \ if empty(&termwinsize) && bufwinnr(bufnr()) !=# -1 |
-        \   resize 15 |
-        \ endif
-  endif
+  Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
+  Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+  Autocmd TerminalWinOpen * if empty(&termwinsize) | resize 15 | endif
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call Highlights()
 if g:vimrc#is_nvim
   Autocmd TermOpen * call Highlights()
 elseif has('terminal')
-  if exists('##TerminalWinOpen')
-    Autocmd TerminalWinOpen * call Highlights()
-  else
-    Autocmd TerminalOpen * call Highlights()
-  endif
+  Autocmd TerminalWinOpen * call Highlights()
 endif
 Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
     \ call s:set_colorcolumn()
@@ -1336,15 +1237,11 @@ augroup END
 "}}}
 
 " plugin "{{{
-if has('patch-7.4.1649') || g:vimrc#is_nvim
-  packadd! matchit
-else
-  runtime macros/matchit.vim
-endif
+packadd! matchit
 
 " 画面切り替え前のメッセージを遅延させる
 redir => s:msg
-silent execute 'source' g:vimrc#dotvim . '/dein.vim'
+silent execute 'source' g:vimrc#dotvim .. '/dein.vim'
 silent runtime! plugin/**/*.vim
 redir END
 Autocmd VimEnter *
