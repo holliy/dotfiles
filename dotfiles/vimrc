@@ -25,7 +25,7 @@ endif
 
 augroup Vimrc
   autocmd!
-  autocmd VimEnter * let g:vimrc#is_starting = 0
+  autocmd VimEnter * ++once let g:vimrc#is_starting = 0
 augroup END "}}}
 
 " use Vim with singleton "{{{
@@ -109,10 +109,9 @@ endfunction "}}}
 let g:vimrc#generate_filetypes = ['git', 'help', 'netrw', 'qf']
 
 " a:1 - バッファ番号 (0か省略されたとき現在のバッファに対して判定)
-function! IgnoreBuffer(...) abort
-  if a:0 && a:1 !=# 0
-    let bn = a:1
-  else
+function! IgnoreBuffer(bn = 0) abort
+  let bn = a:bn
+  if bn ==# 0
     let bn = bufnr()
   endif
 
@@ -407,10 +406,9 @@ function! Highlights() abort "{{{
   call s:set_colorcolumn()
 endfunction "}}}
 
-function! IsCommandLineWindow(...) abort "{{{
-  if a:0 && a:1 !=# 0
-    let bn = a:1
-  else
+function! IsCommandLineWindow(bn = 0) abort "{{{
+  let bn = a:bn
+  if bn ==# 0
     let bn = bufnr()
   endif
 
@@ -822,6 +820,9 @@ tnoremap <ScrollWheelDown> <C-\><C-n>
 
 if g:vimrc#is_nvim
   tnoremap <C-w> <C-\><C-n><C-w>
+  tnoremap <C-w>. <C-w>
+  tnoremap <C-w>: <C-\><C-o>:
+  tnoremap <expr> <C-w>" '<C-\><C-n>"' .. nr2char(getchar()) .. 'pa'
 endif
 "}}}
 
@@ -1244,13 +1245,13 @@ redir => s:msg
 silent execute 'source' g:vimrc#dotvim .. '/dein.vim'
 silent runtime! plugin/**/*.vim
 redir END
-Autocmd VimEnter *
+Autocmd VimEnter * ++once
     \ for s:line in split(s:msg, "\n") |
     \   echomsg s:line |
     \ endfor
 "}}}
 
-Autocmd VimEnter * doautocmd Vimrc FileType
+Autocmd VimEnter * ++once doautocmd Vimrc FileType
 
 if get(g:, 'colors_name', '') ==# ''
   colorscheme desert
