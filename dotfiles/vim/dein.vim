@@ -104,7 +104,7 @@ if !g:vimrc#is_starting
   endfor
 endif
 
-Autocmd VimEnter * call dein#call_hook('post_source')
+Autocmd VimEnter * ++once call dein#call_hook('post_source')
 
 " caw "{{{
 if dein#tap('caw')
@@ -233,7 +233,7 @@ endif "}}}
 
 " landscape "{{{
 if dein#tap('landscape') && (g:vimrc#is_gui || &t_Co > 16)
-  Autocmd VimEnter * nested colorscheme landscape
+  Autocmd VimEnter * ++once nested colorscheme landscape
 endif "}}}
 
 " lexima "{{{
@@ -249,7 +249,7 @@ if dein#tap('lexima')
     Autocmd TerminalWinOpen * let b:lexima_disabled = 1
   endif
 
-  function! s:lexima_sourced(...) abort "{{{
+  function! s:lexima_sourced() abort "{{{
     let quotes = [
         \   #{ start: "'", end: "'" }, #{ start: '"', end: '"' }
         \ ]
@@ -475,8 +475,13 @@ if dein#tap('lightline')
       \   tabnum: 'MyTabnum'
       \ },
       \ separator: #{ left: "", right: "" },
-      \ subseparator: #{ left: "│", right: "│" },
       \ }
+
+  if g:vimrc#is_windows && g:vimrc#is_gui
+    let g:lightline.subseparator = #{ left: "|", right: "|" }
+  else
+    let g:lightline.subseparator = #{ left: "│", right: "│" }
+  endif
   "}}}
 
   " タブラインにバッファ一覧を表示 "{{{
@@ -523,10 +528,9 @@ if dein#tap('lightline')
   Autocmd BufAdd,BufDelete * execute 'set tabline=' .. &tabline
   "}}}
 
-  function! MyModified(...) "{{{
-    if a:0
-      let bn = a:1
-    else
+  function! MyModified(bn = 0) "{{{
+    let bn = a:bn
+    if bn ==# 0
       let bn = bufnr()
     endif
 
@@ -543,7 +547,7 @@ if dein#tap('lightline')
         \ empty(l:fname) ? '[無名]' : l:fname
   endfunction "}}}
 
-  function! MyTabnum(...) "{{{
+  function! MyTabnum(_ = v:none) "{{{
     return tabpagenr()
   endfunction "}}}
 
@@ -641,13 +645,13 @@ if dein#tap('fugitive')
   call add(g:vimrc#generate_filetypes, 'fugitive')
 
   " コミットメッセージ入力時に先頭の行へ移動
-  Autocmd BufWinEnter COMMIT_EDITMSG normal! gg
+  AutocmdFT gitcommit normal! gg
 
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
   AutocmdFT fugitive resize 15
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
 
-  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted
+  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
 endif "}}}
 
 " vim-gitgutter "{{{
