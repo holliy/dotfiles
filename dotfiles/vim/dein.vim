@@ -19,7 +19,9 @@ if !isdirectory(s:dein_repo_dir)
       \ shellescape(s:dein_repo_dir))
   execute 'helptags' s:dein_repo_dir .. '/doc'
 endif
-let &runtimepath = s:dein_repo_dir .. ',' .. &runtimepath
+if index(split(&runtimepath, ','), s:dein_repo_dir) < 0
+  let &runtimepath = s:dein_repo_dir .. ',' .. &runtimepath
+endif
 
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
@@ -45,6 +47,8 @@ if dein#load_state(s:dein_dir)
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('kana/vim-textobj-user')
+  call dein#add('lambdalisue/kensaku.vim', #{ depends: ['denops'] })
+  call dein#add('lambdalisue/kensaku-command.vim', #{ depends: ['kensaku'] })
   call dein#add('LumaKernel/ddc-source-file')
   call dein#add('nathanaelkane/vim-indent-guides') " unmaintained
   call dein#add('mattn/benchvimrc-vim')
@@ -65,6 +69,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('Shougo/ddc-sorter_rank', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-native', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-none', #{ depends: ['ddc'] })
+  call dein#add('Shougo/neco-vim', #{ depends: ['ddc'] })
   call dein#add('shun/ddc-vim-lsp', #{ depends: ['ddc', 'lsp'] })
   call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
   call dein#add('thinca/vim-prettyprint')
@@ -73,6 +78,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('tyru/caw.vim', #{ depends: ['operator-user', 'repeat'] })
   call dein#add('vim-denops/denops.vim', #{ if: executable('deno') })
   call dein#add('vim-jp/vimdoc-ja')
+  call dein#add('yuki-yano/fuzzy-motion.vim', #{ depends: ['denops'] })
 
   if g:vimrc#is_windows
     call dein#add('mattn/vimtweak', #{ if: !g:vimrc#is_nvim && g:vimrc#is_gui })
@@ -163,12 +169,13 @@ if dein#tap('ddc')
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
     call ddc#custom#patch_global('ui', 'none')
 
+    call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around'])
+
     call ddc#custom#patch_global('sourceOptions', #{
         \ _: #{
         \   dup: 'keep',
         \   ignoreCase: v:true,
         \   matchers: ['matcher_head'],
-        \   minAutoCompleteLength: 0,
         \   sorters: ['sorter_rank'],
         \   timeout: 5000
         \ },
@@ -179,7 +186,8 @@ if dein#tap('ddc')
         \ },
         \ file: #{
         \   sorters: ['sorter_ascii']
-        \ }
+        \ },
+        \ necovim: #{ mark: 'vim' }
         \ })
     call ddc#custom#patch_global('sourceParams', #{
         \ around: #{
@@ -217,6 +225,15 @@ if dein#tap('ddc')
   call dein#set_hook('ddc', 'hook_post_source', function('s:ddc_sourced'))
 endif "}}}
 
+" fuzzy-motion "{{{
+if dein#tap('fuzzy-motion')
+  if dein#is_available('kensaku')
+    let g:fuzzy_motion_matchers = ['fzf', 'kensaku']
+  endif
+
+  nnoremap <silent> <Space>f :<C-u>FuzzyMotion<CR>
+endif "}}}
+
 " fzf "{{{
 if dein#tap('fzf')
   " そのうち
@@ -229,6 +246,11 @@ if dein#tap('ghcmod')
   Autocmd Filetype haskell nnoremap <buffer><silent> <Space><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
   Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fc :<C-u>GhcModCheckAsync<CR>
   Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fl :<C-u>GhcModLintAsync<CR>
+endif "}}}
+
+" kensaku-command "{{{
+if dein#tap('kensaku-command')
+  nnoremap <Space>/ :<C-u>Kensaku<Space>
 endif "}}}
 
 " landscape "{{{
