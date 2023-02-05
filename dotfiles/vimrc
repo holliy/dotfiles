@@ -1220,7 +1220,7 @@ AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 
 " TODO: マウスクリックを判定
-Autocmd WinEnter * stopinsert
+Autocmd WinEnter * if !pumvisible() | stopinsert | endif
 
 augroup Vimrc_bin
   autocmd!
