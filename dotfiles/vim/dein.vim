@@ -59,10 +59,8 @@ if dein#load_state(s:dein_dir)
   call dein#add('rhysd/conflict-marker.vim')
   call dein#add('rhysd/vim-operator-surround', #{ depends: ['operator-user'] })
   call dein#add('rhysd/vim-textobj-word-column', #{ depends: ['textobj-user'] })
-  " call dein#add('Shougo/neocomplete.vim')
-  " call dein#add('Shougo/neosnippet.vim')
-  " call dein#add('Shougo/neosnippet-snippets')
-  " call dein#add('Shougo/vimproc.vim', #{ build: 'make', if: !g:vimrc#is_windows })
+  call dein#add('Shougo/neosnippet.vim', #{ depends: ['ddc'] })
+  call dein#add('Shougo/neosnippet-snippets', #{ depends: ['neosnippet'] })
   call dein#add('Shougo/ddc.vim', #{ depends: ['denops'] })
   call dein#add('Shougo/ddc-around', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-matcher_head', #{ depends: ['ddc'] })
@@ -187,7 +185,8 @@ if dein#tap('ddc')
         \ file: #{
         \   sorters: ['sorter_ascii']
         \ },
-        \ necovim: #{ mark: 'vim' }
+        \ necovim: #{ mark: 'vim' },
+        \ neosnippet: #{ mark: 'snip' }
         \ })
     call ddc#custom#patch_global('sourceParams', #{
         \ around: #{
@@ -201,8 +200,6 @@ if dein#tap('ddc')
         \ }
         \ })
 
-    " call ddc#custom#patch_global('autoCompleteDelay', 50)
-
     call ddc#enable()
 
     inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
@@ -210,6 +207,10 @@ if dein#tap('ddc')
     inoremap <silent><expr> <Plug>(vimrc_complete-file)
         \ ddc#map#manual_complete(#{
         \   sources: ['file'], ui: 'native', keywordPattern: '\f*'
+        \ })
+    inoremap <silent><expr> <C-l>
+        \ ddc#map#manual_complete(#{
+        \   sources: ['neosnippet'], ui: 'native'
         \ })
     " imap <C-Space> <C-n>
 
@@ -261,9 +262,10 @@ endif "}}}
 " lexima "{{{
 if dein#tap('lexima')
   let g:lexima_map_escape = 'jk'
-  let g:lexima_accept_pum_with_enter = 1
+  " let g:lexima_accept_pum_with_enter = 1
 
   inoremap <expr><silent> <Plug>(vimrc_cr) lexima#expand('<lt>CR>', 'i')
+  inoremap <expr><silent> <Plug>(vimrc_tab) lexima#expand('<lt>TAB>', 'i')
 
   if g:vimrc#is_nvim
     Autocmd TermOpen * let b:lexima_disabled = 1
@@ -272,6 +274,9 @@ if dein#tap('lexima')
   endif
 
   function! s:lexima_sourced() abort "{{{
+    let save_cr_mapping = maparg('<CR>', 'i', 0, 1)
+    let save_tab_mapping = maparg('<Tab>', 'i', 0, 1)
+
     let quotes = [
         \   #{ start: "'", end: "'" }, #{ start: '"', end: '"' }
         \ ]
@@ -437,6 +442,10 @@ if dein#tap('lexima')
         \   filetype: ['vim']
         \ })
     "}}}
+
+    " imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+    call mapset('i', 0, save_cr_mapping)
+    call mapset('i', 0, save_tab_mapping)
   endfunction "}}}
   call dein#set_hook('lexima', 'hook_post_source', function('s:lexima_sourced'))
 endif "}}}
@@ -648,6 +657,32 @@ if dein#tap('lightline')
     call lightline#colorscheme()
     call lightline#update()
   endif
+endif "}}}
+
+" neosnippet "{{{
+if dein#tap('neosnippet')
+  let g:neosnippet#enable_auto_clear_markers = 0
+  let g:neosnippet#enable_completed_snippet = 1
+  let g:neosnippet#enable_complete_done = 1
+
+  smap <expr> <Tab> neosnippet#expandable_or_jumpable() ?
+      \ '<Plug>(neosnippet_expand_or_jump)' : '<Plug>(vimrc_tab)'
+  imap <expr> <Tab> neosnippet#expandable_or_jumpable() ?
+      \ '<Plug>(neosnippet_expand_or_jump)' : '<Plug>(vimrc_tab)'
+  imap <expr> <CR> pumvisible() ?
+      \ neosnippet#expandable() ? '<Plug>(vimrc_complete-select)<Plug>(neosnippet_expand)' :
+      \ '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+
+  Autocmd InsertLeave * NeoSnippetClearMarkers
+
+  if has('conceal')
+    set conceallevel=2 concealcursor=iv
+  endif
+endif "}}}
+
+" neosnippet-snippets "{{{
+if dein#tap('neosnippet-snippets')
+  let g:neosnippet#snippets_directory = g:dein#plugin.path .. '/neosnippet'
 endif "}}}
 
 " undotree "{{{

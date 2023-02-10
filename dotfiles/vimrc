@@ -808,6 +808,8 @@ nnoremap <silent> <Space>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
 
 inoremap <Plug>(vimrc_cr) <CR>
+inoremap <Plug>(vimrc_tab) <Tab>
+snoremap <Plug>(vimrc_tab) <Tab>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
