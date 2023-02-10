@@ -37,6 +37,8 @@ local config = {
     keys = {
       { key = 'Insert', mods = 'SHIFT', action = act.PasteFrom 'PrimarySelection' },
       { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
+      { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
+      { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
     },
     mouse_bindings = {
         {
