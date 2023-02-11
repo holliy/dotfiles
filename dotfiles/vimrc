@@ -416,8 +416,7 @@ function! IsCommandLineWindow(bn = 0) abort "{{{
     return win_gettype(bufwinnr(bn)) ==# 'command'
   endif
 
-  let fname = bufname(bn)
-  return fname =~# '\[Command Line\]\|\[コマンドライン\]'
+  return !empty(getcmdwintype())
 endfunction "}}}
 "}}}
 
@@ -456,12 +455,12 @@ command! -bar -complete=highlight -nargs=*
 
 if g:vimrc#is_starting
   command -complete=filetype -nargs=*
-      \ AutocmdFT Autocmd VimEnter * Autocmd FileType <args>
+      \ AutocmdFT Autocmd VimEnter * ++once Autocmd FileType <args>
   command -bar -complete=option -nargs=* SetG set <args>
 
-  Autocmd VimEnter * command! -complete=filetype -nargs=*
+  Autocmd VimEnter * ++once command! -complete=filetype -nargs=*
       \ AutocmdFT Autocmd FileType <args>
-  Autocmd VimEnter * command! -bar -complete=option -nargs=*
+  Autocmd VimEnter * ++once command! -bar -complete=option -nargs=*
       \ SetG setglobal <args>
 else
   command! -complete=filetype -nargs=* AutocmdFT Autocmd FileType <args>
@@ -551,7 +550,7 @@ setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
 "  N | 1 | ~/ | .vimrc +  <1b>          utf-8/unix | vim |  30% | 338:20
-set lazyredraw
+" set lazyredraw
 SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
 SetG modeline
@@ -968,18 +967,18 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
     " Seen modifyOtherKeys: true にならないようにキーコードに対してマッピングする
     let s:modifers = [
-        \   #{name: 'S', code: 2},
-        \   #{name: 'A', code: 3},
-        \   #{name: 'A-S', code: 4},
-        \   #{name: 'C', code: 5},
-        \   #{name: 'C-S', code: 6},
-        \   #{name: 'A-C', code: 7},
-        \   #{name: 'A-C-S', code: 8}
+        \   #{ name: 'S', code: 2 },
+        \   #{ name: 'A', code: 3 },
+        \   #{ name: 'A-S', code: 4 },
+        \   #{ name: 'C', code: 5 },
+        \   #{ name: 'C-S', code: 6 },
+        \   #{ name: 'A-C', code: 7 },
+        \   #{ name: 'A-C-S', code: 8 }
         \ ]
     let s:keys = [
-        \   #{name: 'BS', code: 8},
-        \   #{name: 'Tab', code: 9},
-        \   #{name: 'CR', code: 13}
+        \   #{ name: 'BS', code: 8 },
+        \   #{ name: 'Tab', code: 9 },
+        \   #{ name: 'CR', code: 13 }
         \ ]
 
     for s:modifer in s:modifers
@@ -1150,14 +1149,14 @@ Highlight SignColumn ctermbg=NONE guibg=NONE
 
 " Highlight DiffChange ctermbg=25 guibg=#004060
 " Highlight DiffText ctermbg=18 guibg=#000080
-Highlight DiffAdd guifg=NONE
-Highlight DiffChange guifg=NONE
-Highlight DiffDelete guifg=NONE
-Highlight DiffText guifg=NONE
+Highlight DiffAdd ctermfg=NONE guifg=NONE
+Highlight DiffChange ctermfg=NONE guifg=NONE
+Highlight DiffDelete ctermfg=NONE guifg=NONE
+Highlight DiffText ctermfg=NONE guifg=NONE
 
 " コメントのハイライトがおかしいので以前のシンタックスを適用
 " https://github.com/vim/vim/issues/11307
-if has('patch-9.0.652')
+if has('patch-9.0.652') && !has('patch-9.0.1025')
   AutocmdFT vim syntax match vimLineComment +^[ \t:]*".*$+ contains=@vimCommentGroup,vimCommentString,vimCommentTitle
 endif
 "}}}
@@ -1193,7 +1192,8 @@ AutocmdFT * if &omnifunc ==# '' |
 AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf
-    \ nnoremap <buffer><silent> <CR> :<C-u>execute (win_gettype() ==# 'loclist' ? 'll!' : 'cc!') line('.')<CR>
+    \ nnoremap <buffer><silent> <CR>
+    \   :<C-u>execute (win_gettype() ==# 'loclist' ? 'll!' : 'cc!') line('.')<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
@@ -1201,7 +1201,6 @@ execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
 " Autocmd CmdlineChanged : if !wildmenumode() && len(getcompletion(getcmdline(), 'cmdline')) > 1 | call feedkeys("\<Tab>") | endif
 if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
-  Autocmd TermOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   Autocmd TermOpen * startinsert
   Autocmd TermClose * if !v:event.status | execute 'bdelete! ' .. expand('<abuf>') | endif
   Autocmd TermOpen * resize 15
@@ -1243,17 +1242,19 @@ augroup END
 packadd! matchit
 
 " 画面切り替え前のメッセージを遅延させる
-redir => s:msg
-silent execute 'source' g:vimrc#dotvim .. '/dein.vim'
-silent runtime! plugin/**/*.vim
-redir END
+augroup filetypedetect " Neovimで未定義エラーが出るので
+augroup END
+let s:msg = execute([
+    \ 'source ' .. g:vimrc#dotvim .. '/dein.vim',
+    \ 'runtime! plugin/**/*.vim'
+    \ ], 'silent')
 Autocmd VimEnter * ++once
     \ for s:line in split(s:msg, "\n") |
     \   echomsg s:line |
     \ endfor
 "}}}
 
-Autocmd VimEnter * ++once doautocmd Vimrc FileType
+Autocmd VimEnter * ++once doautocmd Vimrc ColorScheme,FileType
 
 if get(g:, 'colors_name', '') ==# ''
   colorscheme desert
