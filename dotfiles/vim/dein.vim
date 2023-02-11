@@ -7,6 +7,7 @@ if !g:vimrc#is_nvim
   scriptversion 4
 endif
 
+" dein "{{{
 let s:dein_dir = g:vimrc#dotvim .. '/dein'
 let s:dein_repo_dir = s:dein_dir .. '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
@@ -25,11 +26,14 @@ endif
 
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
+let g:dein#install_check_diff = 1
+let g:dein#install_log_filename = s:dein_dir .. '/dein.log'
 " let g:dein#install_process_timeout = 60
-let g:dein#install_progress_type = 'tabline'
+let g:dein#install_progress_type = 'floating'
 let g:dein#install_message_type = 'echo'
+let g:dein#types#git#enable_partial_clone = 1
 
-if dein#load_state(s:dein_dir)
+if dein#load_state(s:dein_dir) "{{{
   call dein#begin(s:dein_dir, [expand('<sfile>')])
 
   call dein#add(s:dein_repo_dir)
@@ -49,7 +53,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('kana/vim-textobj-user')
   call dein#add('lambdalisue/kensaku.vim', #{ depends: ['denops'] })
   call dein#add('lambdalisue/kensaku-command.vim', #{ depends: ['kensaku'] })
-  call dein#add('LumaKernel/ddc-source-file')
+  call dein#add('LumaKernel/ddc-source-file', #{ depends: ['ddc'] })
   call dein#add('nathanaelkane/vim-indent-guides') " unmaintained
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', #{ depends: ['lsp'] })
@@ -68,7 +72,7 @@ if dein#load_state(s:dein_dir)
   call dein#add('Shougo/ddc-ui-native', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-none', #{ depends: ['ddc'] })
   call dein#add('Shougo/neco-vim', #{ depends: ['ddc'] })
-  call dein#add('shun/ddc-vim-lsp', #{ depends: ['ddc', 'lsp'] })
+  call dein#add('shun/ddc-source-vim-lsp', #{ depends: ['ddc', 'lsp'] })
   call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
   call dein#add('thinca/vim-prettyprint')
   call dein#add('tpope/vim-fugitive')
@@ -85,13 +89,13 @@ if dein#load_state(s:dein_dir)
   call dein#end()
 
   if g:vimrc#is_starting && dein#check_install()
-    call dein#install()
+    Autocmd VimEnter * ++once call dein#install()
   endif
 
   if !(g:vimrc#is_unix && $USER ==# 'root')
     call dein#save_state()
   endif
-endif
+endif "}}}
 
 if !g:vimrc#is_starting
   " post source フックの関数に変更があったときに反映できるように読み込み済みフラグを消す
@@ -109,6 +113,7 @@ if !g:vimrc#is_starting
 endif
 
 Autocmd VimEnter * ++once call dein#call_hook('post_source')
+"}}}
 
 " caw "{{{
 if dein#tap('caw')
@@ -180,7 +185,8 @@ if dein#tap('ddc')
         \ around: #{ mark: 'A' },
         \ vim-lsp: #{
         \   mark: 'L',
-        \   sorters: ['sorter_rank', 'sorter_ascii']
+        \   sorters: ['sorter_rank', 'sorter_ascii'],
+        \   forceCompletionPattern: '\w+(?:\.|::)'
         \ },
         \ file: #{
         \   sorters: ['sorter_ascii']
@@ -214,12 +220,8 @@ if dein#tap('ddc')
         \ })
     " imap <C-Space> <C-n>
 
-    " 進捗表示などで高速で画面を書き換えるコマンドを実行しているとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
-    if g:vimrc#is_nvim
-      Autocmd TermOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
-      Autocmd TermOpen * autocmd! ddc TextChangedT
-    elseif has('terminal')
-      Autocmd TerminalWinOpen * call ddc#custom#patch_buffer('autoCompleteEvents', [])
+    " 進捗表示などで高速に画面が書き変わるとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
+    if !g:vimrc#is_nvim && has('terminal')
       Autocmd TerminalWinOpen * autocmd! ddc TextChangedT
     endif
   endfunction "}}}
@@ -619,7 +621,7 @@ if dein#tap('lightline')
   endfunction "}}}
 
   function! MyMode() "{{{
-    return IsCommandLineWindow() ? 'Ex' :
+    return IsCommandLineWindow() ? 'Cmd' :
         \ &filetype ==# 'help' ? 'Help' :
         \ &filetype ==# 'qf' ? 'QuickFix' :
         \ (winwidth(0) > 60 ? lightline#mode() : '')
@@ -665,10 +667,12 @@ if dein#tap('neosnippet')
   let g:neosnippet#enable_completed_snippet = 1
   let g:neosnippet#enable_complete_done = 1
 
-  smap <expr> <Tab> neosnippet#expandable_or_jumpable() ?
-      \ '<Plug>(neosnippet_expand_or_jump)' : '<Plug>(vimrc_tab)'
-  imap <expr> <Tab> neosnippet#expandable_or_jumpable() ?
-      \ '<Plug>(neosnippet_expand_or_jump)' : '<Plug>(vimrc_tab)'
+  smap <expr> <Tab> neosnippet#jumpable() ?
+     \ '<Esc>a<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
+  imap <expr> <Tab>
+      \ pumvisible() ?
+      \   neosnippet#expandable_or_jumpable() ? '<Plug>(vimrc_complete-select)<Plug>(neosnippet_expand_or_jump)' : '' :
+      \   neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
   imap <expr> <CR> pumvisible() ?
       \ neosnippet#expandable() ? '<Plug>(vimrc_complete-select)<Plug>(neosnippet_expand)' :
       \ '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
@@ -704,6 +708,7 @@ if dein#tap('fugitive')
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
 
+  AutocmdFT fugitive setlocal nobuflisted
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
   AutocmdFT fugitive resize 15
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
@@ -724,6 +729,7 @@ if dein#tap('gitgutter')
 
   nnoremap <silent> <Space>gp :<C-u>GitGutterPreviewHunk<CR>
   nnoremap <silent> <Space>gs :<C-u>GitGutterStageHunk<CR>
+  nnoremap <silent> <Space>gu :<C-u>GitGutterUndoHunk<CR>
 
   if g:vimrc#is_windows
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
@@ -773,11 +779,13 @@ if dein#tap('lsp')
   let g:lsp_diagnostics_highlights_insert_mode_enabled = 0
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
+  let g:lsp_diagnostics_virtual_text_enabled = 1
   let g:lsp_inlay_hints_enabled = 1
   let g:lsp_inlay_hints_mode = #{ normal: ['curline'], insert: [] }
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
+  let g:lsp_use_native_client = 1
 
   let g:lsp_diagnostics_signs_error = #{ text: '!' }
   let g:lsp_diagnostics_signs_warning = #{ text: '*' }
@@ -800,6 +808,8 @@ if dein#tap('lsp')
   nnoremap <Space>lc <Plug>(lsp-code-action)
 
   Highlight link LspHintText Question
+  Highlight link LspInlayHintsType Comment
+  Highlight link LspInlayHintsParameter Comment
 
   Autocmd User lsp_buffer_enabled
       \ if &filetype !=# 'vim' |
@@ -808,6 +818,7 @@ if dein#tap('lsp')
   Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
+  AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
 
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened
