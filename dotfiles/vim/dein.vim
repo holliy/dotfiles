@@ -189,9 +189,14 @@ if dein#tap('ddc')
         \   forceCompletionPattern: '\w+(?:\.|::)'
         \ },
         \ file: #{
-        \   sorters: ['sorter_ascii']
+        \   sorters: ['sorter_ascii'],
+        \   isVolatile: v:true,
+        \   forceCompletionPattern: '/'
         \ },
-        \ necovim: #{ mark: 'vim' },
+        \ necovim: #{
+        \   mark: 'vim',
+        \   forceCompletionPattern: '[bwtglsav]:|\w+[#.]',
+        \ },
         \ neosnippet: #{ mark: 'snip' }
         \ })
     call ddc#custom#patch_global('sourceParams', #{
@@ -201,8 +206,7 @@ if dein#tap('ddc')
         \ file: #{
         \   displayCwd: 'c',
         \   displayBuf: 'b',
-        \   filenameChars: '[:fname:]',
-        \   isVolatile: v:true
+        \   filenameChars: '-@.[:alnum:]_~'
         \ }
         \ })
 
@@ -219,6 +223,8 @@ if dein#tap('ddc')
         \   sources: ['neosnippet'], ui: 'native'
         \ })
     " imap <C-Space> <C-n>
+
+    Autocmd InsertLeave * pclose
 
     " 進捗表示などで高速に画面が書き変わるとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
     if !g:vimrc#is_nvim && has('terminal')
@@ -444,6 +450,16 @@ if dein#tap('lexima')
         \   filetype: ['vim']
         \ })
     "}}}
+
+    " prehook for neosnippet "{{{
+    " 補完メニューを開いている間に入力したときにleximaのマッピングの途中でCompleteDoneが発火してそう
+    " 先にCompleteDoneを処理させると選択モードになる場合があって<C-]>が誤爆するので適当に入力して選択モードを抜ける
+    for char in keys(lexima#insmode#get_rules())
+      execute printf("inoremap <expr><silent> %s (pumvisible() ? '<C-y>a<BS>' : '') .. lexima#expand(%s, 'i')",
+          \   char,
+          \   string(lexima#string#to_mappable(char))
+          \ )
+    endfor "}}}
 
     " imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
     call mapset('i', 0, save_cr_mapping)
@@ -811,11 +827,12 @@ if dein#tap('lsp')
   Highlight link LspInlayHintsType Comment
   Highlight link LspInlayHintsParameter Comment
 
-  Autocmd User lsp_buffer_enabled
-      \ if &filetype !=# 'vim' |
-      \   setlocal foldmethod=expr |
-      \ endif
-  Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
+  " 重いことがあるので一旦無効化
+  " Autocmd User lsp_buffer_enabled
+  "    \ if &filetype !=# 'vim' |
+  "    \   setlocal foldmethod=expr |
+  "    \ endif
+  " Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
   AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
