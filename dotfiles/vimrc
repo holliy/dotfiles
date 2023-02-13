@@ -1220,8 +1220,13 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 
-" TODO: マウスクリックを判定
-Autocmd WinEnter * if !pumvisible() | stopinsert | endif
+if g:vimrc#is_nvim
+  Autocmd TermOpen * Autocmd WinLeave <buffer>
+      \ if !pumvisible() | stopinsert | endif
+elseif has('terminal')
+  Autocmd TerminalWinOpen * Autocmd WinLeave <buffer>
+      \ if !pumvisible() | stopinsert | endif
+endif
 
 augroup Vimrc_bin
   autocmd!
