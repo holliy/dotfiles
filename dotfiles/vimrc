@@ -11,7 +11,8 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
   let g:vimrc#is_nvim = has('nvim')
   if g:vimrc#is_nvim
-    let g:vimrc#is_gui = nvim_list_uis()[0].chan ==# 1
+    let g:vimrc#is_gui = !(nvim_list_uis()[0].chan ==# 0 ||
+        \ nvim_get_proc(nvim_get_proc(getpid()).ppid).name =~# '^nvim\(\.exe\)\?$')
   else
     let g:vimrc#is_gui = has('gui_running')
   endif
@@ -279,6 +280,7 @@ function! s:winleftpad() abort
 endfunction "}}}
 
 function! Foldtext() abort "{{{
+  " function! Foldtext() abort                                    42 [2]
   let comment = split(substitute(&commentstring, '\s', '', 'g'), '%s')
   let commentstart = len(comment) < 1 ? '' : comment[0]
   let commentend = len(comment) < 2 ? '' : comment[1]
@@ -1219,6 +1221,7 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
     \ call s:set_colorcolumn()
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
+AutocmdFT qf setlocal nobuflisted
 
 if g:vimrc#is_nvim
   Autocmd TermOpen * Autocmd WinLeave <buffer>
@@ -1269,5 +1272,5 @@ filetype plugin indent on
 syntax on
 
 if !g:vimrc#is_starting
-  doautocmd Vimrc VimEnter
+  doautoall Vimrc VimEnter
 endif
