@@ -16,7 +16,7 @@ if !isdirectory(s:dein_repo_dir)
     finish
   endif
 
-  call system('git clone https://github.com/Shougo/dein.vim ' ..
+  call system('git clone --filter=blob:none https://github.com/Shougo/dein.vim ' ..
       \ shellescape(s:dein_repo_dir))
   execute 'helptags' s:dein_repo_dir .. '/doc'
 endif
@@ -27,6 +27,7 @@ endif
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
 let g:dein#install_check_diff = 1
+let g:dein#install_copy_vim = 0
 let g:dein#install_log_filename = s:dein_dir .. '/dein.log'
 " let g:dein#install_process_timeout = 60
 let g:dein#install_progress_type = 'floating'
@@ -42,12 +43,12 @@ if dein#load_state(s:dein_dir) "{{{
   " call dein#add('derekwyatt/vim-scala', #{ on_ft: 'scala' })
   " call dein#add('eagletmt/ghcmod-vim', #{ on_ft: 'haskell' })
   " call dein#add('eagletmt/neco-ghc', #{ on_ft: 'haskell' })
-  " call dein#add('gamoutatsumi/ddc-sorter_ascii', #{ depends: ['ddc'] })
-  call dein#add('holliy/ddc-sorter_ascii', #{ depends: ['ddc'], rev: 'bump-ddc' })
+  call dein#add('gamoutatsumi/ddc-sorter_ascii', #{ depends: ['ddc'] })
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/lightline.vim')
   call dein#add('itchyny/vim-haskell-indent', #{ on_ft: 'haskell' })
-  call dein#add('junegunn/fzf.vim', #{ if: executable('fzf') })
+  call dein#add('junegunn/fzf', #{ merged: 0 })
+  call dein#add('junegunn/fzf.vim', #{ name: 'fzf-plugin', depends: ['fzf'] })
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('kana/vim-textobj-user')
@@ -245,6 +246,7 @@ endif "}}}
 
 " fzf "{{{
 if dein#tap('fzf')
+  " call dein#set_hook('fzf', 'hook_post_source', 'call fzf#install()')
   " そのうち
 endif "}}}
 
