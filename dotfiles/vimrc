@@ -786,19 +786,19 @@ nnoremap <silent> <Space>tt :<C-u>tabnew<CR>
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
-nnoremap <silent> <C-n> :<C-u><C-r>=v:count<CR>bnext<CR>
-nnoremap <silent> <C-p> :<C-u><C-r>=v:count<CR>bprevious<CR>
-nnoremap <silent> <Space>bn :<C-u><C-r>=v:count<CR>bnext<CR>
-nnoremap <silent> <Space>bN :<C-u><C-r>=v:count<CR>bNext<CR>
-nnoremap <silent> <Space>bp :<C-u><C-r>=v:count<CR>bprevious<CR>
+nnoremap <silent> <C-n> :<C-u><C-r>=v:count1<CR>bnext<CR>
+nnoremap <silent> <C-p> :<C-u><C-r>=v:count1<CR>bprevious<CR>
+nnoremap <silent> <Space>bn :<C-u><C-r>=v:count1<CR>bnext<CR>
+nnoremap <silent> <Space>bN :<C-u><C-r>=v:count1<CR>bNext<CR>
+nnoremap <silent> <Space>bp :<C-u><C-r>=v:count1<CR>bprevious<CR>
 
-nnoremap <silent> <Space>cn :<C-u><C-r>=v:count<CR>cnext<CR>
-nnoremap <silent> <Space>cN :<C-u><C-r>=v:count<CR>cNext<CR>
-nnoremap <silent> <Space>cp :<C-u><C-r>=v:count<CR>cprevious<CR>
+nnoremap <silent> <Space>cn :<C-u><C-r>=v:count1<CR>cnext<CR>
+nnoremap <silent> <Space>cN :<C-u><C-r>=v:count1<CR>cNext<CR>
+nnoremap <silent> <Space>cp :<C-u><C-r>=v:count1<CR>cprevious<CR>
 
-nnoremap <silent> <Space>ln :<C-u><C-r>=v:count<CR>lnext<CR>
-nnoremap <silent> <Space>lN :<C-u><C-r>=v:count<CR>lNext<CR>
-nnoremap <silent> <Space>lp :<C-u><C-r>=v:count<CR>lprevious<CR>
+nnoremap <silent> <Space>ln :<C-u><C-r>=v:count1<CR>lnext<CR>
+nnoremap <silent> <Space>lN :<C-u><C-r>=v:count1<CR>lNext<CR>
+nnoremap <silent> <Space>lp :<C-u><C-r>=v:count1<CR>lprevious<CR>
 
 nnoremap <silent> <Space>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
@@ -1208,7 +1208,8 @@ if g:vimrc#is_nvim
   Autocmd TermOpen * resize 15
 elseif has('terminal')
   Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
-  Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+  Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q
+      \ term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
   Autocmd TerminalWinOpen * if empty(&termwinsize) | resize 15 | endif
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call Highlights()
@@ -1222,6 +1223,9 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
+
+" netrwのバッファに飛ぶのでそのときに削除する
+Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
 
 if g:vimrc#is_nvim
   Autocmd TermOpen * Autocmd WinLeave <buffer>

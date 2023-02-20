@@ -654,7 +654,7 @@ if dein#tap('lightline')
     return l:space_line != 0 ? 'Space: L' .. l:space_line : ''
   endfunction
 
-  autocmd Vimrc BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
+  Autocmd BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
   "}}}
 
   function! MyDirectory() "{{{
