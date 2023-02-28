@@ -525,7 +525,7 @@ set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
 SetG foldenable foldmethod=marker foldtext=Foldtext()
-SetG formatoptions+=Bjmr
+SetG formatoptions-=c formatoptions+=Bjmr
 set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
 set hidden
