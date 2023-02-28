@@ -76,6 +76,8 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('shun/ddc-source-vim-lsp', #{ depends: ['ddc', 'lsp'] })
   call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
   call dein#add('thinca/vim-prettyprint')
+  call dein#add('thomasfaingnaert/vim-lsp-snippets', #{ depends: ['lsp'] })
+  call dein#add('thomasfaingnaert/vim-lsp-neosnippet', #{ depends: ['lsp', 'neosnippet'] })
   call dein#add('tpope/vim-fugitive')
   " call dein#add('tpope/vim-surround')
   call dein#add('tyru/caw.vim', #{ depends: ['operator-user', 'repeat'] })
@@ -164,12 +166,13 @@ endif "}}}
 
 " ddc "{{{
 if dein#tap('ddc')
-  function s:ddc_sourced() abort "{{{
+  function! s:ddc_sourced() abort "{{{
     if execute('augroup') !~# '\<denops_plugin_internal\>'
       " denopsがサポートされてない
       return
     endif
 
+    call ddc#custom#set_global({})
     call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
     call ddc#custom#patch_global('ui', 'none')
 
@@ -181,13 +184,16 @@ if dein#tap('ddc')
         \   ignoreCase: v:true,
         \   matchers: ['matcher_head'],
         \   sorters: ['sorter_rank'],
+        \   minAutoCompleteLength: 0,
         \   timeout: 5000
         \ },
-        \ around: #{ mark: 'A' },
+        \ around: #{
+        \   mark: 'A',
+        \   minAutoCompleteLength: 2
+        \ },
         \ vim-lsp: #{
         \   mark: 'L',
-        \   sorters: ['sorter_rank', 'sorter_ascii'],
-        \   forceCompletionPattern: '\w+(?:\.|::)'
+        \   sorters: ['sorter_rank', 'sorter_ascii']
         \ },
         \ file: #{
         \   sorters: ['sorter_ascii'],
@@ -195,8 +201,7 @@ if dein#tap('ddc')
         \   forceCompletionPattern: '/'
         \ },
         \ necovim: #{
-        \   mark: 'vim',
-        \   forceCompletionPattern: '[bwtglsav]:|\w+[#.]',
+        \   mark: 'vim'
         \ },
         \ neosnippet: #{ mark: 'snip' }
         \ })
@@ -207,7 +212,7 @@ if dein#tap('ddc')
         \ file: #{
         \   displayCwd: 'c',
         \   displayBuf: 'b',
-        \   filenameChars: '-@.[:alnum:]_~'
+        \   filenameChars: '\-@.[:alnum:]_~'
         \ }
         \ })
 
@@ -217,7 +222,7 @@ if dein#tap('ddc')
     inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
     inoremap <silent><expr> <Plug>(vimrc_complete-file)
         \ ddc#map#manual_complete(#{
-        \   sources: ['file'], ui: 'native', keywordPattern: '\f*'
+        \   sources: ['file'], ui: 'native'
         \ })
     inoremap <silent><expr> <C-l>
         \ ddc#map#manual_complete(#{
@@ -682,20 +687,21 @@ endif "}}}
 " neosnippet "{{{
 if dein#tap('neosnippet')
   let g:neosnippet#enable_auto_clear_markers = 0
-  let g:neosnippet#enable_completed_snippet = 1
-  let g:neosnippet#enable_complete_done = 1
+  " let g:neosnippet#enable_completed_snippet = 1
+  " let g:neosnippet#enable_complete_done = 1
 
   smap <expr> <Tab> neosnippet#jumpable() ?
      \ '<Esc>a<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
   imap <expr> <Tab>
       \ pumvisible() ?
-      \   neosnippet#expandable_or_jumpable() ? '<Plug>(vimrc_complete-select)<Plug>(neosnippet_expand_or_jump)' : '' :
+      \   neosnippet#expandable_or_jumpable() ? '<Plug>(neosnippet_expand_or_jump)' : '' :
       \   neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
   imap <expr> <CR> pumvisible() ?
-      \ neosnippet#expandable() ? '<Plug>(vimrc_complete-select)<Plug>(neosnippet_expand)' :
+      \ neosnippet#expandable() ? '<Plug>(neosnippet_expand)' :
       \ '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 
   Autocmd InsertLeave * NeoSnippetClearMarkers
+  " Autocmd User lsp_complete_done call neosnippet#complete_done()
 
   if has('conceal')
     set conceallevel=2 concealcursor=iv
@@ -803,7 +809,7 @@ if dein#tap('lsp')
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
-  let g:lsp_use_native_client = 1
+  let g:lsp_use_native_client = 0
 
   let g:lsp_diagnostics_signs_error = #{ text: '!' }
   let g:lsp_diagnostics_signs_warning = #{ text: '*' }
