@@ -230,7 +230,7 @@ if dein#tap('ddc')
         \ })
     " imap <C-Space> <C-n>
 
-    Autocmd InsertLeave * pclose
+    Autocmd InsertLeave * if !IsCommandLineWindow() | pclose | endif
 
     " 進捗表示などで高速に画面が書き変わるとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
     if !g:vimrc#is_nvim && has('terminal')
@@ -645,7 +645,7 @@ if dein#tap('lightline')
 
   function! MyMode() "{{{
     return IsCommandLineWindow() ? 'Cmd' :
-        \ &filetype ==# 'help' ? 'Help' :
+        \ &filetype ==# 'help' && !&modifiable ? 'Help' :
         \ &filetype ==# 'qf' ? 'QuickFix' :
         \ (winwidth(0) > 60 ? lightline#mode() : '')
   endfunction "}}}
@@ -686,6 +686,7 @@ endif "}}}
 
 " neosnippet "{{{
 if dein#tap('neosnippet')
+  let g:neosnippet#disable_select_mode_mappings = 0
   let g:neosnippet#enable_auto_clear_markers = 0
   " let g:neosnippet#enable_completed_snippet = 1
   " let g:neosnippet#enable_complete_done = 1
@@ -699,6 +700,8 @@ if dein#tap('neosnippet')
   imap <expr> <CR> pumvisible() ?
       \ neosnippet#expandable() ? '<Plug>(neosnippet_expand)' :
       \ '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+  snoremap <silent> <CR> <C-r>"a<BS><C-r>"
+  snoremap <silent> <BS> <C-r>_a<BS>
 
   Autocmd InsertLeave * NeoSnippetClearMarkers
   " Autocmd User lsp_complete_done call neosnippet#complete_done()
@@ -824,9 +827,9 @@ if dein#tap('lsp')
 
   nnoremap <Space>lh <Plug>(lsp-hover)
   nnoremap <Space>ls <Plug>(lsp-signature-help)
-  nnoremap <Space>ld <Plug>(lsp-peek-definition)
+  nnoremap <Space>ld <Plug>(lsp-definition)zz
   nnoremap <Space>lt <Plug>(lsp-peek-type-definition)
-  nnoremap <Space>li <Plug>(lsp-peek-implementation)
+  nnoremap <Space>li <Plug>(lsp-implementation)zz
   nnoremap <Space>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Space>lr <Plug>(lsp-rename)
   nnoremap <Space>lc <Plug>(lsp-code-action)

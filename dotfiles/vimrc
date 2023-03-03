@@ -107,7 +107,7 @@ function! s:delcount(count) abort
 endfunction "}}}
 
 " 自動で生成されるバッファか判定 "{{{
-let g:vimrc#generate_filetypes = ['git', 'help', 'netrw', 'qf']
+let g:vimrc#generate_filetypes = ['git', 'netrw', 'qf']
 
 " a:1 - バッファ番号 (0か省略されたとき現在のバッファに対して判定)
 function! IgnoreBuffer(bn = 0) abort
@@ -136,6 +136,8 @@ function! IgnoreBuffer(bn = 0) abort
 
   for ft in split(fts, '\.')
     if index(g:vimrc#generate_filetypes, ft) !=# -1
+      return 1
+    elseif ft ==# 'help' && !&modifiable
       return 1
     endif
   endfor
@@ -817,6 +819,7 @@ inoremap <Plug>(vimrc_reindent) <C-f>
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
 imap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
+inoremap <expr> <C-e> pumvisible() ? '<C-e>' : '<End>'
 
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
@@ -1030,10 +1033,12 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " 挿入モードでのESCキーの待ちをなくす "{{{
   inoremap <special> <Esc>O[ <Esc>
-  inoremap <special> <C-V><Esc>O[ <C-V><Esc>
+  inoremap <special> <C-v><Esc>O[ <C-v><Esc>
   inoremap <special> <C-r><Esc>O[ <Nop>
   noremap <special> r<Esc>O[ <Nop>
+  noremap <special> gr<Esc>O[ <Nop>
   noremap <special> r<C-v><Esc>O[ r<Esc>
+  noremap <special> gr<C-v><Esc>O[ gr<Esc>
 
   if g:vimrc#is_starting && !g:vimrc#is_nvim
     let &t_SI ..= "\e[?7727h"
