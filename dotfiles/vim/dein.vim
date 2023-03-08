@@ -543,13 +543,25 @@ if dein#tap('lightline')
   " タブラインにバッファ一覧を表示 "{{{
   function! MyBuffers() abort "{{{
     " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
-    let [active_bn, alt_bn, last_bn, tn] = [bufnr(), bufnr(0), bufnr('$'), tabpagenr()]
+    let [active_bn, alt_bn, last_bn, tn] = [bufnr(), winbufnr(winnr('#')), bufnr('$'), tabpagenr()]
     let [left, mid, right] = [[], [], []]
     let fold = '...'
-    let max_side_tabs = min([max([&columns/25, 2]), 8]) " left, rightそれぞれから表示する数
+    let max_side_tabs = min([max([&columns/40, 2]), 8]) " left, rightそれぞれから表示する数
 
-    if IgnoreBuffer(active_bn) && !IgnoreBuffer(alt_bn)
-      let active_bn = alt_bn
+    if IgnoreBuffer(active_bn)
+      if !IgnoreBuffer(alt_bn)
+        let active_bn = alt_bn
+      else
+        " タブページ内のウィンドウから探す
+        for wn in range(1, winnr('$'))
+          let bn = winbufnr(wn)
+
+          if !IgnoreBuffer(bn)
+            let active_bn = bn
+            break
+          endif
+        endfor
+      endif
     endif
 
     for bn in range(1, last_bn)
@@ -735,18 +747,18 @@ if dein#tap('fugitive')
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
 
-  AutocmdFT fugitive setlocal nobuflisted
+  AutocmdFT fugitive setlocal nobuflisted nofoldenable
   AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
   AutocmdFT fugitive resize 15
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
 
-  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
+  Autocmd BufEnter fugitive://* setlocal nomodifiable
 endif "}}}
 
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
-  " let g:gitgutter_set_sign_backgrounds = 0
+  let g:gitgutter_set_sign_backgrounds = 1
   let g:gitgutter_sign_priority = 9
 
   if &encoding !=# 'utf-8'
@@ -757,13 +769,16 @@ if dein#tap('gitgutter')
   nnoremap <silent> <Space>gp :<C-u>GitGutterPreviewHunk<CR>
   nnoremap <silent> <Space>gs :<C-u>GitGutterStageHunk<CR>
   nnoremap <silent> <Space>gu :<C-u>GitGutterUndoHunk<CR>
+  nnoremap <silent> <Space>gg :<C-u>GitGutterToggle<CR>
 
   if g:vimrc#is_windows
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
     Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' .. expand('%:p:h')
   endif
 
-  Autocmd BufWritePost * GitGutter
+  " Autocmd BufWritePost * GitGutter
+  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
+  Autocmd VimEnter * ++once call gitgutter#highlight#define_highlights()
 
   function! s:gitgutter_sourced() abort
     " autocmd! gitgutter CursorHold,CursorHoldI
@@ -780,7 +795,7 @@ endif "}}}
 if dein#tap('indent-guides')
   let g:indent_guides_auto_colors = 1
   let g:indent_guides_enable_on_vim_startup = 1
-  let g:indent_guides_exclude_filetypes = ['help']
+  let g:indent_guides_exclude_filetypes = ['help', 'diff', 'fugitive']
   let g:indent_guides_indent_levels = 15
   let g:indent_guides_start_level = 1
 
