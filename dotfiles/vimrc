@@ -526,7 +526,7 @@ set diffopt+=context:2,vertical,algorithm:histogram
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
-SetG foldenable foldmethod=marker foldtext=Foldtext()
+SetG foldenable foldmethod=syntax foldtext=Foldtext()
 SetG formatoptions-=c formatoptions+=Bjmr
 set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
@@ -671,6 +671,8 @@ map! <Nul> <C-Space>
 " map <C-j> <S-CR>
 " map! <C-j> <S-CR>
 
+nnoremap <Space> <Nop>
+
 noremap - ^
 noremap ^ $
 sunmap -
@@ -805,7 +807,7 @@ nnoremap <silent> <Space>lp :<C-u><C-r>=v:count1<CR>lprevious<CR>
 nnoremap <silent> <Space>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
 
-let g:foldmethods = ['marker', 'expr', 'indent']
+let g:foldmethods = ['indent', 'marker', 'syntax', 'expr']
 call add(g:foldmethods, g:foldmethods[0])
 nnoremap <silent> <Space>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
@@ -957,10 +959,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
     execute "set <FocusGained>=\e[I"
     execute "set <FocusLost>=\e[O"
-  " endif
 
   " modifyOtherKeys "{{{
-  " if GetXTVersion() =~# '^RLogin' " 応答がキー入力扱いになってしまうので無効化
     " modifyCursorKeysとmodifyStringKeysも有効にする
     if g:vimrc#is_starting
       " 有効にすると一部のキー(DD, <C-r>")で問題があるのでmodifyOtherKeys以外を一旦無効化
@@ -969,9 +969,11 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       let &t_TI = "\e[>4;2m"
       let &t_TE = "\e[>4;m"
     endif
+  endif
 
+  function! s:rlogin_modifyotherkeys()
     " Seen modifyOtherKeys: true にならないようにキーコードに対してマッピングする
-    let s:modifers = [
+    let modifers = [
         \   #{ name: 'S', code: 2 },
         \   #{ name: 'A', code: 3 },
         \   #{ name: 'A-S', code: 4 },
@@ -980,26 +982,31 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
         \   #{ name: 'A-C', code: 7 },
         \   #{ name: 'A-C-S', code: 8 }
         \ ]
-    let s:keys = [
+    let keys = [
         \   #{ name: 'BS', code: 8 },
         \   #{ name: 'Tab', code: 9 },
         \   #{ name: 'CR', code: 13 }
         \ ]
 
-    for s:modifer in s:modifers
-      for s:key in s:keys
+    for modifer in modifers
+      for key in keys
         execute 'map <special>'
-            \ printf('<Esc>[27;%d;%d~', s:modifer['code'], s:key['code'])
-            \ printf('<%s-%s>', s:modifer['name'], s:key['name'])
+            \ printf('<Esc>[27;%d;%d~', modifer['code'], key['code'])
+            \ printf('<%s-%s>', modifer['name'], key['name'])
         execute 'map! <special>'
-            \ printf('<Esc>[27;%d;%d~', s:modifer['code'], s:key['code'])
-            \ printf('<%s-%s>', s:modifer['name'], s:key['name'])
+            \ printf('<Esc>[27;%d;%d~', modifer['code'], key['code'])
+            \ printf('<%s-%s>', modifer['name'], key['name'])
       endfor
     endfor
-    unlet s:modifers s:modifer s:keys s:key
 
     cnoremap <special><expr> <S-Tab> wildmenumode() ? '<C-p>' : '<Tab>'
-  endif "}}}
+  endfunction
+
+  Autocmd VimEnter * ++once
+      \ if !g:vimrc#is_nvim && GetXTVersion() =~# '^RLogin' |
+      \   call s:rlogin_modifyotherkeys() |
+      \ endif
+  "}}}
   "}}}
 
   " OSC52でのコピー "{{{
@@ -1032,18 +1039,51 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endif "}}}
 
   " 挿入モードでのESCキーの待ちをなくす "{{{
-  inoremap <special> <Esc>O[ <Esc>
-  inoremap <special> <C-v><Esc>O[ <C-v><Esc>
-  inoremap <special> <C-r><Esc>O[ <Nop>
-  noremap <special> r<Esc>O[ <Nop>
-  noremap <special> gr<Esc>O[ <Nop>
-  noremap <special> r<C-v><Esc>O[ r<Esc>
-  noremap <special> gr<C-v><Esc>O[ gr<Esc>
+  noremap <special> <Esc>O[ <Esc>
+  noremap! <special> <Esc>O[ <Esc>
+  noremap! <special> <C-v><Esc>O[ <C-v><Esc>
+  noremap! <special> <C-r><Esc>O[ <Nop>
+  noremap! <special> <C-r><C-r><Esc>O[ <Nop>
+  noremap! <special> <C-k><Esc>O[ <Nop>
+  snoremap <special> <C-r><Esc>O[ <Nop>
+  nnoremap <special> r<Esc>O[ <Nop>
+  nnoremap <special> gr<Esc>O[ <Nop>
+  nnoremap <special> r<C-v><Esc>O[ r<Esc>
+  nnoremap <special> gr<C-v><Esc>O[ gr<Esc>
+  nnoremap <special> r<C-k><Esc>O[ <Nop>
+  nnoremap <special> gr<C-k><Esc>O[ <Nop>
+  nnoremap <special> z<Esc>O[ <Nop>
+  nnoremap <special> g<Esc>O[ <Nop>
+  onoremap <special> i<Esc>O[ <Esc>
+  onoremap <special> a<Esc>O[ <Esc>
 
   if g:vimrc#is_starting && !g:vimrc#is_nvim
-    let &t_SI ..= "\e[?7727h"
-    let &t_EI ..= "\e[?7727l"
-  endif "}}}
+    let &t_ti ..= "\e[?7727h"
+    let &t_te ..= "\e[?7727l"
+  endif
+
+  function! s:disable_fast_esc_map()
+    unmap <special> <Esc>O[
+    unmap! <special> <Esc>O[
+    unmap! <special> <C-v><Esc>O[
+    unmap! <special> <C-r><Esc>O[
+    unmap! <special> <C-r><C-r><Esc>O[
+    unmap! <special> <C-k><Esc>O[
+    sunmap <special> <C-r><Esc>O[
+    nunmap <special> r<Esc>O[
+    nunmap <special> gr<Esc>O[
+    nunmap <special> r<C-v><Esc>O[
+    nunmap <special> gr<C-v><Esc>O[
+    nunmap <special> r<C-k><Esc>O[
+    nunmap <special> gr<C-k><Esc>O[
+    nunmap <special> z<Esc>O[
+  endfunction
+
+  Autocmd VimEnter * ++once
+      \ if g:vimrc#is_nvim || GetXTVersion() =~# '^WezTerm' |
+      \   call s:disable_fast_esc_map() |
+      \ endif
+  "}}}
 
   " 縦分割時のスクロールの高速化 "{{{
   " https://qiita.com/kefir_/items/c725731d33de4d8fb096
@@ -1078,7 +1118,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     endif
   endif "}}}
 
-  " バージョン情報を取得 "{{{
+  " 端末のバージョン情報を取得 "{{{
   " 応答が DCS (ESC P) > | VERSION ST (ESC \)で返ってくるのでどうにかして取得
   " Neovimだと応答が取れない?
   function! GetXTVersion() abort
@@ -1090,7 +1130,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     endif
 
     call writefile(list2blob(str2list("\e[>0q")), '/dev/tty', 'a')
-    sleep 200m
+    sleep 100m
     call s:parse_response()
 
     return g:xtversion
@@ -1228,6 +1268,7 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
+AutocmdFT vim setlocal foldmethod=marker
 
 " netrwのバッファに飛ぶのでそのときに削除する
 Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
@@ -1271,7 +1312,7 @@ Autocmd VimEnter * ++once
     \ endfor
 "}}}
 
-Autocmd VimEnter * ++once doautocmd Vimrc ColorScheme,FileType
+Autocmd VimEnter * ++once doautoall Vimrc ColorScheme,FileType
 
 if get(g:, 'colors_name', '') ==# ''
   colorscheme desert
