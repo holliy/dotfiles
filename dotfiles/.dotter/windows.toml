@@ -1,4 +1,4 @@
-packages = ["vim", "neovim", "alacritty", "wezterm"]
+packages = ["vim", "neovim", "alacritty", "wezterm", "git"]
 
 [files]
 "config/nvim/init.vim" = "~/AppData/Local/nvim/init.vim"
