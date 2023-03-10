@@ -12,3 +12,4 @@
 	diffc = diff --cached
 	diffs = diff --stat
 	logline = log --oneline --graph
+# vi: noet ts=4 sw=4 ft=gitconfig:
