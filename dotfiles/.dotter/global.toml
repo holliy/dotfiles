@@ -27,4 +27,7 @@ bashrc = "~/.bashrc"
 [x.files]
 Xresources = "~/.Xresources"
 
+[git.files]
+gitconfig = "~/.gitconfig"
+
 [default.variables]

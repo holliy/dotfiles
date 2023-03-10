@@ -1,0 +1,14 @@
+[init]
+	defaultBranch = main
+[pull]
+	ff = only
+[diff]
+	algorithm = histogram
+	indentHeuristic = true
+[alias]
+	partialclone = clone --filter=blob:none
+	amend = commit --amend
+	commitadd = commit --amend --no-edit
+	diffc = diff --cached
+	diffs = diff --stat
+	logline = log --oneline --graph
