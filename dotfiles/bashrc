@@ -89,17 +89,19 @@ if type "gh" > /dev/null 2>&1; then
 fi
 
 _fzf_compgen_path() {
-  find -L $1 -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
+  find -L $1 -type f -not -readable -prune -o \
+    -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
     -name .vscode-server -prune -o -name target -prune -o -name node_modules \
     -prune -o -name site-packages -prune -o \
-    -type f -print | sed 's@^\./@@'
+    -print | sed 's@^\./@@'
 }
 
 _fzf_compgen_dir() {
-  find -L $1 -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
+  find -L $1 -type d -not -readable -prune -o \
+    -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
     -name .vscode-server -prune -o -name target -prune -o -name node_modules \
     -prune -o -name site-packages -prune -o \
-    -type d -print | sed 's@^\./@@'
+    -print | sed 's@^\./@@'
 }
 
 if [ -f ~/.fzf.bash ]; then
