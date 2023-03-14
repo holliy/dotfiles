@@ -526,7 +526,7 @@ set diffopt+=context:2,vertical,algorithm:histogram
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
-SetG foldenable foldmethod=syntax foldtext=Foldtext()
+SetG foldenable foldlevel=1 foldmethod=syntax foldtext=Foldtext()
 SetG formatoptions-=c formatoptions+=Bjmr
 set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
@@ -576,7 +576,7 @@ set switchbuf=useopen,usetab
 SetG synmaxcol=800
 set timeout ttimeout timeoutlen=700 ttimeoutlen=50
 set title
-set undoreload=20000 | SetG undofile undolevels=800
+set undoreload=20000 | SetG undolevels=800
 let &undodir = g:vimrc#dotvim .. '/.undo'
 set updatecount=0 | SetG noswapfile
 set updatetime=2000
@@ -624,6 +624,12 @@ else
 endif
 if g:vimrc#is_unix
   set shell=bash
+endif
+if g:vimrc#is_nvim
+  " 互換性がないので
+  SetG noundofile
+else
+  SetG undofile
 endif "}}}
 
 " バックアップフォルダ等を作成 "{{{
@@ -681,14 +687,12 @@ sunmap ^
 " nnoremap gi '[v']
 nnoremap go gi
 
-vnoremap za zo
+xnoremap za zo
 
-noremap iq i'
-noremap iQ i"
-nunmap iq
-nunmap iQ
-sunmap iq
-sunmap iQ
+xnoremap iq i'
+onoremap iq i'
+xnoremap iQ i"
+onoremap iQ i"
 
 " マッチした文字列を選択
 " TODO: マッチした文字列内か判定
@@ -734,9 +738,9 @@ sunmap #
 sunmap g*
 sunmap g#
 
-noremap <expr> <C-e>
+nnoremap <expr> <C-e>
     \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
-noremap <expr> <C-y>
+nnoremap <expr> <C-y>
     \ '<C-y>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'k'
 noremap <C-u> <C-u>zz
 noremap <C-d> <C-d>zz
@@ -751,6 +755,7 @@ cnoremap <C-g> <C-u>
 
 nnoremap Y y$
 noremap! jk <Esc>
+snoremap jk <Esc>
 nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
 " cnoremap <Esc><Esc> <C-c>
@@ -1010,20 +1015,27 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   "}}}
 
   " OSC52でのコピー "{{{
-  function s:paste64(text) abort
-    let str = join(systemlist('base64 --wrap=0', a:text), '')
+  if g:vimrc#is_nvim
+    " heredocだと構文表示がダメになるので
+    lua
+        \ function write_stdout(data)
+        \   local uv = vim.loop
+        \   local stdout = uv.new_tty(1, false)
+        \
+        \   stdout:write(data)
+        \   stdout:close()
+        \ end
+  endif
 
+  function! s:paste64(text) abort
+    let str = join(systemlist('base64 --wrap=0', a:text), '')
     let seq = printf("\e]52;;%s\e\\", str)
+
     if g:vimrc#is_nvim
-      let blob = [seq]
+      call v:lua.write_stdout(seq)
     else
       let blob = list2blob(str2list(seq))
-    endif
-
-    call writefile(blob, '/dev/tty', 'a')
-
-    if g:vimrc#is_nvim
-      redraw!
+      call writefile(blob, '/dev/tty', 'ab')
     endif
   endfunction
 
@@ -1038,82 +1050,52 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     let &t_te ..= "\e[<0\e[<s"
   endif "}}}
 
-  " 挿入モードでのESCキーの待ちをなくす "{{{
-  noremap <special> <Esc>O[ <Esc>
-  noremap! <special> <Esc>O[ <Esc>
-  noremap! <special> <C-v><Esc>O[ <C-v><Esc>
-  noremap! <special> <C-r><Esc>O[ <Nop>
-  noremap! <special> <C-r><C-r><Esc>O[ <Nop>
-  noremap! <special> <C-k><Esc>O[ <Nop>
-  snoremap <special> <C-r><Esc>O[ <Nop>
-  nnoremap <special> r<Esc>O[ <Nop>
-  nnoremap <special> gr<Esc>O[ <Nop>
-  nnoremap <special> r<C-v><Esc>O[ r<Esc>
-  nnoremap <special> gr<C-v><Esc>O[ gr<Esc>
-  nnoremap <special> r<C-k><Esc>O[ <Nop>
-  nnoremap <special> gr<C-k><Esc>O[ <Nop>
-  nnoremap <special> z<Esc>O[ <Nop>
-  nnoremap <special> g<Esc>O[ <Nop>
-  onoremap <special> i<Esc>O[ <Esc>
-  onoremap <special> a<Esc>O[ <Esc>
-
+  " ESCキーの待ちをなくす "{{{
   if g:vimrc#is_starting && !g:vimrc#is_nvim
     let &t_ti ..= "\e[?7727h"
     let &t_te ..= "\e[?7727l"
   endif
 
-  function! s:disable_fast_esc_map()
-    unmap <special> <Esc>O[
-    unmap! <special> <Esc>O[
-    unmap! <special> <C-v><Esc>O[
-    unmap! <special> <C-r><Esc>O[
-    unmap! <special> <C-r><C-r><Esc>O[
-    unmap! <special> <C-k><Esc>O[
-    sunmap <special> <C-r><Esc>O[
-    nunmap <special> r<Esc>O[
-    nunmap <special> gr<Esc>O[
-    nunmap <special> r<C-v><Esc>O[
-    nunmap <special> gr<C-v><Esc>O[
-    nunmap <special> r<C-k><Esc>O[
-    nunmap <special> gr<C-k><Esc>O[
-    nunmap <special> z<Esc>O[
+  function! s:fast_esc_map()
+    noremap <special> <Esc>O[ <Esc>
+    snoremap <special> <Esc>O[ <Esc>
+    noremap! <special> <Esc>O[ <Esc>
+
+    " <C-r><Esc>などで'O['が残るときの対処
+    noremap <special><expr> O getchar(0) ==# char2nr('[') ? '' : 'O'
+    noremap! <special><expr> O getchar(0) ==# char2nr('[') ? '' : 'O'
   endfunction
 
   Autocmd VimEnter * ++once
-      \ if g:vimrc#is_nvim || GetXTVersion() =~# '^WezTerm' |
-      \   call s:disable_fast_esc_map() |
+      \ if !g:vimrc#is_nvim && GetXTVersion() !~# '^WezTerm' |
+      \   call s:fast_esc_map() |
       \ endif
   "}}}
 
   " 縦分割時のスクロールの高速化 "{{{
   " https://qiita.com/kefir_/items/c725731d33de4d8fb096
   if 0 && !g:vimrc#is_nvim
-    set nottyfast
-    function! s:enableVsplitMode() abort "{{{
+    " set nottyfast
+    function! s:enable_vsplit_mode() abort "{{{
       " enable origin mode and left/right margins
       let &t_CS = 'y'
       let &t_CV = "\e[%i%p1%d;%p2%ds"
-      let &t_te = "\e[?6;69l" .. &t_te
-      " let &t_te = "\e[?6;69l\e[999H" . &t_te
-      " let &t_te = "\e7\e[?6;69l\e8" . &t_te
-      " let &t_te ..= "\e[?6;69l"
-      " let &t_te ..= "\e[?6;69l\e[999H"
-      " let &t_te ..= "\e7\e[?6;69l\e8"
+      " let &t_te = "\e[?6;69l" .. &t_te
+      let &t_te = "\e[?6;69l\e[999H" .. &t_te
+      " let &t_te = "\e7\e[?6;69l\e8" .. &t_te
       let &t_ti ..= "\e[?6;69h"
-      "   call writefile(["\e[?6h\e[?69h"], '/dev/tty', 'a')
-      call writefile(["\e[?6;69h"], '/dev/tty', 'a')
+      call writefile(["\e[?6;69h"], '/dev/tty', 'ab')
     endfunction "}}}
 
     " old vim does not ignore CPR
-    " map <special> <Esc>[3;9R <Nop>
+    " map <special> <Esc>[3;3R <Nop>
 
     " new vim can't handle CPR with direct mapping
-    " map <expr> [3;3R <SID>enableVsplitMode()
-    " set t_F9=[3;3R
-    map <Esc>[3;3R <t_F9>
-    map <expr> <t_F9> <SID>enableVsplitMode()
+    " map <special><expr> <Esc>[3;3R <SID>enableVsplitMode()
+    map <special><expr> <t_F9> <SID>enableVsplitMode()
 
     if g:vimrc#is_starting
+      let &t_F9 = "\e[3;3R"
       let &t_RV ..= "\e[?6;69h\e[1;3s\e[3;9H\e[6n\e[0;0s\e[?6;69l"
     endif
   endif "}}}
@@ -1129,8 +1111,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       return g:xtversion
     endif
 
-    call writefile(list2blob(str2list("\e[>0q")), '/dev/tty', 'a')
-    sleep 100m
+    call writefile(list2blob(str2list("\e[>0q")), '/dev/tty', 'ab')
+    sleep 80m
     call s:parse_response()
 
     return g:xtversion
@@ -1238,9 +1220,7 @@ AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
 AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
-AutocmdFT qf
-    \ nnoremap <buffer><silent> <CR>
-    \   :<C-u>execute (win_gettype() ==# 'loclist' ? 'll!' : 'cc!') line('.')<CR>
+AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
@@ -1268,7 +1248,7 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
-AutocmdFT vim setlocal foldmethod=marker
+AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
 
 " netrwのバッファに飛ぶのでそのときに削除する
 Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
