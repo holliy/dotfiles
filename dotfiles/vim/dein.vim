@@ -121,7 +121,7 @@ Autocmd VimEnter * ++once call dein#call_hook('post_source')
 " caw "{{{
 if dein#tap('caw')
   let g:caw_dollarpos_sp_left = ' '
-  let g:caw_hatpos_align = 0
+  let g:caw_hatpos_align = 1
   let g:caw_hatpos_skip_blank_line = 1
   " let g:caw_no_default_keymappings = 1
   let g:caw_operator_keymappings = 1
@@ -131,14 +131,14 @@ if dein#tap('caw')
 
   " nmap <silent><expr> <Space>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
-  vmap <Space>cc <Plug>(caw:hatpos:toggle)
+  xmap <Space>cc <Plug>(caw:hatpos:toggle)
   noremap <silent> <Space>ct :normal 1 cc<CR>
   nmap <Space>cu <Plug>(caw:hatpos:uncomment)
-  vmap <Space>cu <Plug>(caw:hatpos:uncomment)
+  xmap <Space>cu <Plug>(caw:hatpos:uncomment)
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
   nmap <Space>ca <Plug>(caw:dollarpos:toggle)
   nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
-  vmap <Space>cw <Plug>(caw:wrap:toggle)
+  xmap <Space>cw <Plug>(caw:wrap:toggle)
   nmap <Space>co <Plug>(caw:jump:comment-next)
   nmap <Space>cO <Plug>(caw:jump:comment-prev)
 endif "}}}
@@ -753,6 +753,8 @@ if dein#tap('fugitive')
   AutocmdFT fugitiveblame noremap <buffer><silent> q gq
 
   Autocmd BufEnter fugitive://* setlocal nomodifiable
+  Autocmd User FugitiveStageBlob GitGutterLineHighlightsDisable
+  Autocmd User FugitiveStageBlob call lsp#disable_diagnostics_for_buffer()
 endif "}}}
 
 " vim-gitgutter "{{{
@@ -827,6 +829,7 @@ if dein#tap('lsp')
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
+  let g:lsp_untitled_buffer_enabled = 0
   let g:lsp_use_native_client = 0
 
   let g:lsp_diagnostics_signs_error = #{ text: '!' }
@@ -842,9 +845,9 @@ if dein#tap('lsp')
 
   nnoremap <Space>lh <Plug>(lsp-hover)
   nnoremap <Space>ls <Plug>(lsp-signature-help)
-  nnoremap <Space>ld <Plug>(lsp-definition)zz
+  nnoremap <Space>ld <Plug>(lsp-definition)zvzz
   nnoremap <Space>lt <Plug>(lsp-peek-type-definition)
-  nnoremap <Space>li <Plug>(lsp-implementation)zz
+  nnoremap <Space>li <Plug>(lsp-implementation)zvzz
   nnoremap <Space>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Space>lr <Plug>(lsp-rename)
   nnoremap <Space>lc <Plug>(lsp-code-action)
@@ -862,6 +865,10 @@ if dein#tap('lsp')
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
   AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
+
+  " inlay表示でカーソル位置がずれるので
+  " https://github.com/vim/vim/issues/5713
+  Autocmd User lsp_buffer_enabled setlocal nobreakindent showbreak=
 
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened
