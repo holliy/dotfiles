@@ -868,7 +868,7 @@ if dein#tap('lsp')
 
   " inlay表示でカーソル位置がずれるので
   " https://github.com/vim/vim/issues/5713
-  Autocmd User lsp_buffer_enabled setlocal nobreakindent showbreak=
+  Autocmd User lsp_buffer_enabled setlocal nobreakindent breakindentopt= showbreak=NONE
 
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened

@@ -1222,6 +1222,7 @@ AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
+Autocmd CmdwinEnter * nnoremap <buffer><silent> <CR> <CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
 execute 'Autocmd BufReadPre' &backupskip 'setlocal noundofile'
@@ -1245,10 +1246,13 @@ elseif has('terminal')
 endif
 Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
     \ call s:set_colorcolumn()
-AutocmdFT diff setlocal vartabstop=9,8
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
 AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
+
+if exists('+vartabstop')
+  AutocmdFT diff setlocal vartabstop=9,8
+endif
 
 " netrwのバッファに飛ぶのでそのときに削除する
 Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
@@ -1257,8 +1261,8 @@ if g:vimrc#is_nvim
   Autocmd TermOpen * Autocmd WinLeave <buffer>
       \ if !pumvisible() | stopinsert | endif
 elseif has('terminal')
-  Autocmd TerminalWinOpen * Autocmd WinLeave <buffer>
-      \ if !pumvisible() | stopinsert | endif
+  " Autocmd TerminalWinOpen * Autocmd WinLeave <buffer>
+  "    \ if !pumvisible() | stopinsert | endif
 endif
 
 augroup Vimrc_bin
