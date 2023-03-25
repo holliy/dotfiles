@@ -694,6 +694,8 @@ onoremap iq i'
 xnoremap iQ i"
 onoremap iQ i"
 
+onoremap . l
+
 " マッチした文字列を選択
 " TODO: マッチした文字列内か判定
 onoremap / //e<CR>
@@ -707,12 +709,17 @@ sunmap k
 sunmap gj
 sunmap gk
 
+nnoremap ~ g~
+nnoremap g~ ~
+
 noremap c "_c
 nnoremap C "_C
 noremap D "_d
 nnoremap DD "_dd
 noremap x "_x
 noremap X x
+noremap s "_s
+noremap S "_S
 xnoremap p "_dP
 sunmap c
 ounmap c
@@ -722,6 +729,10 @@ sunmap x
 ounmap x
 sunmap X
 ounmap X
+sunmap s
+ounmap s
+sunmap S
+ounmap S
 
 noremap n nzzzv
 noremap N Nzzzv
@@ -823,10 +834,12 @@ snoremap <Plug>(vimrc_tab) <Tab>
 inoremap <Plug>(vimrc_complete-select) <C-y>
 inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
+inoremap <expr> <Plug>(vimrc_cancel-complete) pumvisible() ? '<C-e>' : ''
+
 imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
 imap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
-inoremap <expr> <C-e> pumvisible() ? '<C-e>' : '<End>'
+inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
 
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
