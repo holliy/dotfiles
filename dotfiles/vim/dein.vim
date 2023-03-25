@@ -133,6 +133,7 @@ if dein#tap('caw')
   nmap <Space>cc <Plug>(caw:hatpos:toggle)
   xmap <Space>cc <Plug>(caw:hatpos:toggle)
   noremap <silent> <Space>ct :normal 1 cc<CR>
+  sunmap <Space>ct
   nmap <Space>cu <Plug>(caw:hatpos:uncomment)
   xmap <Space>cu <Plug>(caw:hatpos:uncomment)
   nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
