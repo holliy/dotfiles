@@ -613,7 +613,7 @@ if dein#tap('lightline')
     let l:fname = fnamemodify(bufname(a:bufnr), ':t')
     let l:alt_fname = fnamemodify(bufname(0), ':t')
     return IsCommandLineWindow(a:bufnr) ? l:alt_fname :
-        \ empty(l:fname) ? '[無名]' : l:fname
+        \ empty(l:fname) ? gettext('[No Name]') : l:fname
   endfunction "}}}
 
   function! MyTabnum(_ = v:none) "{{{
@@ -642,7 +642,7 @@ if dein#tap('lightline')
           \ &filetype ==# 'qf' ?
           \   win_gettype() ==# 'loclist' ? '[Location List]' : '[Quickfix List]' :
           \ &filetype =~# '\<lsp-hover\>' ? '[LSP Hover Information]' :
-          \ empty(l:fname) ? '[無名]' : l:fname
+          \ empty(l:fname) ? gettext('[No Name]') : l:fname
     endif
   endfunction "}}}
 
