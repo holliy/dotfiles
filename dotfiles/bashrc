@@ -183,3 +183,9 @@ xterm*|rxvt*)
     ;;
 esac
 
+# OpenGPGの認証プロンプトを表示するために必要
+export GPG_TTY=$(tty)
+# コンテナのビルド時にdocker-credential-pass経由で表示されるGPGの認証プロンプトが
+# auto (tty)だとdocker buildの出力が混ざるので変更
+export BUILDKIT_PROGRESS=plain
+
