@@ -1234,6 +1234,10 @@ AutocmdFT * if &omnifunc ==# '' |
 AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
+AutocmdFT qf nnoremap <buffer> j j
+AutocmdFT qf nnoremap <buffer> k k
+AutocmdFT qf nnoremap <buffer> gj gj
+AutocmdFT qf nnoremap <buffer> gk gk
 Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> <CR> <CR>
 AutocmdFT vim,help setlocal keywordprg=:help

@@ -85,6 +85,12 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('vim-jp/vimdoc-ja')
   call dein#add('yuki-yano/fuzzy-motion.vim', #{ depends: ['denops'] })
 
+  if g:vimrc#is_nvim
+    call dein#add('kevinhwang91/nvim-bqf')
+  else
+    call dein#add('bfrg/vim-qf-preview')
+  endif
+
   if g:vimrc#is_windows
     call dein#add('mattn/vimtweak', #{ if: !g:vimrc#is_nvim && g:vimrc#is_gui })
   endif
@@ -729,6 +735,25 @@ if dein#tap('neosnippet-snippets')
   let g:neosnippet#snippets_directory = g:dein#plugin.path .. '/neosnippet'
 endif "}}}
 
+" nvim-bqf "{{{
+if dein#tap('bqf')
+  lua require('bqf').setup({
+      \   func_map = {
+      \     pscrollup = '<C-u>',
+      \     pscrolldown = '<C-d>',
+      \   },
+      \   magic_window = false,
+      \   preview = {
+      \     border_chars = {'', '', '─', '─', '─', '─', '─', '─', '█'},
+      \     show_title = true
+      \   },
+      \   wrap = true
+      \ })
+
+  " Highlight link BqfPreviewBorder Pmenu
+  Highlight BqfPreviewFloat ctermbg=18 guibg=midnightblue
+endif "}}}
+
 " undotree "{{{
 if dein#tap('undotree')
   let g:undotree_DiffpanelHeight = 8
@@ -892,5 +917,24 @@ if dein#tap('operator-surround')
   nmap dsi <Plug>(operator-surround-delete)i
   nmap cs <Plug>(operator-surround-replace)a
   nmap csi <Plug>(operator-surround-replace)i
+endif "}}}
+
+" vim-qf-preview "{{{
+if dein#tap('qf-preview')
+  let g:qfpreview = #{
+      \   close: 'q',
+      \   halfpageup: "\<C-u>",
+      \   harlpagedown: "\<C-d>",
+      \   next: 'n',
+      \   number: 1,
+      \   offset: 2,
+      \   previous: 'p',
+      \ }
+
+  Highlight QfPreview ctermbg=18 guibg=midnightblue
+
+  AutocmdFT qf nnoremap <buffer> p <Plug>(qf-preview-open)
+  AutocmdFT qf execute "normal! \<Plug>(qf-preview-open)"
+  " AutocmdFT qf Autocmd CursorMoved <buffer> execute "normal! \<Plug>(qf-preview-open)"
 endif "}}}
 
