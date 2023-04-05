@@ -259,7 +259,9 @@ endif "}}}
 " fzf "{{{
 if dein#tap('fzf')
   " call dein#set_hook('fzf', 'hook_post_source', 'call fzf#install()')
-  " そのうち
+
+  nnoremap <Space>b :<C-u>Buffers<CR>
+  nnoremap <Space>e :<C-u>Files<CR>
 endif "}}}
 
 " ghcmod-vim "{{{

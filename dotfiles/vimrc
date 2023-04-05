@@ -719,8 +719,6 @@ noremap D "_d
 nnoremap DD "_dd
 noremap x "_x
 noremap X x
-noremap s "_s
-noremap S "_S
 xnoremap p "_dP
 sunmap c
 ounmap c
@@ -730,10 +728,12 @@ sunmap x
 ounmap x
 sunmap X
 ounmap X
-sunmap s
-ounmap s
-sunmap S
-ounmap S
+
+" c. / cc に矯正
+nnoremap s <Nop>
+xnoremap s <Nop>
+nnoremap S <Nop>
+xnoremap S <Nop>
 
 noremap n nzzzv
 noremap N Nzzzv
@@ -787,7 +787,7 @@ nnoremap <S-Tab> <C-o>
 inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
 
-nnoremap gs :%s/
+nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
 noremap <F1> <Esc>:help<Space>
@@ -799,6 +799,9 @@ nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
 inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
 nnoremap <C-CR> i<CR><Esc>
+
+cnoremap <M-f> <C-Right>
+cnoremap <M-b> <C-Left>
 
 inoremap <silent> <C-z> <C-o>:update<CR>
 nnoremap <silent> <Space><Tab> :<C-u>nohlsearch<CR>
