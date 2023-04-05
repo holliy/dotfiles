@@ -202,7 +202,7 @@ function! Concat(type) abort
     let lines = getline(startline + 1, endline)
 
     " ソースコード中では結合時に空白を入れない
-    if &filetype !~# '\v(\.|^)text(\.|$)'
+    if &filetype !~# '\v(\.|^)(text|markdown)(\.|$)'
       let synname = synIDattr(synID(startline, col('$') - 1, 1), "name")
       if synname !~# '\v(Comment|String)$'
         set nojoinspaces
@@ -401,6 +401,7 @@ function! s:set_colorcolumn() abort
   if IgnoreBuffer()
     setlocal colorcolumn&
   else
+    " TODO: もとの値があるときによしなにしたい
     let &l:colorcolumn = 81 - s:winleftpad()
   endif
 endfunction "}}}
@@ -1080,7 +1081,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endfunction
 
   Autocmd VimEnter * ++once
-      \ if !g:vimrc#is_nvim && GetXTVersion() !~# '^WezTerm' |
+      \ if !g:vimrc#is_nvim && !empty(GetXTVersion()) && GetXTVersion() !~# '^WezTerm' |
       \   call s:fast_esc_map() |
       \ endif
   "}}}
@@ -1304,8 +1305,8 @@ packadd! matchit
 augroup filetypedetect " Neovimで未定義エラーが出るので
 augroup END
 let s:msg = execute([
-    \ 'source ' .. g:vimrc#dotvim .. '/dein.vim',
-    \ 'runtime! plugin/**/*.vim'
+    \   'source ' .. g:vimrc#dotvim .. '/dein.vim',
+    \   'runtime! plugin/**/*.vim'
     \ ], 'silent')
 Autocmd VimEnter * ++once
     \ for s:line in split(s:msg, "\n") |
