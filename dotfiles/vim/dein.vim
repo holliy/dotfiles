@@ -135,19 +135,20 @@ if dein#tap('caw')
   AutocmdFT haskell let b:caw_wrap_oneline_comment = ['{-', '-}']
   AutocmdFT haskell let b:caw_wrap_multiline_comment = #{ left: '{-', right: '-}', top: '-', bottom: '-' }
 
-  " nmap <silent><expr> <Space>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
-  nmap <Space>cc <Plug>(caw:hatpos:toggle)
-  xmap <Space>cc <Plug>(caw:hatpos:toggle)
-  noremap <silent> <Space>ct :normal 1 cc<CR>
-  sunmap <Space>ct
-  nmap <Space>cu <Plug>(caw:hatpos:uncomment)
-  xmap <Space>cu <Plug>(caw:hatpos:uncomment)
-  nmap <Space>cd <Plug>(caw:hatpos:toggle:operator)
-  nmap <Space>ca <Plug>(caw:dollarpos:toggle)
-  nmap <Space>cw <Plug>(caw:wrap:toggle:operator)
-  xmap <Space>cw <Plug>(caw:wrap:toggle)
-  nmap <Space>co <Plug>(caw:jump:comment-next)
-  nmap <Space>cO <Plug>(caw:jump:comment-prev)
+  " nmap <silent><expr> <Leader>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
+  nmap <Leader>cc <Plug>(caw:hatpos:toggle)
+  xmap <Leader>cc <Plug>(caw:hatpos:toggle)
+  noremap <silent> <Leader>ct :normal 1 cc<CR>
+  sunmap <Leader>ct
+  ounmap <Leader>ct
+  nmap <Leader>cu <Plug>(caw:hatpos:uncomment)
+  xmap <Leader>cu <Plug>(caw:hatpos:uncomment)
+  nmap <Leader>cd <Plug>(caw:hatpos:toggle:operator)
+  nmap <Leader>ca <Plug>(caw:dollarpos:toggle)
+  nmap <Leader>cw <Plug>(caw:wrap:toggle:operator)
+  xmap <Leader>cw <Plug>(caw:wrap:toggle)
+  nmap <Leader>co <Plug>(caw:jump:comment-next)
+  nmap <Leader>cO <Plug>(caw:jump:comment-prev)
 endif "}}}
 
 " conflict-marker "{{{
@@ -253,29 +254,29 @@ if dein#tap('fuzzy-motion')
     let g:fuzzy_motion_matchers = ['fzf', 'kensaku']
   endif
 
-  nnoremap <silent> <Space>f :<C-u>FuzzyMotion<CR>
+  nnoremap <silent> <Leader>f :<C-u>FuzzyMotion<CR>
 endif "}}}
 
 " fzf "{{{
 if dein#tap('fzf')
   " call dein#set_hook('fzf', 'hook_post_source', 'call fzf#install()')
 
-  nnoremap <Space>b :<C-u>Buffers<CR>
-  nnoremap <Space>e :<C-u>Files<CR>
+  nnoremap <Leader>b :<C-u>Buffers<CR>
+  nnoremap <Leader>e :<C-u>Files<CR>
 endif "}}}
 
 " ghcmod-vim "{{{
 if dein#tap('ghcmod')
-  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>ft :<C-u>GhcModType!<CR>
-  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fi :<C-u>GhcModInfo!<CR>
-  Autocmd Filetype haskell nnoremap <buffer><silent> <Space><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
-  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fc :<C-u>GhcModCheckAsync<CR>
-  Autocmd Filetype haskell nnoremap <buffer><silent> <Space>fl :<C-u>GhcModLintAsync<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>ft :<C-u>GhcModType!<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fi :<C-u>GhcModInfo!<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Leader><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fc :<C-u>GhcModCheckAsync<CR>
+  Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fl :<C-u>GhcModLintAsync<CR>
 endif "}}}
 
 " kensaku-command "{{{
 if dein#tap('kensaku-command')
-  nnoremap <Space>/ :<C-u>Kensaku<Space>
+  nnoremap <Leader>/ :<C-u>Kensaku<Space>
 endif "}}}
 
 " landscape "{{{
@@ -762,7 +763,7 @@ if dein#tap('undotree')
   let g:undotree_SetFocusWhenToggle = 1
   let g:undotree_WindowLayout = 2
 
-  nmap <Space>u :<C-u>UndotreeToggle<CR>
+  nmap <Leader>u :<C-u>UndotreeToggle<CR>
 
   Autocmd BufWinEnter undotree_* GitGutterLineHighlightsDisable
   Autocmd BufWinLeave undotree_* GitGutterLineHighlightsEnable
@@ -788,6 +789,7 @@ endif "}}}
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
+  let g:gitgutter_map_keys = 0
   let g:gitgutter_set_sign_backgrounds = 1
   let g:gitgutter_sign_priority = 9
 
@@ -796,10 +798,13 @@ if dein#tap('gitgutter')
     let g:gitgutter_sign_removed_above_and_below = '_'
   endif
 
-  nnoremap <silent> <Space>gp :<C-u>GitGutterPreviewHunk<CR>
-  nnoremap <silent> <Space>gs :<C-u>GitGutterStageHunk<CR>
-  nnoremap <silent> <Space>gu :<C-u>GitGutterUndoHunk<CR>
-  nnoremap <silent> <Space>gg :<C-u>GitGutterToggle<CR>
+  nnoremap <Leader>gd <Plug>(GitGutterPreviewHunk)
+  noremap <Leader>gs <Plug>(GitGutterStageHunk)
+  sunmap <Leader>gs
+  nnoremap <Leader>gu <Plug>(GitGutterUndoHunk)
+  nnoremap <silent> <Leader>gg :<C-u>GitGutterToggle<CR>
+  nnoremap <Leader>gp <Plug>(GitGutterPrevHunk)
+  nnoremap <Leader>gn <Plug>(GitGutterNextHunk)
 
   if g:vimrc#is_windows
     " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
@@ -824,6 +829,7 @@ endif "}}}
 " vim-indent-guides "{{{
 if dein#tap('indent-guides')
   let g:indent_guides_auto_colors = 1
+  let g:indent_guides_default_mapping = 0
   let g:indent_guides_enable_on_vim_startup = 1
   let g:indent_guides_exclude_filetypes = ['help', 'diff', 'fugitive']
   let g:indent_guides_indent_levels = 15
@@ -871,14 +877,14 @@ if dein#tap('lsp')
       \   LspWarning: 11
       \ }
 
-  nnoremap <Space>lh <Plug>(lsp-hover)
-  nnoremap <Space>ls <Plug>(lsp-signature-help)
-  nnoremap <Space>ld <Plug>(lsp-definition)zvzz
-  nnoremap <Space>lt <Plug>(lsp-peek-type-definition)
-  nnoremap <Space>li <Plug>(lsp-implementation)zvzz
-  nnoremap <Space>ll <Plug>(lsp-document-diagnostics)
-  nnoremap <Space>lr <Plug>(lsp-rename)
-  nnoremap <Space>lc <Plug>(lsp-code-action)
+  nnoremap <Leader>lh <Plug>(lsp-hover)
+  nnoremap <Leader>ls <Plug>(lsp-signature-help)
+  nnoremap <Leader>ld <Plug>(lsp-definition)zvzz
+  nnoremap <Leader>lt <Plug>(lsp-peek-type-definition)
+  nnoremap <Leader>li <Plug>(lsp-implementation)zvzz
+  nnoremap <Leader>ll <Plug>(lsp-document-diagnostics)
+  nnoremap <Leader>lr <Plug>(lsp-rename)
+  nnoremap <Leader>lc <Plug>(lsp-code-action)
 
   Highlight link LspHintText Question
   Highlight link LspInlayHintsType Comment

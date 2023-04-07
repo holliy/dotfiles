@@ -20,6 +20,8 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#dotvim = expand('~/.vim')
 endif
 
+let g:mapleader = ' '
+
 if !g:vimrc#is_nvim
   scriptversion 4
 endif
@@ -238,14 +240,14 @@ function! Concat(type) abort
 endfunction
 
 noremap <expr> J <SID>J()
-noremap <Space>J J
+noremap <Leader>J J
 sunmap J
 ounmap J
-sunmap <Space>J
-ounmap <Space>J
+sunmap <Leader>J
+ounmap <Leader>J
 
-nnoremap <silent> <Space><Space>J :<C-u>set operatorfunc=Concat<CR>g@
-nnoremap <silent> <Space><Space>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
+nnoremap <silent> <Leader><Leader>J :<C-u>set operatorfunc=Concat<CR>g@
+nnoremap <silent> <Leader><Leader>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
 "}}}
 
 " ウィンドウの左側の余白の幅 "{{{
@@ -671,14 +673,14 @@ let g:vim_indent_cont = shiftwidth()*2
 "}}}
 
 " キーマップ "{{{
+nnoremap <Leader> <Nop>
+
 map <Nul> <C-Space>
 map! <Nul> <C-Space>
 
 " minttyだけ?
 " map <C-j> <S-CR>
 " map! <C-j> <S-CR>
-
-nnoremap <Space> <Nop>
 
 noremap - ^
 noremap ^ $
@@ -804,32 +806,32 @@ cnoremap <M-f> <C-Right>
 cnoremap <M-b> <C-Left>
 
 inoremap <silent> <C-z> <C-o>:update<CR>
-nnoremap <silent> <Space><Tab> :<C-u>nohlsearch<CR>
+nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
-nnoremap <silent> <Space>tt :<C-u>tabnew<CR>
+nnoremap <silent> <Leader>tt :<C-u>tabnew<CR>
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
 nnoremap <silent> <C-n> :<C-u><C-r>=v:count1<CR>bnext<CR>
 nnoremap <silent> <C-p> :<C-u><C-r>=v:count1<CR>bprevious<CR>
-nnoremap <silent> <Space>bn :<C-u><C-r>=v:count1<CR>bnext<CR>
-nnoremap <silent> <Space>bN :<C-u><C-r>=v:count1<CR>bNext<CR>
-nnoremap <silent> <Space>bp :<C-u><C-r>=v:count1<CR>bprevious<CR>
+nnoremap <silent> <Leader>bn :<C-u><C-r>=v:count1<CR>bnext<CR>
+nnoremap <silent> <Leader>bN :<C-u><C-r>=v:count1<CR>bNext<CR>
+nnoremap <silent> <Leader>bp :<C-u><C-r>=v:count1<CR>bprevious<CR>
 
-nnoremap <silent> <Space>cn :<C-u><C-r>=v:count1<CR>cnext<CR>
-nnoremap <silent> <Space>cN :<C-u><C-r>=v:count1<CR>cNext<CR>
-nnoremap <silent> <Space>cp :<C-u><C-r>=v:count1<CR>cprevious<CR>
+nnoremap <silent> <Leader>cn :<C-u><C-r>=v:count1<CR>cnext<CR>
+nnoremap <silent> <Leader>cN :<C-u><C-r>=v:count1<CR>cNext<CR>
+nnoremap <silent> <Leader>cp :<C-u><C-r>=v:count1<CR>cprevious<CR>
 
-nnoremap <silent> <Space>ln :<C-u><C-r>=v:count1<CR>lnext<CR>
-nnoremap <silent> <Space>lN :<C-u><C-r>=v:count1<CR>lNext<CR>
-nnoremap <silent> <Space>lp :<C-u><C-r>=v:count1<CR>lprevious<CR>
+nnoremap <silent> <Leader>ln :<C-u><C-r>=v:count1<CR>lnext<CR>
+nnoremap <silent> <Leader>lN :<C-u><C-r>=v:count1<CR>lNext<CR>
+nnoremap <silent> <Leader>lp :<C-u><C-r>=v:count1<CR>lprevious<CR>
 
-nnoremap <silent> <Space>h
+nnoremap <silent> <Leader>h
     \ :<C-u>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
 
 let g:foldmethods = ['indent', 'marker', 'syntax', 'expr']
 call add(g:foldmethods, g:foldmethods[0])
-nnoremap <silent> <Space>sf
+nnoremap <silent> <Leader>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
 
 inoremap <Plug>(vimrc_cr) <CR>
@@ -1056,7 +1058,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     endif
   endfunction
 
-  nnoremap <silent> <Space>y :<C-u>call <SID>paste64(@")<CR>
+  nnoremap <silent> <Leader>y :<C-u>call <SID>paste64(@")<CR>
   "}}}
 
   " 挿入モードを出るときにIMEを自動で切る "{{{
