@@ -11,8 +11,18 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_wsl = g:vimrc#is_unix && system('uname -r') =~? 'microsoft'
   let g:vimrc#is_nvim = has('nvim')
   if g:vimrc#is_nvim
-    let g:vimrc#is_gui = !(nvim_list_uis()[0].chan ==# 0 ||
-        \ nvim_get_proc(nvim_get_proc(getpid()).ppid).name =~# '^nvim\(\.exe\)\?$')
+    if empty(nvim_list_uis())
+      " UI connected later are regarded as GUI
+      let g:vimrc#is_gui = 1
+    elseif nvim_list_uis()[0].chan ==# 0
+      " embed
+      let g:vimrc#is_gui = 0
+    else
+      let s:ui_name = nvim_get_proc(nvim_get_proc(getpid()).ppid).name
+      let g:vimrc#is_gui = s:ui_name !~# '^nvim\(\.exe\)\?$'
+      unlet s:ui_name
+      " let g:vimrc#is_gui = !empty(nvim_get_chan_info(nvim_list_uis()[0].chan).client)
+    endif
   else
     let g:vimrc#is_gui = has('gui_running')
   endif
@@ -1061,6 +1071,21 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endfunction
 
   nnoremap <silent> <Leader>y :<C-u>call <SID>paste64(@")<CR>
+
+  if g:vimrc#is_nvim
+    let g:clipboard = #{
+        \   name: 'myClipboard',
+        \   copy: {
+        \     '+': { lines, _ -> s:paste64(lines) },
+        \     '*': { lines, _ -> s:paste64(lines) }
+        \   },
+        \   paste: {
+        \     '+': { -> [] },
+        \     '*': { -> [] }
+        \   },
+        \   cache_enabled: 1
+        \ }
+  endif
   "}}}
 
   " 挿入モードを出るときにIMEを自動で切る "{{{
