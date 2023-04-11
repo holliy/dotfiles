@@ -802,10 +802,12 @@ inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
 nnoremap <C-CR> i<CR><Esc>
 
-cnoremap <M-f> <C-Right>
-cnoremap <M-b> <C-Left>
+cnoremap <C-x> <C-Right>
+cnoremap <C-z> <C-Left>
 
-inoremap <silent> <C-z> <C-o>:update<CR>
+nnoremap <silent> ZZ :<C-u>update<CR>
+nnoremap <expr><silent> ZQ ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'bwipeout<CR>'
+
 nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
 nnoremap <silent> <Leader>tt :<C-u>tabnew<CR>
@@ -1078,7 +1080,8 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   function! s:fast_esc_map()
     noremap <special> <Esc>O[ <Esc>
     snoremap <special> <Esc>O[ <Esc>
-    noremap! <special> <Esc>O[ <Esc>
+    inoremap <special> <Esc>O[ <Esc>
+    cnoremap <special> <Esc>O[ <C-c>
 
     " <C-r><Esc>などで'O['が残るときの対処
     noremap <special><expr> O getchar(0) ==# char2nr('[') ? '' : 'O'
