@@ -55,17 +55,15 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('lambdalisue/kensaku.vim', #{ depends: ['denops'] })
   call dein#add('lambdalisue/kensaku-command.vim', #{ depends: ['kensaku'] })
   call dein#add('LumaKernel/ddc-source-file', #{ depends: ['ddc'] })
-  call dein#add('nathanaelkane/vim-indent-guides') " unmaintained
   call dein#add('mattn/benchvimrc-vim')
   call dein#add('mattn/vim-lsp-settings', #{ depends: ['lsp'] })
   call dein#add('mbbill/undotree')
   call dein#add('prabirshrestha/vim-lsp')
+  call dein#add('preservim/vim-indent-guides')
   call dein#add('rbtnn/vim-ambiwidth')
   call dein#add('rhysd/conflict-marker.vim')
   call dein#add('rhysd/vim-operator-surround', #{ depends: ['operator-user'] })
   call dein#add('rhysd/vim-textobj-word-column', #{ depends: ['textobj-user'] })
-  call dein#add('Shougo/neosnippet.vim', #{ depends: ['ddc'] })
-  call dein#add('Shougo/neosnippet-snippets', #{ depends: ['neosnippet'] })
   call dein#add('Shougo/ddc.vim', #{ depends: ['denops'] })
   call dein#add('Shougo/ddc-around', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-matcher_head', #{ depends: ['ddc'] })
@@ -73,13 +71,14 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('Shougo/ddc-ui-native', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-none', #{ depends: ['ddc'] })
   call dein#add('Shougo/neco-vim', #{ depends: ['ddc'] })
+  call dein#add('Shougo/neosnippet.vim', #{ depends: ['ddc'] })
+  call dein#add('Shougo/neosnippet-snippets', #{ depends: ['neosnippet'] })
   call dein#add('shun/ddc-source-vim-lsp', #{ depends: ['ddc', 'lsp'] })
   call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
   call dein#add('thinca/vim-prettyprint')
   call dein#add('thomasfaingnaert/vim-lsp-snippets', #{ depends: ['lsp'] })
   call dein#add('thomasfaingnaert/vim-lsp-neosnippet', #{ depends: ['lsp', 'neosnippet'] })
   call dein#add('tpope/vim-fugitive')
-  " call dein#add('tpope/vim-surround')
   call dein#add('tyru/caw.vim', #{ depends: ['operator-user', 'repeat'] })
   call dein#add('vim-denops/denops.vim', #{ if: executable('deno') })
   call dein#add('vim-jp/vimdoc-ja')
@@ -259,7 +258,7 @@ endif "}}}
 
 " fzf "{{{
 if dein#tap('fzf')
-  " call dein#set_hook('fzf', 'hook_post_source', 'call fzf#install()')
+  " call dein#set_hook('fzf', 'hook_post_update', 'call fzf#install()')
 
   nnoremap <Leader>b :<C-u>Buffers<CR>
   nnoremap <Leader>e :<C-u>Files<CR>
@@ -281,7 +280,7 @@ endif "}}}
 
 " landscape "{{{
 if dein#tap('landscape') && (g:vimrc#is_gui || &t_Co > 16)
-  Autocmd VimEnter * ++once nested colorscheme landscape
+  call dein#set_hook('landscape', 'hook_post_source', 'colorscheme landscape | doautocmd ColorScheme')
 endif "}}}
 
 " lexima "{{{
@@ -814,11 +813,6 @@ if dein#tap('gitgutter')
   " Autocmd BufWritePost * GitGutter
   Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
   Autocmd VimEnter * ++once call gitgutter#highlight#define_highlights()
-
-  function! s:gitgutter_sourced() abort
-    " autocmd! gitgutter CursorHold,CursorHoldI
-  endfunction
-  call dein#set_hook('gitgutter', 'hook_post_source', function('s:gitgutter_sourced'))
 endif "}}}
 
 " vim-haskell-indent "{{{
@@ -838,16 +832,7 @@ if dein#tap('indent-guides')
   " Highlight link IndentGuidesOdd Comment
   " Highlight link IndentGuidesEven Folded
 
-  function! s:indent_guides_sourced() "{{{
-    " augroup indent_guides
-    "   autocmd!
-    "   autocmd BufEnter,WinEnter,FileType,VimEnter * let g:indent_guides_guide_size = &shiftwidth
-    "   autocmd BufEnter,WinEnter,FileType,ColorScheme * call indent_guides#process_autocmds()
-    " augroup end
-
-    call indent_guides#enable()
-  endfunction "}}}
-  call dein#set_hook('indent-guides', 'hook_post_source', function('s:indent_guides_sourced'))
+  call dein#set_hook('indent-guides', 'hook_post_source', function('indent_guides#enable'))
 endif "}}}
 
 " vim-lsp "{{{
