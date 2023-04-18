@@ -537,18 +537,18 @@ if dein#tap('lightline')
       \   showcmd: exists('+showcmdloc') ? '%S' : ''
       \ },
       \ component_function: #{
-      \   branch: 'MyBranch',
-      \   directory: 'MyDirectory',
-      \   filename: 'MyFilename',
-      \   fileinfo: 'MyFileinfo',
-      \   filetype: 'MyFiletype',
-      \   mode: 'MyMode',
-      \   modified: 'MyModified',
-      \   readonly: 'MyReadonly'
+      \   branch: 'LightlineBranch',
+      \   directory: 'LightlineDirectory',
+      \   filename: 'LightlineFilename',
+      \   fileinfo: 'LightlineFileinfo',
+      \   filetype: 'LightlineFiletype',
+      \   mode: 'LightlineMode',
+      \   modified: 'LightlineModified',
+      \   readonly: 'LightlineReadonly'
       \ },
       \ component_expand: #{
-      \   buffers: 'MyBuffers',
-      \   trailing: 'MyTrailingSpaceWarning'
+      \   buffers: 'LightlineBuffers',
+      \   trailing: 'LightlineTrailingSpaceWarning'
       \ },
       \ component_function_visible_condition: #{
       \   directory: '&filetype!=#"netrw"'
@@ -559,9 +559,9 @@ if dein#tap('lightline')
       \ },
       \ tab_component_function: #{
       \   bufnum: 'lightline#tab#tabnum',
-      \   filename: 'MyFilenameB',
-      \   modified: 'MyModified',
-      \   tabnum: 'MyTabnum'
+      \   filename: 'LightlineFilenameB',
+      \   modified: 'LightlineModified',
+      \   tabnum: 'LightlineTabnum'
       \ },
       \ separator: #{ left: "", right: "" },
       \ }
@@ -574,7 +574,7 @@ if dein#tap('lightline')
   "}}}
 
   " タブラインにバッファ一覧を表示 "{{{
-  function! MyBuffers() abort "{{{
+  function! LightlineBuffers() abort "{{{
     " return:タブが5個以上の時ウィンドウの幅によって5個から17個表示する
     let [active_bn, alt_bn, last_bn, tn] = [bufnr(), winbufnr(winnr('#')), bufnr('$'), tabpagenr()]
     let [left, mid, right] = [[], [], []]
@@ -629,7 +629,7 @@ if dein#tap('lightline')
   Autocmd BufAdd,BufDelete * execute 'set tabline=' .. &tabline
   "}}}
 
-  function! MyModified(bn = 0) "{{{
+  function! LightlineModified(bn = 0) abort "{{{
     let bn = a:bn
     if bn ==# 0
       let bn = bufnr()
@@ -641,25 +641,25 @@ if dein#tap('lightline')
         \ getbufvar(bn, '&modifiable') ? '' : '-'
   endfunction "}}}
 
-  function! MyFilenameB(bufnr) "{{{
+  function! LightlineFilenameB(bufnr) abort "{{{
     let l:fname = fnamemodify(bufname(a:bufnr), ':t')
     let l:alt_fname = fnamemodify(bufname(0), ':t')
     return IsCommandLineWindow(a:bufnr) ? l:alt_fname :
         \ empty(l:fname) ? gettext('[No Name]') : l:fname
   endfunction "}}}
 
-  function! MyTabnum(_ = v:none) "{{{
+  function! LightlineTabnum(_ = v:none) abort "{{{
     return tabpagenr()
   endfunction "}}}
 
   let s:readonlychar = 'x'
-  function! MyReadonly() "{{{
+  function! LightlineReadonly() abort "{{{
     return IgnoreBuffer() ? '' :
         \ &filetype =~# 'netrw' ? '' :
         \ &readonly ? s:readonlychar : ''
   endfunction "}}}
 
-  function! MyFilename() "{{{
+  function! LightlineFilename() abort "{{{
     if &filetype ==# 'netrw'
       let save_shellslash = &shellslash
       set shellslash
@@ -678,24 +678,24 @@ if dein#tap('lightline')
     endif
   endfunction "}}}
 
-  function! MyFiletype() "{{{
+  function! LightlineFiletype() abort "{{{
     return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype : '?') : ''
   endfunction "}}}
 
-  function! MyFileinfo() "{{{
+  function! LightlineFileinfo() abort "{{{
     return IgnoreBuffer() || winwidth(0) <= 75 ? '' :
         \ (strlen(&fileencoding) ? &fileencoding : &encoding) ..
         \ '/' .. &fileformat
   endfunction "}}}
 
-  function! MyMode() "{{{
+  function! LightlineMode() abort "{{{
     return IsCommandLineWindow() ? 'Cmd' :
         \ &filetype ==# 'help' && !&modifiable ? 'Help' :
         \ &filetype ==# 'qf' ? 'QuickFix' :
         \ (winwidth(0) > 60 ? lightline#mode() : '')
   endfunction "}}}
 
-  function! MyTrailingSpaceWarning() "{{{
+  function! LightlineTrailingSpaceWarning() abort "{{{
     if IgnoreBuffer()
       return ''
     endif
@@ -704,10 +704,10 @@ if dein#tap('lightline')
     return l:space_line != 0 ? 'Space: L' .. l:space_line : ''
   endfunction
 
-  Autocmd BufWritePost * call MyTrailingSpaceWarning() | call lightline#update()
+  Autocmd BufWritePost * call LightlineTrailingSpaceWarning() | call lightline#update()
   "}}}
 
-  function! MyDirectory() "{{{
+  function! LightlineDirectory() abort "{{{
     if &filetype ==# 'netrw'
       return ''
     endif
@@ -722,16 +722,15 @@ if dein#tap('lightline')
     return pathshorten(dir)
   endfunction "}}}
 
-  function! MyBranch() abort "{{{
-    if exists('t:git_branch')
-      return t:git_branch
+  function! LightlineBranch() abort "{{{
+    if !exists('t:git_branch')
+      let t:git_branch = _LightlineBranch()
     endif
 
-    let t:git_branch = _MyBranch()
     return t:git_branch
   endfunction
 
-  function! _MyBranch() abort
+  function! _LightlineBranch() abort
     if !executable('git')
       return ''
     endif
@@ -751,7 +750,7 @@ if dein#tap('lightline')
   endfunction
 
   Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,FocusGained,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
-      \ let t:git_branch = _MyBranch()
+      \ let t:git_branch = _LightlineBranch()
   "}}}
 
   if !g:vimrc#is_starting
