@@ -1305,6 +1305,8 @@ if exists('+vartabstop')
   AutocmdFT diff setlocal vartabstop=9,8
 endif
 
+Autocmd BufWinLeave * if &diff | diffoff | endif
+
 " netrwのバッファに飛ぶのでそのときに削除する
 Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
 

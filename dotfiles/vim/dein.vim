@@ -52,6 +52,7 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('kana/vim-operator-user')
   call dein#add('kana/vim-repeat')
   call dein#add('kana/vim-textobj-user')
+  call dein#add('lambdalisue/gin.vim', #{ depends: ['denops'] })
   call dein#add('lambdalisue/kensaku.vim', #{ depends: ['denops'] })
   call dein#add('lambdalisue/kensaku-command.vim', #{ depends: ['kensaku'] })
   call dein#add('LumaKernel/ddc-source-file', #{ depends: ['ddc'] })
@@ -78,7 +79,6 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('thinca/vim-prettyprint')
   call dein#add('thomasfaingnaert/vim-lsp-snippets', #{ depends: ['lsp'] })
   call dein#add('thomasfaingnaert/vim-lsp-neosnippet', #{ depends: ['lsp', 'neosnippet'] })
-  call dein#add('tpope/vim-fugitive')
   call dein#add('tyru/caw.vim', #{ depends: ['operator-user', 'repeat'] })
   call dein#add('vim-denops/denops.vim', #{ if: executable('deno') })
   call dein#add('vim-jp/vimdoc-ja')
@@ -271,6 +271,30 @@ if dein#tap('ghcmod')
   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fc :<C-u>GhcModCheckAsync<CR>
   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fl :<C-u>GhcModLintAsync<CR>
+endif "}}}
+
+" gin "{{{
+if dein#tap('gin')
+  let g:vimrc#generate_filetypes += [
+      \   'gin', 'gin-branch', 'gin-diff', 'gin-edit', 'gin-log', 'gin-status'
+      \ ]
+
+  command! -nargs=* -bang -bar G GinStatus<bang> <args>
+  " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
+
+  " コミットメッセージ入力時に先頭の行へ移動
+  AutocmdFT gitcommit normal! gg
+
+  Autocmd BufEnter gin*://* setlocal nobuflisted
+  Autocmd BufEnter ginedit://*;commitish* setlocal nomodifiable
+  " Autocmd BufEnter ginedit://*;commitish* call lsp#disable_diagnostics_for_buffer()
+
+  AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
+  AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
+
+  if dein#is_available('gitgutter')
+    Autocmd BufEnter ginedit://*;commitish* GitGutterLineHighlightsDisable
+  endif
 endif "}}}
 
 " kensaku-command "{{{
@@ -513,7 +537,7 @@ if dein#tap('lightline')
       \   showcmd: exists('+showcmdloc') ? '%S' : ''
       \ },
       \ component_function: #{
-      \   branch: 'FugitiveHead',
+      \   branch: 'MyBranch',
       \   directory: 'MyDirectory',
       \   filename: 'MyFilename',
       \   fileinfo: 'MyFileinfo',
@@ -698,6 +722,38 @@ if dein#tap('lightline')
     return pathshorten(dir)
   endfunction "}}}
 
+  function! MyBranch() abort "{{{
+    if exists('t:git_branch')
+      return t:git_branch
+    endif
+
+    let t:git_branch = _MyBranch()
+    return t:git_branch
+  endfunction
+
+  function! _MyBranch() abort
+    if !executable('git')
+      return ''
+    endif
+
+    silent let is_worktree = trim(system('git rev-parse --is-inside-work-tree'))
+    if is_worktree !=# 'true'
+      return ''
+    endif
+
+    silent let branch = trim(system('git rev-parse --abbrev-ref --short @'))
+    if branch !=# 'HEAD'
+      return branch
+    endif
+
+    silent let commithash = trim(system('git rev-parse --short @'))
+    return commithash
+  endfunction
+
+  Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,FocusGained,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
+      \ let t:git_branch = _MyBranch()
+  "}}}
+
   if !g:vimrc#is_starting
     call lightline#init()
     call lightline#colorscheme()
@@ -768,23 +824,6 @@ if dein#tap('undotree')
   Autocmd BufWinLeave undotree_* GitGutterLineHighlightsEnable
 endif "}}}
 
-" vim-fugitive "{{{
-if dein#tap('fugitive')
-  call add(g:vimrc#generate_filetypes, 'fugitive')
-
-  " コミットメッセージ入力時に先頭の行へ移動
-  AutocmdFT gitcommit normal! gg
-
-  AutocmdFT fugitive setlocal nobuflisted nofoldenable
-  AutocmdFT fugitive noremap <buffer><silent> q :<C-u>bwipeout<CR>
-  AutocmdFT fugitive resize 15
-  AutocmdFT fugitiveblame noremap <buffer><silent> q gq
-
-  Autocmd BufEnter fugitive://* setlocal nomodifiable
-  Autocmd User FugitiveStageBlob GitGutterLineHighlightsDisable
-  Autocmd User FugitiveStageBlob call lsp#disable_diagnostics_for_buffer()
-endif "}}}
-
 " vim-gitgutter "{{{
 if dein#tap('gitgutter')
   let g:gitgutter_highlight_lines = 1
@@ -813,6 +852,12 @@ if dein#tap('gitgutter')
   " Autocmd BufWritePost * GitGutter
   Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
   Autocmd VimEnter * ++once call gitgutter#highlight#define_highlights()
+  Autocmd OptionSet diff
+      \ if v:option_new |
+      \   GitGutterLineHighlightsDisable |
+      \ else |
+      \   GitGutterLineHighlightsEnable |
+      \ endif
 endif "}}}
 
 " vim-haskell-indent "{{{
