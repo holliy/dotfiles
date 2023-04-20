@@ -442,12 +442,12 @@ cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
 cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
 cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
 
-" vimrc等を開く "{{{
-let s:vimrc = resolve(expand('<sfile>'))
-let s:gvimrc = resolve(expand('<sfile>:h') .. '/.gvimrc')
+" vimrc, gvimrcを開く "{{{
+let s:vimrc = expand('<sfile>')
+let s:gvimrc = expand('<sfile>:h') .. '/.gvimrc'
 
-execute 'command! -bar -nargs=0 Evimrc edit' s:vimrc
-execute 'command! -bar -nargs=0 Egvimrc edit' s:gvimrc
+execute 'command! -bar -nargs=0 Evimrc edit' resolve(s:vimrc)
+execute 'command! -bar -nargs=0 Egvimrc edit' resolve(s:gvimrc)
 execute 'command! -bar -nargs=0 Svimrc source' s:vimrc
 cnoreabbrev <expr> ev Cmdwhen(':', 'ev', 'Evimrc')
 cnoreabbrev <expr> evimrc Cmdwhen(':', 'evimrc', 'Evimrc')
@@ -535,7 +535,7 @@ SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG nocursorline
-set diffopt+=context:2,vertical,algorithm:histogram
+set diffopt+=context:2,vertical,indent-heuristic,algorithm:histogram
 set display=lastline,uhex
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
@@ -821,6 +821,7 @@ nnoremap <expr><silent> ZQ ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'bwipeout
 nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
 nnoremap <silent> <Leader>tt :<C-u>tabnew<CR>
+nnoremap <expr><silent> <Leader>tc ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'tabclose<CR>'
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
@@ -1306,6 +1307,14 @@ if exists('+vartabstop')
 endif
 
 Autocmd BufWinLeave * if &diff | diffoff | endif
+Autocmd OptionSet diff
+    \ if v:option_new |
+    \   execute 'nnoremap <buffer> dp dp]c' |
+    \   execute 'nnoremap <buffer> do do]c' |
+    \ else |
+    \   silent! execute 'nunmap <buffer> dp' |
+    \   silent! execute 'nunmap <buffer> do' |
+    \ endif
 
 " netrwのバッファに飛ぶのでそのときに削除する
 Autocmd BufEnter * if isdirectory(expand('<afile>')) | setlocal bufhidden=wipe | endif
