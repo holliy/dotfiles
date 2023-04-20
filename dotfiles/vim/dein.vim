@@ -38,7 +38,6 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#begin(s:dein_dir, [expand('<sfile>')])
 
   call dein#add(s:dein_repo_dir)
-  call dein#add('airblade/vim-gitgutter')
   call dein#add('cohama/lexima.vim')
   " call dein#add('derekwyatt/vim-scala', #{ on_ft: 'scala' })
   " call dein#add('eagletmt/ghcmod-vim', #{ on_ft: 'haskell' })
@@ -160,15 +159,6 @@ if dein#tap('conflict-marker')
   Highlight link ConflictMarkerCommonAncestors Error
   Highlight link ConflictMarkerCommonAncestorsHunk Folded
   Highlight link ConflictMarkerTheirs DiffAdd
-
-  Autocmd BufReadPost *
-      \ if conflict_marker#detect#markers() |
-      \   GitGutterLineHighlightsDisable |
-      \ endif
-  Autocmd BufWritePost *
-      \ if !conflict_marker#detect#markers() |
-      \   GitGutterLineHighlightsEnable |
-      \ endif
 endif "}}}
 
 " ddc "{{{
@@ -291,10 +281,6 @@ if dein#tap('gin')
 
   AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
   AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
-
-  if dein#is_available('gitgutter')
-    Autocmd BufEnter ginedit://*;commitish* GitGutterLineHighlightsDisable
-  endif
 endif "}}}
 
 " kensaku-command "{{{
@@ -818,45 +804,6 @@ if dein#tap('undotree')
   let g:undotree_WindowLayout = 2
 
   nmap <Leader>u :<C-u>UndotreeToggle<CR>
-
-  Autocmd BufWinEnter undotree_* GitGutterLineHighlightsDisable
-  Autocmd BufWinLeave undotree_* GitGutterLineHighlightsEnable
-endif "}}}
-
-" vim-gitgutter "{{{
-if dein#tap('gitgutter')
-  let g:gitgutter_highlight_lines = 1
-  let g:gitgutter_map_keys = 0
-  let g:gitgutter_set_sign_backgrounds = 1
-  let g:gitgutter_sign_priority = 9
-
-  if &encoding !=# 'utf-8'
-    let g:gitgutter_sign_removed_first_line = '_'
-    let g:gitgutter_sign_removed_above_and_below = '_'
-  endif
-
-  nnoremap <Leader>gd <Plug>(GitGutterPreviewHunk)
-  noremap <Leader>gs <Plug>(GitGutterStageHunk)
-  sunmap <Leader>gs
-  nnoremap <Leader>gu <Plug>(GitGutterUndoHunk)
-  nnoremap <silent> <Leader>gg :<C-u>GitGutterToggle<CR>
-  nnoremap <Leader>gp <Plug>(GitGutterPrevHunk)
-  nnoremap <Leader>gn <Plug>(GitGutterNextHunk)
-
-  if g:vimrc#is_windows
-    " リポジトリが認識されないのでファイルのディレクトリから認識するように指定
-    Autocmd BufWinEnter * let g:gitgutter_git_args = '-C ' .. expand('%:p:h')
-  endif
-
-  " Autocmd BufWritePost * GitGutter
-  Autocmd BufEnter gitgutter://hunk-preview setlocal nobuflisted nofoldenable
-  Autocmd VimEnter * ++once call gitgutter#highlight#define_highlights()
-  Autocmd OptionSet diff
-      \ if v:option_new |
-      \   GitGutterLineHighlightsDisable |
-      \ else |
-      \   GitGutterLineHighlightsEnable |
-      \ endif
 endif "}}}
 
 " vim-haskell-indent "{{{
