@@ -271,6 +271,11 @@ if dein#tap('gin')
 
   command! -nargs=* -bang -bar G GinStatus<bang> <args>
   " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
+  command! -bar DiffIndex tabnew % | GinEdit& ++opener=leftabove\ vsplit %:p | diffthis | wincmd p | diffthis
+  command! -bar DiffStage tab GinEdit& ++opener=split %:p | GinEdit& ++opener=leftabove\ vsplit @ %:p | diffthis | wincmd p | diffthis
+
+  nnoremap <silent> <Leader>gd :<C-u>DiffIndex<CR>
+  nnoremap <silent> <Leader>gs :<C-u>DiffStage<CR>
 
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
@@ -279,8 +284,9 @@ if dein#tap('gin')
   Autocmd BufEnter ginedit://*;commitish* setlocal nomodifiable
   " Autocmd BufEnter ginedit://*;commitish* call lsp#disable_diagnostics_for_buffer()
 
-  AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
-  AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
+  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus ++opener=rightbelow\ split<CR>
+  AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit):<C-u>diffthis<CR><C-w>x<C-w>w
+  AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit):<C-u>diffthis<CR><C-w>x<C-w>w
 endif "}}}
 
 " kensaku-command "{{{
@@ -500,11 +506,11 @@ if dein#tap('lightline')
   let g:lightline = #{
       \ colorscheme: 'landscape',
       \ active: #{
-      \   left: [['mode', 'paste'], ['bufnum', 'branch', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \   left: [['mode', 'paste'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
       \   right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
       \ },
       \ inactive: #{
-      \   left: [['bufnum', 'directory', 'filename', 'readonly', 'modified']],
+      \   left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
       \   right: [['lineinfo'], ['percent']]
       \ },
       \ tabline: #{
@@ -523,7 +529,7 @@ if dein#tap('lightline')
       \   showcmd: exists('+showcmdloc') ? '%S' : ''
       \ },
       \ component_function: #{
-      \   branch: 'LightlineBranch',
+      \   git: 'LightlineGit',
       \   directory: 'LightlineDirectory',
       \   filename: 'LightlineFilename',
       \   fileinfo: 'LightlineFileinfo',
@@ -621,9 +627,9 @@ if dein#tap('lightline')
       let bn = bufnr()
     endif
 
-    return IgnoreBuffer(bn) ? '' :
+    return getbufvar(bn, '&modified') ? '+' :
+        \ IgnoreBuffer(bn) ? '' :
         \ getbufvar(bn, '&filetype') =~# 'netrw' ? '' :
-        \ getbufvar(bn, '&modified') ? '+' :
         \ getbufvar(bn, '&modifiable') ? '' : '-'
   endfunction "}}}
 
@@ -701,22 +707,52 @@ if dein#tap('lightline')
     let save_shellslash = &shellslash
     set shellslash
 
-    let dir = fnamemodify(expand('%:p:h'), ':~:.')
+    let fname = expand('%:p:h')
+
+    if dein#is_available('gin')
+      let scheme = matchstr(fname, '^\w\+://')[:-4]
+      if !empty(scheme) && scheme =~# '^gin.*'
+        let fname = gin#util#worktree() .. '/' .. gin#util#expand('%:p:h')
+      endif
+    endif
+
+    let dir = fnamemodify(fname, ':~:.')
     let dir = substitute(dir, '[^/]\zs$', '/', '')
 
     let &shellslash = save_shellslash
     return pathshorten(dir)
   endfunction "}}}
 
-  function! LightlineBranch() abort "{{{
+  function! LightlineGit() abort "{{{
+    if dein#is_available('gin')
+      " https://deno.land/x/denops_std@v4.1.5/bufname/mod.ts
+      let matches = matchlist(bufname(), '^\(\w\+\)://\(\f\+\);\([^#]*\)#\(\f\+\)$')[1:4]
+      if !empty(matches)
+        let [scheme, expr, params, fragment] = matches
+        if !empty(scheme) && scheme =~# '^gin.*'
+          let params = split(params, '&')
+          let params = filter(params, { _, v -> v =~# '^commitish=' })
+          if empty(params)
+            let revision = 'INDEX'
+          else
+            let commitish = params[0][10:]
+            let revision = substitute(commitish, '%\(\x\{2}\)', '\=nr2char(str2nr(submatch(1), 16))', 'g')
+            let revision = substitute(revision, '@', 'HEAD', 'g')
+          endif
+
+          return revision
+        endif
+      endif
+    endif
+
     if !exists('t:git_branch')
-      let t:git_branch = _LightlineBranch()
+      let t:git_branch = LightlineBranch()
     endif
 
     return t:git_branch
   endfunction
 
-  function! _LightlineBranch() abort
+  function! LightlineBranch() abort
     if !executable('git')
       return ''
     endif
@@ -736,7 +772,7 @@ if dein#tap('lightline')
   endfunction
 
   Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,FocusGained,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
-      \ let t:git_branch = _LightlineBranch()
+      \ let t:git_branch = LightlineBranch()
   "}}}
 
   if !g:vimrc#is_starting
