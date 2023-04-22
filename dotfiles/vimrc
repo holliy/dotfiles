@@ -441,6 +441,7 @@ endfunction "}}}
 cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
 cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
 cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
+cnoreabbrev <expr> es Cmdwhen(':', 'es', 'argadd')
 
 " vimrc, gvimrcを開く "{{{
 let s:vimrc = expand('<sfile>')
