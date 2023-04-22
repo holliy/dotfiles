@@ -65,9 +65,9 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('rhysd/vim-operator-surround', #{ depends: ['operator-user'] })
   call dein#add('rhysd/vim-textobj-word-column', #{ depends: ['textobj-user'] })
   call dein#add('Shougo/ddc.vim', #{ depends: ['denops'] })
-  call dein#add('Shougo/ddc-around', #{ depends: ['ddc'] })
-  call dein#add('Shougo/ddc-matcher_head', #{ depends: ['ddc'] })
-  call dein#add('Shougo/ddc-sorter_rank', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-filter-matcher_head', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-filter-sorter_rank', #{ depends: ['ddc'] })
+  call dein#add('Shougo/ddc-source-around', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-native', #{ depends: ['ddc'] })
   call dein#add('Shougo/ddc-ui-none', #{ depends: ['ddc'] })
   call dein#add('Shougo/neco-vim', #{ depends: ['ddc'] })
@@ -871,7 +871,6 @@ if dein#tap('lsp')
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
   let g:lsp_diagnostics_virtual_text_enabled = 1
   let g:lsp_inlay_hints_enabled = 1
-  let g:lsp_inlay_hints_mode = #{ normal: ['curline'], insert: [] }
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
@@ -883,6 +882,7 @@ if dein#tap('lsp')
   let g:lsp_diagnostics_signs_hint = #{ text: '.' }
   let g:lsp_diagnostics_signs_information = #{ text: '.' }
   let g:lsp_document_code_action_signs_hint = #{ text: ':' }
+  let g:lsp_inlay_hints_mode = #{ normal: ['curline'], insert: [] }
 
   let g:lsp_diagnostics_signs_priority_map = #{
       \   LspError: 12,
@@ -901,6 +901,20 @@ if dein#tap('lsp')
   Highlight link LspHintText Question
   Highlight link LspInlayHintsType Comment
   Highlight link LspInlayHintsParameter Comment
+
+  function! s:lsp_highlight_virtualtext() abort
+    let hl_question = hlget('Question', 1)[0]
+
+    highlight LspErrorVirtualText ctermfg=red ctermbg=61 guifg=red guibg=royalblue4
+    highlight LspWarningVirtualText ctermfg=yellow ctermbg=61 guifg=yellow2 guibg=royalblue4
+    execute 'highlight LspInformationVirtualText'
+        \ printf('ctermfg=%s ctermbg=61 guifg=%s guibg=royalblue4',
+        \   hl_question.ctermfg, hl_question.guifg
+        \ )
+    highlight link LspHintVirtualText LspInformationVirtualText
+  endfunction
+  " :command-keepscript は8.2.3584以降
+  execute printf('Autocmd ColorScheme * call %slsp_highlight_virtualtext()', expand('<SID>'))
 
   " 重いことがあるので一旦無効化
   " Autocmd User lsp_buffer_enabled
