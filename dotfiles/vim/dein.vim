@@ -42,6 +42,7 @@ if dein#load_state(s:dein_dir) "{{{
   " call dein#add('derekwyatt/vim-scala', #{ on_ft: 'scala' })
   " call dein#add('eagletmt/ghcmod-vim', #{ on_ft: 'haskell' })
   " call dein#add('eagletmt/neco-ghc', #{ on_ft: 'haskell' })
+  call dein#add('editorconfig/editorconfig-vim')
   call dein#add('gamoutatsumi/ddc-sorter_ascii', #{ depends: ['ddc'] })
   call dein#add('itchyny/landscape.vim')
   call dein#add('itchyny/lightline.vim')
@@ -459,7 +460,7 @@ if dein#tap('lexima')
     " 補完した文字の後ろに<Tab>で移動 "{{{
     for pair in brackets + quotes
       call lexima#add_rule(#{
-          \   at: '\V\S\%# \?' .. pair.end,
+          \   at: '\V\%#\( \?\|\n\s\*\)' .. pair.end,
           \   char: '<Tab>',
           \   leave: pair.end
           \ })
@@ -891,25 +892,35 @@ if dein#tap('lsp')
 
   nnoremap <Leader>lh <Plug>(lsp-hover)
   nnoremap <Leader>ls <Plug>(lsp-signature-help)
-  nnoremap <Leader>ld <Plug>(lsp-definition)zvzz
   nnoremap <Leader>lt <Plug>(lsp-peek-type-definition)
-  nnoremap <Leader>li <Plug>(lsp-implementation)zvzz
   nnoremap <Leader>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Leader>lr <Plug>(lsp-rename)
   nnoremap <Leader>lc <Plug>(lsp-code-action)
+  xnoremap <silent> <Leader>lc :LspCodeAction<CR>
+
+  " 非同期でカーソルが動くのでスリープを挟む
+  nnoremap <silent> <Leader>ld <Plug>(lsp-definition):<C-u>sleep 1m<CR>zvzz
+  nnoremap <silent> <Leader>li <Plug>(lsp-implementation):<C-u>sleep 1m<CR>zvzz
 
   Highlight link LspHintText Question
   Highlight link LspInlayHintsType Comment
   Highlight link LspInlayHintsParameter Comment
 
   function! s:lsp_highlight_virtualtext() abort
-    let hl_question = hlget('Question', 1)[0]
+    if g:vimrc#is_nvim
+      let hl_question = nvim_get_hl(0, #{ name: 'Question' })
+      let hl_question_guifg = printf('#%06X', hl_question.fg)
+    else
+      " 8.2.3578
+      let hl_question = hlget('Question', 1)[0]
+      let hl_question_guifg = hl_question.guifg
+    endif
 
     highlight LspErrorVirtualText ctermfg=red ctermbg=61 guifg=red guibg=royalblue4
     highlight LspWarningVirtualText ctermfg=yellow ctermbg=61 guifg=yellow2 guibg=royalblue4
     execute 'highlight LspInformationVirtualText'
         \ printf('ctermfg=%s ctermbg=61 guifg=%s guibg=royalblue4',
-        \   hl_question.ctermfg, hl_question.guifg
+        \   hl_question.ctermfg, hl_question_guifg
         \ )
     highlight link LspHintVirtualText LspInformationVirtualText
   endfunction
