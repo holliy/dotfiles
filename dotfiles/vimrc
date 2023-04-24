@@ -1302,6 +1302,7 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
 AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
+AutocmdFT toml setlocal foldlevel=0 foldmethod=indent | normal! zv
 
 if exists('+vartabstop')
   AutocmdFT diff setlocal vartabstop=9,8
