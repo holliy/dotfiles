@@ -76,6 +76,7 @@ if dein#load_state(s:dein_dir) "{{{
   call dein#add('Shougo/neosnippet-snippets', #{ depends: ['neosnippet'] })
   call dein#add('shun/ddc-source-vim-lsp', #{ depends: ['ddc', 'lsp'] })
   call dein#add('thinca/vim-ft-help_fold', #{ name: 'help-fold' })
+  call dein#add('thinca/vim-partedit')
   call dein#add('thinca/vim-prettyprint')
   call dein#add('thomasfaingnaert/vim-lsp-snippets', #{ depends: ['lsp'] })
   call dein#add('thomasfaingnaert/vim-lsp-neosnippet', #{ depends: ['lsp', 'neosnippet'] })
@@ -962,6 +963,68 @@ if dein#tap('operator-surround')
   nmap dsi <Plug>(operator-surround-delete)i
   nmap cs <Plug>(operator-surround-replace)a
   nmap csi <Plug>(operator-surround-replace)i
+endif "}}}
+
+" vim-partedit "{{{
+if dein#tap('partedit')
+  let g:partedit#opener = 'split'
+
+  Autocmd BufReadPost dein.toml let b:partedit_filetype = 'vim'
+  Autocmd BufReadPost dein.toml let b:partedit_prefix = '\s*'
+  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p V<Plug>(textobj-indent-indent-i):Partedit<CR>:nnoremap <lt>silent><lt>buffer> <lt>Leader>p :<lt>C-u>ParteditEnd<lt>CR><lt>C-w>c<CR>
+endif "}}}
+
+" vim-textobj-user "{{{
+if dein#tap('textobj-user')
+  function! s:textobj_user_sourced() abort "{{{
+    call textobj#user#plugin('indent', #{
+        \   indent: #{
+        \     select-a-function: 'SameIndent',
+        \     select-a: 'at',
+        \     select-i-function: 'SameIndent_i',
+        \     select-i: 'it'
+        \   }
+        \ })
+  endfunction "}}}
+  call dein#set_hook('textobj-user', 'hook_post_source', function('s:textobj_user_sourced'))
+
+  function! SameIndent() abort "{{{
+    let line = getline('.')
+    if empty(line)
+      return 0
+    endif
+
+    let indent = matchstr(line, '^\s\+')
+
+    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'bW')
+    let head_pos = getpos('.')
+
+    normal! j
+    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'eW')
+    let tail_pos = getpos('.')
+
+    return ['V', head_pos, tail_pos]
+  endfunction "}}}
+
+  function! SameIndent_i() abort "{{{
+    let line = getline('.')
+    if empty(line)
+      return 0
+    endif
+
+    let indent = matchstr(line, '^\s\+')
+
+    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'bW')
+    call search('^' .. indent .. '\zs.*$', 'W')
+    let head_pos = getpos('.')
+
+    normal! j
+    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'eW')
+    call search('^' .. indent .. '\zs.*$', 'beW')
+    let tail_pos = getpos('.')
+
+    return ['V', head_pos, tail_pos]
+  endfunction "}}}
 endif "}}}
 
 " vim-qf-preview "{{{
