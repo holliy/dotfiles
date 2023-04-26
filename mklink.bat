@@ -13,7 +13,7 @@ REM ä«óùé“å†å¿Ç≈é¿çs
 for /f "tokens=3 delims=\ " %%i in ('%SYSTEMROOT%\System32\whoami.exe /groups^|%SYSTEMROOT%\System32\find "Mandatory"') do set LEVEL=%%i
 
 if NOT "%LEVEL%"=="High" (
-  @powershell -NoProfile -ExecutionPolicy unrestricted -Command "Start-Process %~f0 -Verb runas"
+  @powershell -NoProfile -ExecutionPolicy unrestricted -Command "Start-Process \"%~f0\" -Verb runas"
   exit /b 0
 )
 

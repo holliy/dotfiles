@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # スクリプトが置かれている場所をカレントディレクトリにする
-cd $(dirname $0)
+cd "$(dirname "$0")"
 
 # terminfoファイルのコンパイル
 ls -1 terminfo/* | xargs -n1 tic -x
