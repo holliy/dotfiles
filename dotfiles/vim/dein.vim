@@ -161,6 +161,8 @@ if dein#tap('conflict-marker')
   Highlight link ConflictMarkerCommonAncestors Error
   Highlight link ConflictMarkerCommonAncestorsHunk Folded
   Highlight link ConflictMarkerTheirs DiffAdd
+
+  call dein#set_hook('conflict-marker', 'hook_post_source', 'autocmd ConflictMarkerDetect BufEnter * doautocmd ConflictMarkerDetect BufRead')
 endif "}}}
 
 " ddc "{{{

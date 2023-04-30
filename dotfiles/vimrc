@@ -723,6 +723,11 @@ sunmap k
 sunmap gj
 sunmap gk
 
+noremap m `
+noremap ` m
+sunmap m
+sunmap `
+
 nnoremap ~ g~
 nnoremap g~ ~
 
@@ -817,7 +822,8 @@ cnoremap <C-x> <C-Right>
 cnoremap <C-z> <C-Left>
 
 nnoremap <silent> ZZ :<C-u>update<CR>
-nnoremap <expr><silent> ZQ ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'bwipeout<CR>'
+nnoremap <expr><silent> ZQ
+    \ ':<C-u>' .. (v:count > 0 ? v:count : 'buffer ' .. expand('#') .. '<Bar>' .. bufnr()) .. 'bwipeout<CR>'
 
 nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
@@ -1151,12 +1157,14 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " 端末のバージョン情報を取得 "{{{
   " 応答が DCS (ESC P) > | VERSION ST (ESC \)で返ってくるのでどうにかして取得
-  " Neovimだと応答が取れない?
   function! GetXTVersion() abort
     " unmap <Esc>P><Bar>
     " let &t_ti = substitute(&t_ti, "\e[>0q", '', '')
 
     if exists('g:xtversion')
+      return g:xtversion
+    elseif g:vimrc#is_nvim
+      let g:xtversion = $TERM_PROGRAM .. ' ' .. $TERM_PROGRAM_VERSION
       return g:xtversion
     endif
 
