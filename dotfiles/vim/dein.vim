@@ -575,7 +575,7 @@ if dein#tap('lightline')
     let [active_bn, alt_bn, last_bn, tn] = [bufnr(), winbufnr(winnr('#')), bufnr('$'), tabpagenr()]
     let [left, mid, right] = [[], [], []]
     let fold = '...'
-    let max_side_tabs = min([max([&columns/40, 2]), 8]) " left, rightそれぞれから表示する数
+    let max_side_tabs = min([max([&columns/50, 2]), 8]) " left, rightそれぞれから表示する数
 
     if IgnoreBuffer(active_bn)
       if !IgnoreBuffer(alt_bn)
@@ -894,7 +894,7 @@ if dein#tap('lsp')
       \ }
 
   nnoremap <Leader>lh <Plug>(lsp-hover)
-  nnoremap <Leader>ls <Plug>(lsp-signature-help)
+  nnoremap <silent> <Leader>ls :<C-u>LspWorkspaceSymbol <C-r>=expand('<lt>cword>')<CR><CR>
   nnoremap <Leader>lt <Plug>(lsp-peek-type-definition)
   nnoremap <Leader>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Leader>lr <Plug>(lsp-rename)
