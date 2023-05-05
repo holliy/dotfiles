@@ -1361,7 +1361,6 @@ augroup filetypedetect " Neovimで未定義エラーが出るので
 augroup END
 let s:msg = execute([
     \   'source ' .. g:vimrc#dotvim .. '/dein.vim',
-    \   'runtime! plugin/**/*.vim'
     \ ], 'silent')
 Autocmd VimEnter * ++once
     \ for s:line in split(s:msg, "\n") |
