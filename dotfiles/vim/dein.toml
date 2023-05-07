@@ -808,7 +808,7 @@ repo = 'Shougo/context_filetype.vim'
 repo = 'Shougo/ddc.vim'
 depends = ['denops']
 hook_post_source = '''
-  if execute('augroup') !~# '\<denops_plugin_internal\>'
+  if !exists('#denops_plugin_internal')
     " denopsがサポートされてない
     return
   endif
@@ -818,6 +818,7 @@ hook_post_source = '''
   call ddc#custom#patch_global('ui', 'none')
 
   call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around'])
+  call ddc#custom#patch_filetype('vim', 'specialBufferCompletion', v:true)
 
   call ddc#custom#patch_global('sourceOptions', #{
       \ _: #{
@@ -842,7 +843,8 @@ hook_post_source = '''
       \   forceCompletionPattern: '/'
       \ },
       \ necovim: #{
-      \   mark: 'vim'
+      \   mark: 'vim',
+      \   sorters: ['sorter_rank', 'sorter_ascii']
       \ },
       \ neosnippet: #{ mark: 'snip' }
       \ })
