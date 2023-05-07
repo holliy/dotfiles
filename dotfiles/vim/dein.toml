@@ -290,6 +290,9 @@ hook_source = '''
       \ separator: #{ left: "", right: "" },
       \ }
 
+  " 使うけど'statusline'を自動で設定されたくないので
+  let g:lightline['enable'] = #{ statusline: 0 }
+
   if g:vimrc#is_windows && g:vimrc#is_gui
     let g:lightline.subseparator = #{ left: "|", right: "|" }
   else
@@ -511,6 +514,9 @@ hook_post_source = '''
   call lightline#init()
   call lightline#colorscheme()
   call lightline#update()
+
+  " parteditなどでローカルの値が設定されないのでグローバルに設定
+  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#win_getid())
 '''
 
 [[plugins]]
