@@ -39,6 +39,8 @@ local config = {
       { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
       { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
       { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
+      { key = 'F2', mods = 'CTRL', action = act.SpawnTab 'CurrentPaneDomain' },
+      { key = 'L', mods = 'CTRL', action = act.ShowDebugOverlay },
     },
     mouse_bindings = {
         {
