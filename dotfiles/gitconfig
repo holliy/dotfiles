@@ -1,5 +1,6 @@
 [core]
 	editor = vim
+	quotepath = false
 [init]
 	defaultBranch = main
 [pull]
@@ -19,4 +20,8 @@
 	logline = log --oneline --graph
 	s = status
 	sa = status --ignored
+	detail = show --format=fuller --stat
+	detailpatch = show --format=fuller
+	listmodified = diff --name-only --relative --diff-filter=M
+	liststaged = diff --cached --name-only --relative --diff-filter=AM
 # vi: noet ts=4 sw=4 ft=gitconfig:
