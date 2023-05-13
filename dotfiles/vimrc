@@ -360,36 +360,22 @@ function! OpenSymbolicTarget() abort "{{{
 
   " バッファを開いてからカーソルを動かしていないときはカーソル位置を保存しない
   if getpos('.') !=# getpos("'\"")
+    " とりあえずカレントウィンドウのみ
     let view = winsaveview()
   endif
 
-  " TODO: 別のタブも
-  if winnr('$') > 1
-    " すべてのウィンドウに対して閉じないようにしつつ対象のバッファを変更
-    let bn = bufnr()
-    let buflist = tabpagebuflist()
-    call remove(buflist, index(buflist, bn))
-    let tmpbn = buflist[0]
-    let restwins = []
+  let bn = bufnr()
+  let restwins = BDeleteSaveWindow(bn)
+  unlet restwins[index(restwins, win_getid())]
 
-    for wn in range(1, winnr('$'))
-      if winbufnr(wn) ==# bn
-        call insert(restwins, wn)
-        execute wn .. 'windo' 'buffer' tmpbn
-      endif
-    endfor
+  " 完全に削除しないとリンク元のファイルが開かれる
+  execute 'bwipeout' bn
+  execute 'edit' filepath
+  let bn = bufnr()
 
-    execute 'bwipeout' bn
-    execute 'edit' filepath
-    let bn = bufnr()
-
-    for wn in restwins
-      execute wn .. 'windo' 'buffer' bn
-    endfor
-  else
-    bwipeout
-    execute 'edit' filepath
-  endif
+  for wn in restwins
+    execute wn .. 'windo' 'buffer' bn
+  endfor
 
   if exists('l:view')
     call winrestview(view)
@@ -434,6 +420,55 @@ function! IsCommandLineWindow(bn = 0) abort "{{{
   endif
 
   return !empty(getcmdwintype())
+endfunction "}}}
+
+function! BDeleteSaveWindow(bn) abort "{{{
+  " 対象のバッファを表示しているウィンドウで別のバッファにしてからbdelete
+  " 対象のバッファを表示していたウィンドウのIDをリストで返す
+  " ※バッファが一つしかない場合はウィンドウを一つにする
+
+  if !empty(getcmdwintype())
+    echohl Error
+    echo 'Not works in command-line window'
+    echohl None
+
+    return []
+  endif
+
+  let buflist = []
+  for tn in range(tabpagenr('$'))
+    call extend(buflist, tabpagebuflist(tn + 1))
+  endfor
+
+  let listed_bufs = []
+  for b in filter(range(1, bufnr('$')), { _, b -> bufexists(b) })
+    if b ==# a:bn || !IgnoreBuffer(b)
+      call add(listed_bufs, b)
+    endif
+  endfor
+
+  if len(listed_bufs) < 2
+    execute 'bdelete' a:bn
+    return [win_getid()]
+    " confirm qall
+  endif
+
+  " 対象の一つ次か前のバッファに切り替える
+  call add(listed_bufs, listed_bufs[-2])
+  let alt_bn = listed_bufs[index(listed_bufs, a:bn) + 1]
+
+  let restwins = win_findbuf(a:bn)
+  for wid in restwins
+    call win_execute(wid, 'let tmp_bn = bufnr("#")')
+    if tmp_bn < 0 || !IgnoreBuffer(tmp_bn)
+      let tmp_bn = alt_bn
+    endif
+
+    call win_execute(wid, 'buffer ' .. tmp_bn)
+  endfor
+
+  execute 'bdelete' a:bn
+  return restwins
 endfunction "}}}
 "}}}
 
@@ -823,8 +858,8 @@ cnoremap <C-x> <C-Right>
 cnoremap <C-z> <C-Left>
 
 nnoremap <silent> ZZ :<C-u>update<CR>
-nnoremap <expr><silent> ZQ
-    \ ':<C-u>' .. (v:count > 0 ? v:count : 'buffer ' .. expand('#') .. '<Bar>' .. bufnr()) .. 'bwipeout<CR>'
+nnoremap <silent> ZQ
+    \ :<C-u>call BDeleteSaveWindow(<C-r>=v:count > 0 ? v:count : bufnr()<CR>)<CR>
 
 nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
