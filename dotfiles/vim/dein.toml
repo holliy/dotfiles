@@ -238,7 +238,7 @@ hook_source = '''
   let g:lightline = #{
       \ colorscheme: 'landscape',
       \ active: #{
-      \   left: [['mode', 'paste'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \   left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
       \   right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
       \ },
       \ inactive: #{
@@ -297,6 +297,10 @@ hook_source = '''
     let g:lightline.subseparator = #{ left: "|", right: "|" }
   else
     let g:lightline.subseparator = #{ left: "│", right: "│" }
+  endif
+
+  if dein#is_available('lightline_skk')
+    let g:lightline.component_function['skk'] = 'lightline_skk#mode'
   endif
   "}}}
 
@@ -826,7 +830,7 @@ hook_post_source = '''
       \   ignoreCase: v:true,
       \   matchers: ['matcher_head'],
       \   sorters: ['sorter_rank'],
-      \   minAutoCompleteLength: 0,
+      \   minAutoCompleteLength: 1,
       \   timeout: 5000
       \ },
       \ around: #{
@@ -858,6 +862,50 @@ hook_post_source = '''
       \   filenameChars: '\-@.[:alnum:]_~'
       \ }
       \ })
+
+  if dein#is_available('skkeleton')
+    function! s:skkeleton_enable()
+      if !exists('b:ddc_options')
+        " skkeletonの設定が入ることがあるので初回だけ
+        let b:ddc_options = ddc#custom#get_buffer()
+
+        " preview 外すと機能しなくなるので一旦無効化
+        " let b:save_cot = &completeopt
+        " set completeopt-=preview
+      endif
+
+      call ddc#custom#set_buffer(#{
+          \   ui: 'native',
+          \   sources: ['around', 'skkeleton'],
+          \   keywordPattern: '[ぁ-ゖァ-ヶー]+',
+          \   sourceOptions: #{
+          \     _: #{
+          \       sorters: [],
+          \       matchers: [],
+          \     }
+          \   }
+          \ })
+    endfunction
+    execute printf('Autocmd User skkeleton-enable-pre call %sskkeleton_enable()', expand('<SID>'))
+
+    function! s:skkeleton_disable()
+      call ddc#custom#set_buffer(b:ddc_options)
+      " let &completeopt = b:save_cot
+    endfunction
+    execute printf('Autocmd User skkeleton-disable-pre call %sskkeleton_disable()', expand('<SID>'))
+
+    call ddc#custom#patch_global('keywordPattern', '[ァ-ヮア-ンー]+')
+    call ddc#custom#patch_global('sourceOptions', #{
+        \ skkeleton: #{
+        \   mark: 'SKK',
+        \   matchers: ['skkeleton'],
+        \   sorters: [],
+        \   converters: [],
+        \   minAutoCompleteLength: 1,
+        \   isVolatile: v:true
+        \ }
+        \ })
+  endif
 
   call ddc#enable()
 
@@ -950,6 +998,14 @@ repo = 'shun/ddc-source-vim-lsp'
 depends = ['ddc', 'lsp']
 
 [[plugins]]
+repo = 'skk-dev/dict'
+name = 'skk-dict'
+merged = 0
+hook_source = '''
+  let s:skk_dict_dir = g:dein#plugin.path
+'''
+
+[[plugins]]
 repo = 'thinca/vim-ft-help_fold'
 name = 'help-fold'
 
@@ -1009,6 +1065,42 @@ if = 'executable("deno")'
 
 [[plugins]]
 repo = 'vim-jp/vimdoc-ja'
+
+[[plugins]]
+repo = 'vim-skk/skkeleton'
+depends = ['denops']
+hook_source = '''
+  noremap! <C-k> <Plug>(skkeleton-toggle)
+
+  function! s:skk_init()
+    call skkeleton#config(#{
+        \   eggLikeNewline: v:true,
+        \   globalDictionaries: [s:skk_dict_dir .. '/SKK-JISYO.L'],
+        \   keepState: v:true,
+        \   markerHenkan: '',
+        \   markerHenkanSelect: ''
+        \ })
+    call skkeleton#register_keymap('input', ';', 'henkanPoint')
+    call skkeleton#register_kanatable('rom', #{
+        \   jk: 'escape'
+        \ })
+  endfunction
+  execute printf('Autocmd User skkeleton-initialize-pre call %sskk_init()', expand('<SID>'))
+'''
+
+[[plugins]]
+repo = 'yasunori-kirin0418/lightline_skk.vim'
+depends = ['lightline', 'skkeleton']
+hook_post_source = '''
+  call lightline_skk#option('display', #{
+      \   hiragana: 'あ',
+      \   katakana: 'ア',
+      \   hankaku_katakana: ' ｱ',
+      \   zenkaku_alphabet: 'Ａ',
+      \   alphabet: '',
+      \   abbrev: 'ab'
+      \ })
+'''
 
 [[plugins]]
 repo = 'yuki-yano/fuzzy-motion.vim'
