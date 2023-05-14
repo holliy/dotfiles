@@ -866,7 +866,7 @@ hook_post_source = '''
   if dein#is_available('skkeleton')
     function! s:skkeleton_enable()
       if !exists('b:ddc_options')
-        " skkeletonの設定が入ることがあるので初回だけ
+        " skkeleton有効時の設定が入ることがあるので初回だけ
         let b:ddc_options = ddc#custom#get_buffer()
 
         " preview 外すと機能しなくなるので一旦無効化
@@ -876,7 +876,7 @@ hook_post_source = '''
 
       call ddc#custom#set_buffer(#{
           \   ui: 'native',
-          \   sources: ['around', 'skkeleton'],
+          \   sources: ['skkeleton', 'around'],
           \   keywordPattern: '[ぁ-ゖァ-ヶー]+',
           \   sourceOptions: #{
           \     _: #{
@@ -959,7 +959,7 @@ depends = ['ddc']
 
 [[plugins]]
 repo = 'Shougo/neosnippet.vim'
-depends = ['ddc']
+depends = ['neosnippet-snippets', 'ddc']
 hook_source = '''
   let g:neosnippet#disable_select_mode_mappings = 0
   let g:neosnippet#enable_auto_clear_markers = 0
@@ -988,7 +988,7 @@ hook_source = '''
 
 [[plugins]]
 repo = 'Shougo/neosnippet-snippets'
-depends = ['neosnippet']
+merged = 0
 hook_source = '''
   let g:neosnippet#snippets_directory = g:dein#plugin.path .. '/neosnippet'
 '''

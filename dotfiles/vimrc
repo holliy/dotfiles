@@ -453,7 +453,11 @@ function! BDeleteSaveWindow(bn) abort "{{{
     " confirm qall
   endif
 
-  " 対象の一つ次か前のバッファに切り替える
+  if len(filter(copy(listed_bufs), { _, b -> !empty(bufname(b)) })) >= 2
+    let listed_bufs = filter(listed_bufs, { _, b -> !empty(bufname(b)) })
+  endif
+
+  " 対象の一つ後か前のバッファに切り替える
   call add(listed_bufs, listed_bufs[-2])
   let alt_bn = listed_bufs[index(listed_bufs, a:bn) + 1]
 
@@ -791,18 +795,12 @@ xnoremap S <Nop>
 
 noremap n nzzzv
 noremap N Nzzzv
-" nnoremap <silent> * :let stay_star_view = winsaveview()<cr>*:call winrestview(stay_star_view)<cr>
-" vnoremap <silent> * :let stay_star_view = winsaveview()<cr>*:call winrestview(stay_star_view)<cr>
-noremap * g*<C-o>
-noremap # g#<C-o>
-noremap g* *<C-o>
-noremap g# #<C-o>
+nnoremap <silent> * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
+nnoremap # <Nop>
+nnoremap <silent> g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
+nnoremap g# <Nop>
 sunmap n
 sunmap N
-sunmap *
-sunmap #
-sunmap g*
-sunmap g#
 
 nnoremap <expr> <C-e>
     \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
@@ -1199,8 +1197,12 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
     if exists('g:xtversion')
       return g:xtversion
-    elseif g:vimrc#is_nvim
+    elseif exists('$TERM_PROGRAM')
       let g:xtversion = $TERM_PROGRAM .. ' ' .. $TERM_PROGRAM_VERSION
+      return g:xtversion
+    elseif g:vimrc#is_nvim
+      " TODO
+      let g:xtversion = ''
       return g:xtversion
     endif
 
@@ -1347,6 +1349,10 @@ Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
 AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
 AutocmdFT toml setlocal foldlevel=0 foldmethod=indent | normal! zv
+
+if vimrc#is_nvim
+  Autocmd UIEnter * doautocmd ColorScheme
+endif
 
 if exists('+vartabstop')
   AutocmdFT diff setlocal vartabstop=9,8
