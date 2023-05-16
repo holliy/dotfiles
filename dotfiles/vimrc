@@ -427,12 +427,22 @@ function! BDeleteSaveWindow(bn) abort "{{{
   " 対象のバッファを表示していたウィンドウのIDをリストで返す
   " ※バッファが一つしかない場合はウィンドウを一つにする
 
+  " typename(): 8.2.2339
+  if type(a:bn) ==# 0 && a:bn <= 0
+    return []
+  endif
+
   if !empty(getcmdwintype())
     echohl Error
     echo 'Not works in command-line window'
     echohl None
 
     return []
+  endif
+
+  let save_bh = getbufvar(a:bn, '&bufhidden')
+  if save_bh !=# 'wipe'
+    call setbufvar(a:bn, '&bufhidden', 'delete')
   endif
 
   let buflist = []
@@ -464,14 +474,19 @@ function! BDeleteSaveWindow(bn) abort "{{{
   let restwins = win_findbuf(a:bn)
   for wid in restwins
     call win_execute(wid, 'let tmp_bn = bufnr("#")')
-    if tmp_bn < 0 || !IgnoreBuffer(tmp_bn)
+    if tmp_bn < 0 || index(listed_bufs, tmp_bn) < 0 || !IgnoreBuffer(tmp_bn)
       let tmp_bn = alt_bn
     endif
 
     call win_execute(wid, 'buffer ' .. tmp_bn)
   endfor
 
-  execute 'bdelete' a:bn
+  if buflisted(a:bn)
+    " 必要ないはず
+    execute 'bdelete' a:bn
+  endif
+  call setbufvar(a:bn, '&bufhidden', save_bh)
+
   return restwins
 endfunction "}}}
 "}}}
