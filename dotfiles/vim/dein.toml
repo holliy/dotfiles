@@ -611,6 +611,7 @@ hook_source = '''
       \ ]
 
   command! -nargs=* -bang -bar G GinStatus<bang> <args>
+  command! -nargs=* -bang -bar GB GinBuffer<bang> <args>
   " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
   command! -bar DiffIndex tabnew % | GinEdit& ++opener=leftabove\ vsplit %:p | diffthis | wincmd p | diffthis
   command! -bar DiffStage tab GinEdit& ++opener=split %:p | GinEdit& ++opener=leftabove\ vsplit @ %:p | diffthis | wincmd p | diffthis
