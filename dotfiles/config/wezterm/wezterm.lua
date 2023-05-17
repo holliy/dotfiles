@@ -40,7 +40,8 @@ local config = {
       { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
       { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
       { key = 'F2', mods = 'CTRL', action = act.SpawnTab 'CurrentPaneDomain' },
-      { key = 'L', mods = 'CTRL', action = act.ShowDebugOverlay },
+      { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowDebugOverlay },
+      { key = 'n', mods = 'CTRL|SHIFT', action = act.SpawnWindow },
     },
     mouse_bindings = {
         {
