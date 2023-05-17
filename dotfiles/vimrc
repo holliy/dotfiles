@@ -922,6 +922,7 @@ inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
 
 cnoremap <C-g> <C-u>
+inoremap <C-k> <C-o>"_d$
 
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
@@ -1021,7 +1022,7 @@ execute 'set fileencodings+=' .. &encoding
 
 " 日本語を含まない場合は fileencoding に encoding を使うようにする
 Autocmd BufReadPost,FileReadPost,FilterReadPost *
-    \ if &fileencoding=~#'iso-2022-jp' && search("[^\x01-\x7e]", 'n')==0 |
+    \ if &fileencoding =~# 'iso-2022-jp' && search("[^\x01-\x7e]", 'n', 0, 1000) == 0 |
     \   let &fileencoding = &encoding | endif "}}}
 
 " terminal "{{{

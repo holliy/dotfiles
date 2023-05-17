@@ -1071,7 +1071,7 @@ repo = 'vim-jp/vimdoc-ja'
 repo = 'vim-skk/skkeleton'
 depends = ['denops']
 hook_source = '''
-  noremap! <C-k> <Plug>(skkeleton-toggle)
+  noremap! ,, <Plug>(skkeleton-enable)
 
   function! s:skk_init()
     call skkeleton#config(#{
