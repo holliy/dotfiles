@@ -748,27 +748,31 @@ map! <Nul> <C-Space>
 " map <C-j> <S-CR>
 " map! <C-j> <S-CR>
 
-noremap - ^
-noremap ^ $
-sunmap -
-sunmap ^
+nnoremap Y y$
 
-" nnoremap gi '[v']
-nnoremap go gi
+noremap! jk <Esc>
+snoremap jk <Esc>
 
+" cnoremap <Esc><Esc> <C-c>
+
+" fold "{{{
 xnoremap za zo
+"}}}
 
-xnoremap iq i'
-onoremap iq i'
-xnoremap iQ i"
-onoremap iQ i"
+" scroll "{{{
+nnoremap <expr> <C-e>
+    \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
+nnoremap <expr> <C-y>
+    \ '<C-y>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'k'
+noremap <C-u> <C-u>zz
+noremap <C-d> <C-d>zz
+noremap <C-f> <C-f>zz
+noremap <C-b> <C-b>zz
+" noremap <ScrollWheelUp> 3<C-y>
+" noremap <ScrollWheelDown> 3<C-e>
+"}}}
 
-onoremap . l
-
-" マッチした文字列を選択
-" TODO: マッチした文字列内か判定
-onoremap / //e<CR>
-
+" move / jump (current line) "{{{
 noremap j gj
 noremap k gk
 noremap gj j
@@ -778,14 +782,45 @@ sunmap k
 sunmap gj
 sunmap gk
 
-noremap m `
-noremap ` m
-sunmap m
-sunmap `
+noremap - ^
+noremap ^ $
+sunmap -
+sunmap ^
 
-nnoremap ~ g~
-nnoremap g~ ~
+nnoremap <Tab> <C-i>
+nnoremap <S-Tab> <C-o>
 
+" noremap! <C-p> <Up>
+" noremap! <C-l> <Down>
+" inoremap <C-k> <Left>
+" cnoremap <C-k> <Space><BS><Left>
+" inoremap <C-@> <Right>
+" cnoremap <C-@> <Space><BS><Right>
+
+" inoremap <C-y> <C-o>^
+" cnoremap <C-y> <Home>
+" noremap! <C-b> <End>
+" cnoremap <C-e> <C-y>
+
+cnoremap <C-x> <C-Right>
+cnoremap <C-z> <C-Left>
+"}}}
+
+" jump (other) "{{{
+nnoremap go `^
+"}}}
+
+" search "{{{
+noremap n nzzzv
+noremap N Nzzzv
+sunmap n
+sunmap N
+
+nnoremap <silent> * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
+nnoremap <silent> g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
+"}}}
+
+" カット時にブラックホールレジスタを使う "{{{
 noremap c "_c
 nnoremap C "_C
 noremap D "_d
@@ -801,74 +836,52 @@ sunmap x
 ounmap x
 sunmap X
 ounmap X
+"}}}
 
+" operator, textobj "{{{
+xnoremap iq i'
+onoremap iq i'
+xnoremap iQ i"
+onoremap iQ i"
+
+onoremap . l
+
+" マッチした文字列を選択
+" TODO: マッチした文字列内か判定
+" @/
+onoremap / //e<CR>
+
+" nnoremap gi '[v']
+"}}}
+
+" swap mapping "{{{
+noremap m `
+noremap ` m
+sunmap m
+sunmap `
+
+nnoremap ~ g~
+nnoremap g~ ~
+"}}}
+
+" disable mapping "{{{
 " c. / cc に矯正
 nnoremap s <Nop>
 xnoremap s <Nop>
 nnoremap S <Nop>
 xnoremap S <Nop>
 
-noremap n nzzzv
-noremap N Nzzzv
-nnoremap <silent> * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
 nnoremap # <Nop>
-nnoremap <silent> g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
 nnoremap g# <Nop>
-sunmap n
-sunmap N
+"}}}
 
-nnoremap <expr> <C-e>
-    \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
-nnoremap <expr> <C-y>
-    \ '<C-y>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'k'
-noremap <C-u> <C-u>zz
-noremap <C-d> <C-d>zz
-noremap <C-f> <C-f>zz
-noremap <C-b> <C-b>zz
-" noremap <ScrollWheelUp> 3<C-y>
-" noremap <ScrollWheelDown> 3<C-e>
-
-" inoremap <C-u> <C-p>
-" cnoremap <C-u> <C-p>
-cnoremap <C-g> <C-u>
-
-nnoremap Y y$
-noremap! jk <Esc>
-snoremap jk <Esc>
-nnoremap <Tab> <C-i>
-nnoremap <S-Tab> <C-o>
-" cnoremap <Esc><Esc> <C-c>
-
-" noremap! <C-p> <Up>
-" noremap! <C-l> <Down>
-" inoremap <C-k> <Left>
-" cnoremap <C-k> <Space><BS><Left>
-" inoremap <C-@> <Right>
-" cnoremap <C-@> <Space><BS><Right>
-
-" inoremap <C-y> <C-o>^
-" cnoremap <C-y> <Home>
-" noremap! <C-b> <End>
-" cnoremap <C-e> <C-y>
-
-inoremap <BS> <C-g>u<BS>
-inoremap <CR> <C-]><C-g>u<CR>
-
+" command "{{{
 nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
 noremap <F1> <Esc>:help<Space>
 nnoremap <F1> :<C-u>help<Space>
 inoremap <F1> <Esc>:help<Space>
-
-nnoremap <CR> o<Esc>
-nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
-inoremap <C-CR> <C-o>o
-nnoremap <C-Space> i<CR><Esc>
-nnoremap <C-CR> i<CR><Esc>
-
-cnoremap <C-x> <C-Right>
-cnoremap <C-z> <C-Left>
 
 nnoremap <silent> ZZ :<C-u>update<CR>
 nnoremap <silent> ZQ
@@ -902,6 +915,24 @@ let g:foldmethods = ['indent', 'marker', 'syntax', 'expr']
 call add(g:foldmethods, g:foldmethods[0])
 nnoremap <silent> <Leader>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
+"}}}
+
+" insert / delete "{{{
+inoremap <BS> <C-g>u<BS>
+inoremap <CR> <C-]><C-g>u<CR>
+
+cnoremap <C-g> <C-u>
+
+nnoremap <CR> o<Esc>
+nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
+inoremap <C-CR> <C-o>o
+nnoremap <C-Space> i<CR><Esc>
+nnoremap <C-CR> i<CR><Esc>
+"}}}
+
+" completion "{{{
+" inoremap <C-u> <C-p>
+" cnoremap <C-u> <C-p>
 
 inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_tab) <Tab>
@@ -915,7 +946,9 @@ imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
 imap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
 inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
+"}}}
 
+" terminal "{{{
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
 
@@ -925,6 +958,7 @@ if g:vimrc#is_nvim
   tnoremap <C-w>: <C-\><C-o>:
   tnoremap <expr> <C-w>" '<C-\><C-n>"' .. nr2char(getchar()) .. 'pa'
 endif
+"}}}
 "}}}
 
 " エンコード "{{{
