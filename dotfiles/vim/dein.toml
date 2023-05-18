@@ -219,6 +219,18 @@ hook_post_source = '''
 
 [[plugins]]
 repo = 'editorconfig/editorconfig-vim'
+hook_post_source = '''
+  function! s:editorconfig_enabled(config) abort
+    if has_key(a:config, 'charset')
+      execute 'set fileencodings-=' .. a:config.charset
+      execute 'set fileencodings^=' .. a:config.charset
+    endif
+
+    return 0
+  endfunction
+
+  call editorconfig#AddNewHook(function('s:editorconfig_enabled'))
+'''
 
 [[plugins]]
 repo = 'gamoutatsumi/ddc-sorter_ascii'
@@ -895,7 +907,6 @@ hook_post_source = '''
     endfunction
     execute printf('Autocmd User skkeleton-disable-pre call %sskkeleton_disable()', expand('<SID>'))
 
-    call ddc#custom#patch_global('keywordPattern', '[ァ-ヮア-ンー]+')
     call ddc#custom#patch_global('sourceOptions', #{
         \ skkeleton: #{
         \   mark: 'SKK',

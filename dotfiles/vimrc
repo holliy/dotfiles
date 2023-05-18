@@ -787,9 +787,6 @@ noremap ^ $
 sunmap -
 sunmap ^
 
-nnoremap <Tab> <C-i>
-nnoremap <S-Tab> <C-o>
-
 " noremap! <C-p> <Up>
 " noremap! <C-l> <Down>
 " inoremap <C-k> <Left>
@@ -808,6 +805,9 @@ cnoremap <C-z> <C-Left>
 
 " jump (other) "{{{
 nnoremap go `^
+
+nnoremap <Tab> <C-i>
+nnoremap <S-Tab> <C-o>
 "}}}
 
 " search "{{{
