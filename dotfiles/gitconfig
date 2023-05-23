@@ -26,4 +26,6 @@
 	detailpatch = show --format=fuller
 	listmodified = diff --name-only --relative --diff-filter=M
 	liststaged = diff --cached --name-only --relative --diff-filter=AM
+	listadded = diff --cached --name-only --relative --diff-filter=A
+	listuntracked = ls-files --others --exclude-standard
 # vi: noet ts=4 sw=4 ft=gitconfig:
