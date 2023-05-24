@@ -831,7 +831,7 @@ hook_post_source = '''
   endif
 
   call ddc#custom#set_global({})
-  call ddc#custom#patch_global('sources', ['vim-lsp', 'around'])
+  call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
   call ddc#custom#patch_global('ui', 'none')
 
   call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around'])
@@ -863,7 +863,8 @@ hook_post_source = '''
       \   mark: 'vim',
       \   sorters: ['sorter_rank', 'sorter_ascii']
       \ },
-      \ neosnippet: #{ mark: 'snip' }
+      \ neosnippet: #{ mark: 'snip' },
+      \ other-window: #{ mark: 'win' }
       \ })
   call ddc#custom#patch_global('sourceParams', #{
       \ around: #{

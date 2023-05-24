@@ -1447,6 +1447,8 @@ augroup END
 " plugin "{{{
 packadd! matchit
 
+let &runtimepath = g:vimrc#dotvim .. ',' .. &runtimepath
+
 " 画面切り替え前のメッセージを遅延させる
 augroup filetypedetect " Neovimで未定義エラーが出るので
 augroup END
