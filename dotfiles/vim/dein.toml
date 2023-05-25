@@ -834,8 +834,13 @@ hook_post_source = '''
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
   call ddc#custom#patch_global('ui', 'none')
 
-  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around'])
+  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'other-window'])
   call ddc#custom#patch_filetype('vim', 'specialBufferCompletion', v:true)
+  call ddc#custom#patch_filetype('vim', 'sourceParams', #{
+      \   other-window: #{
+      \     include_filetypes: ['help']
+      \   }
+      \ })
 
   call ddc#custom#patch_global('sourceOptions', #{
       \ _: #{
