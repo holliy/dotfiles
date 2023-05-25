@@ -1,10 +1,10 @@
-import { GatherArguments } from 'https://deno.land/x/ddc_vim@v3.4.0/base/source.ts';
-import { Denops, fn } from 'https://deno.land/x/ddc_vim@v3.4.0/deps.ts';
-import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v3.4.0/types.ts';
+import { GatherArguments } from 'https://deno.land/x/ddc_vim@v3.4.1/base/source.ts';
+import { Denops, fn } from 'https://deno.land/x/ddc_vim@v3.4.1/deps.ts';
+import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v3.4.1/types.ts';
 
 type Params = {
-  // include_current_filetype: boolean;
-  // include_filetypes: string[];
+  include_current_filetype: boolean;
+  include_filetypes: string[];
   only_current_tabpage: boolean;
   only_viewport: boolean;
 };
@@ -20,11 +20,6 @@ type WinInfo = {
   winnr: number;
 };
 
-type BufInfo = {
-  bufnr: number;
-  linecount: number;
-};
-
 function from1(max: number): number[] {
   return [...new Array(max).keys()].map((n) => n + 1);
 }
@@ -34,17 +29,17 @@ async function get_tabpages(
   only_current_tabpage: boolean,
 ): Promise<number[]> {
   if (only_current_tabpage) {
-    return [await fn.tabpagenr(denops) as number];
+    return [await fn.tabpagenr(denops)];
   }
 
-  return from1(await fn.tabpagenr(denops, '$') as number);
+  return from1(await fn.tabpagenr(denops, '$'));
 }
 
 async function get_windows(denops: Denops, tn: number): Promise<number[]> {
-  const last_wn = await fn.tabpagewinnr(denops, tn, '$') as number;
+  const last_wn = await fn.tabpagewinnr(denops, tn, '$');
   const wns = from1(last_wn);
   const winids = await Promise.all(wns.map(async (wn) => {
-    return await fn.win_getid(denops, wn, tn) as number;
+    return await fn.win_getid(denops, wn, tn);
   }));
 
   return winids;
@@ -58,23 +53,30 @@ async function get_wininfos(denops: Denops): Promise<{ [k: number]: WinInfo }> {
   );
 }
 
-async function get_bufinfos(denops: Denops): Promise<{ [k: number]: BufInfo }> {
+async function get_bufinfos(
+  denops: Denops,
+): Promise<{ [k: number]: fn.BufInfo }> {
   return Object.fromEntries(
-    (await fn.getbufinfo(denops, { bufloaded: true }) as BufInfo[])
+    (await fn.getbufinfo(denops, { bufloaded: true }))
       .map((binfo) => [binfo.bufnr, binfo]),
   );
 }
 
-function is_filetype(filetypes: string, filetype: string): boolean {
-  const fts = filetypes.split('.');
+function filetype_list(filetypes: string): string[] {
+  return filetypes.split('.');
+}
 
-  return fts.includes(filetype);
+function is_filetype_include(
+  filetype1: string[],
+  filetype2: string[],
+): boolean {
+  return filetype1.some((ft) => filetype2.includes(ft));
 }
 
 async function get_lines(
   denops: Denops,
   winfo: WinInfo,
-  binfo: BufInfo,
+  binfo: fn.BufInfo,
   only_viewport: boolean,
 ): Promise<string[]> {
   const [top, bottom] = only_viewport
@@ -101,6 +103,9 @@ export class Source extends BaseSource<Params> {
     const winfo = await get_wininfos(args.denops);
     const binfo = await get_bufinfos(args.denops);
     const bn = await fn.bufnr(args.denops);
+    const bft = filetype_list(
+      await fn.getbufvar(args.denops, bn, '&filetype') as string,
+    );
 
     const winids: number[] = [];
     for (const tn of tabs) {
@@ -115,19 +120,26 @@ export class Source extends BaseSource<Params> {
           continue;
         }
 
-        // const wbn = winfo[wid].bufnr;
-        // const filetype = await fn.getbufvar(
-        //   args.denops,
-        //   wbn,
-        //   '&filetype',
-        // ) as string;
-        // if (
-        //   args.sourceParams.include_filetypes.some((ft) =>
-        //     is_filetype(filetype, ft)
-        //   )
-        // ) {
-        //   continue;
-        // }
+        const wbn = winfo[wid].bufnr;
+        const wft = filetype_list(
+          await fn.getbufvar(
+            args.denops,
+            wbn,
+            '&filetype',
+          ) as string,
+        );
+        if (
+          args.sourceParams.include_current_filetype &&
+          is_filetype_include(wft, bft)
+        ) {
+          // nop
+        } else if (
+          is_filetype_include(wft, args.sourceParams.include_filetypes)
+        ) {
+          // nop
+        } else {
+          continue;
+        }
 
         winids.push(wid);
       }
@@ -153,8 +165,8 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
-      // include_current_filetype: true,
-      // include_filetypes: [],
+      include_current_filetype: true,
+      include_filetypes: [],
       only_current_tabpage: false,
       only_viewport: true,
     };
