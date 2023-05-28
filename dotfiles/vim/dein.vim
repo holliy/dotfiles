@@ -27,7 +27,7 @@ endif
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
 let g:dein#install_check_diff = 1
-let g:dein#install_copy_vim = 0
+let g:dein#install_copy_vim = g:vimrc#is_windows
 let g:dein#install_log_filename = s:dein_dir .. '/dein.log'
 " let g:dein#install_process_timeout = 60
 let g:dein#install_progress_type = 'floating'

@@ -522,7 +522,7 @@ hook_source = '''
     return commithash
   endfunction
 
-  Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,FocusGained,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
+  Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
       \ let t:git_branch = LightlineBranch()
   "}}}
 '''
@@ -651,7 +651,7 @@ depends = ['denops']
 repo = 'lambdalisue/kensaku-command.vim'
 depends = ['kensaku']
 hook_source = '''
-  nnoremap <Leader>/ :<C-u>Kensaku<Space>
+  nnoremap g/ :<C-u>Kensaku<Space>
 '''
 
 [[plugins]]
@@ -1181,5 +1181,5 @@ hook_source = '''
 
 [[plugins]]
 repo = 'mattn/vimtweak'
-if = '!g:vimrc#is_nvim && g:vimrc#is_windows && g:vimrc_is_gui'
+if = '!g:vimrc#is_nvim && g:vimrc#is_windows && g:vimrc#is_gui'
 
