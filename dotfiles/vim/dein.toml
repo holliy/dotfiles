@@ -222,8 +222,22 @@ repo = 'editorconfig/editorconfig-vim'
 hook_post_source = '''
   function! s:editorconfig_enabled(config) abort
     if has_key(a:config, 'charset')
-      execute 'set fileencodings-=' .. a:config.charset
-      execute 'set fileencodings^=' .. a:config.charset
+      let value = a:config.charset
+
+      execute 'set fileencodings-=' .. value
+      execute 'set fileencodings^=' .. value
+
+      let &g:fileencoding = a:donfig.charset
+    endif
+
+    if has_key(a:config, 'end_of_line')
+      let mapping = #{ lf: 'unix', cr: 'mac', crlf: 'dos' }
+      let value = mapping[a:config.end_of_line]
+
+      execute 'set fileformats-=' .. value
+      execute 'set fileformats^=' .. value
+
+      let &g:fileformat = a:donfig.charset
     endif
 
     return 0
