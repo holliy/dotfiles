@@ -428,7 +428,7 @@ function! BDeleteSaveWindow(bn) abort "{{{
   " ※バッファが一つしかない場合はウィンドウを一つにする
 
   " typename(): 8.2.2339
-  if type(a:bn) ==# 0 && a:bn <= 0
+  if type(a:bn) ==# v:t_number && a:bn <= 0
     return []
   endif
 
@@ -494,7 +494,7 @@ endfunction "}}}
 " コマンド "{{{
 cnoreabbrev <expr> w] Cmdwhen(':', 'w]', 'write')
 cnoreabbrev <expr> new Cmdwhen(':', 'new', 'enew')
-cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tabnew')
+cnoreabbrev <expr> newtab Cmdwhen(':', 'newtab', 'tab split')
 cnoreabbrev <expr> es Cmdwhen(':', 'es', 'argadd')
 
 " vimrc, gvimrcを開く "{{{
@@ -799,6 +799,8 @@ sunmap ^
 " noremap! <C-b> <End>
 " cnoremap <C-e> <C-y>
 
+cnoremap <C-a> <Home>
+
 cnoremap <C-x> <C-Right>
 cnoremap <C-z> <C-Left>
 "}}}
@@ -889,7 +891,7 @@ nnoremap <silent> ZQ
 
 nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
 
-nnoremap <silent> <Leader>tt :<C-u>tabnew<CR>
+nnoremap <silent> <Leader>tt :<C-u>tab split<CR>
 nnoremap <expr><silent> <Leader>tc ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'tabclose<CR>'
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
