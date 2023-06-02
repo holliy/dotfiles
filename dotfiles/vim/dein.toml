@@ -219,6 +219,9 @@ hook_post_source = '''
 
 [[plugins]]
 repo = 'editorconfig/editorconfig-vim'
+hook_source = '''
+  let g:EditorConfig_enable_for_new_buf = 1
+'''
 hook_post_source = '''
   function! s:editorconfig_enabled(config) abort
     if has_key(a:config, 'charset')
@@ -546,7 +549,7 @@ hook_post_source = '''
   call lightline#update()
 
   " parteditなどでローカルの値が設定されないのでグローバルに設定
-  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#win_getid())
+  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#(win_gettype()==#'popup'?win_getid(winnr('#')):win_getid()))
 '''
 
 [[plugins]]
@@ -1004,9 +1007,11 @@ hook_source = '''
       \ pumvisible() ?
       \   neosnippet#expandable_or_jumpable() ? '<Plug>(neosnippet_expand_or_jump)' : '' :
       \   neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
-  imap <expr> <CR> pumvisible() ?
-      \ neosnippet#expandable() ? '<Plug>(neosnippet_expand)' :
-      \ '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+  " neosnippet がソースになくても同名の候補でスニペットが展開されるのでv:completed_itemを見て展開しないようにする
+  imap <expr> <CR>
+      \ pumvisible() ?
+      \   v:completed_item.menu =~# '^snip\>' && neosnippet#expandable() ?
+      \     '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   snoremap <silent> <CR> <C-r>"a<BS><C-r>"
   snoremap <silent> <BS> <C-r>_a<BS>
 
@@ -1112,10 +1117,13 @@ hook_source = '''
         \   markerHenkan: '',
         \   markerHenkanSelect: ''
         \ })
-    call skkeleton#register_keymap('input', ';', 'henkanPoint')
     call skkeleton#register_kanatable('rom', #{
         \   jk: 'escape'
         \ })
+    call skkeleton#register_keymap('input', ';', 'henkanPoint')
+
+    call remove(g:skkeleton#mapped_keys, index(g:skkeleton#mapped_keys, '<Down>'))
+    call remove(g:skkeleton#mapped_keys, index(g:skkeleton#mapped_keys, '<Up>'))
   endfunction
   execute printf('Autocmd User skkeleton-initialize-pre call %sskk_init()', expand('<SID>'))
 '''
