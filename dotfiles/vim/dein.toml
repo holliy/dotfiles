@@ -639,23 +639,54 @@ hook_source = '''
       \   'gin', 'gin-branch', 'gin-diff', 'gin-edit', 'gin-log', 'gin-status'
       \ ]
 
+  let g:gin_status_default_args = ['++opener=tabnew']
+
+  function! DiffRevision(commit1, commit2, path)
+    " 前提: commit2が新しい
+    " commit2 がnullのときworking treeを表示
+
+    if tolower(a:commit1) ==# 'index'
+      let commit1 = ''
+    else
+      let commit1 = a:commit1
+    endif
+    if tolower(a:commit2) ==# 'index'
+      let commit2 = ''
+    else
+      let commit2 = a:commit2
+    endif
+
+    execute 'GinEdit& ++opener=tabnew' commit1 fnamemodify(a:path, ':p')
+    diffthis
+
+    if a:commit2 is v:null
+      botright vsplit `=a:path`
+    else
+      execute 'GinEdit& ++opener=botright\ vsplit' commit2 fnamemodify(a:path, ':p')
+    endif
+    diffthis
+  endfunction
+
   command! -nargs=* -bang -bar G GinStatus<bang> <args>
   command! -nargs=* -bang -bar GB GinBuffer<bang> <args>
   " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
-  command! -bar DiffIndex tabnew % | GinEdit& ++opener=leftabove\ vsplit %:p | diffthis | wincmd p | diffthis
-  command! -bar DiffStage tab GinEdit& ++opener=split %:p | GinEdit& ++opener=leftabove\ vsplit @ %:p | diffthis | wincmd p | diffthis
+  command! -nargs=1 -complete=file -bar DiffIndex call DiffRevision('INDEX', v:null, <f-args>)
+  command! -nargs=1 -complete=file -bar DiffStage call DiffRevision('HEAD', 'INDEX', <f-args>)
 
-  nnoremap <silent> <Leader>gd :<C-u>DiffIndex<CR>
-  nnoremap <silent> <Leader>gs :<C-u>DiffStage<CR>
+  nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
+  nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
 
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
+
+  AutocmdFT gitcommit nnoremap <silent><buffer> <Leader>gd :<C-u>DiffIndex <C-r>=gin#util#worktree()<CR>/<cfile><CR>
+  AutocmdFT gitcommit nnoremap <silent><buffer> <Leader>gs :<C-u>DiffStage <C-r>=gin#util#worktree()<CR>/<cfile><CR>
 
   Autocmd BufEnter gin*://* setlocal nobuflisted
   Autocmd BufEnter ginedit://*;commitish* setlocal nomodifiable
   " Autocmd BufEnter ginedit://*;commitish* call lsp#disable_diagnostics_for_buffer()
 
-  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus ++opener=rightbelow\ split<CR>
+  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus& ++opener=rightbelow\ split<CR>
   AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit):<C-u>diffthis<CR><C-w>x<C-w>w
   AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit):<C-u>diffthis<CR><C-w>x<C-w>w
 '''
@@ -957,11 +988,6 @@ hook_post_source = '''
   " imap <C-Space> <C-n>
 
   Autocmd InsertLeave * if !IsCommandLineWindow() | pclose | endif
-
-  " 進捗表示などで高速に画面が書き変わるとdenoがメモリを食いすぎるので端末ウィンドウ中のautocommandを無効化
-  if !g:vimrc#is_nvim && has('terminal')
-    Autocmd TerminalWinOpen * autocmd! ddc TextChangedT
-  endif
 '''
 
 [[plugins]]
