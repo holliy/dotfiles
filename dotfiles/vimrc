@@ -463,6 +463,7 @@ function! BDeleteSaveWindow(bn) abort "{{{
     " confirm qall
   endif
 
+  " 他に表示できるバッファがあるときに無名バッファを除外
   if len(filter(copy(listed_bufs), { _, b -> !empty(bufname(b)) })) >= 2
     let listed_bufs = filter(listed_bufs, { _, b -> !empty(bufname(b)) })
   endif
@@ -482,7 +483,6 @@ function! BDeleteSaveWindow(bn) abort "{{{
   endfor
 
   if buflisted(a:bn)
-    " 必要ないはず
     execute 'bdelete' a:bn
   endif
   call setbufvar(a:bn, '&bufhidden', save_bh)
@@ -811,6 +811,10 @@ nnoremap go `^
 
 nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
+
+nnoremap <silent> gf :<C-u>e %:h/<cfile><CR>
+nnoremap <silent> <C-w><C-f> :<C-u>split %:h/<cfile><CR>
+nnoremap <silent> <C-w>f :<C-u>split %:h/<cfile><CR>
 "}}}
 
 " search "{{{
@@ -830,7 +834,6 @@ noremap D "_d
 nnoremap DD "_dd
 noremap x "_x
 noremap X x
-xnoremap p "_dP
 sunmap c
 ounmap c
 sunmap D
@@ -884,6 +887,8 @@ xnoremap gs :s/
 
 nnoremap <silent> <Leader>a :<C-u>Lexplore<CR>
 
+" 誤爆防止
+nnoremap Z <Nop>
 nnoremap <silent> ZZ :<C-u>update<CR>
 nnoremap <silent> ZQ
     \ :<C-u>call BDeleteSaveWindow(<C-r>=v:count > 0 ? v:count : bufnr()<CR>)<CR>
@@ -918,12 +923,15 @@ nnoremap <silent> <Leader>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
 "}}}
 
-" insert / delete "{{{
+" insert / delete / paste "{{{
 inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
 
 cnoremap <C-g> <C-u>
 inoremap <C-k> <C-o>"_d$
+
+xnoremap p P
+xnoremap P I<C-r>=getreg(v:register)<CR><Esc>
 
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
@@ -1143,7 +1151,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     " heredocだと構文表示がダメになるので
     lua
         \ function write_stdout(data)
-        \   local uv = vim.loop
+        \   local uv = vim.uv or vim.loop
         \   local stdout = uv.new_tty(1, false)
         \
         \   stdout:write(data)

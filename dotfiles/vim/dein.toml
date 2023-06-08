@@ -1036,7 +1036,7 @@ hook_source = '''
   " neosnippet がソースになくても同名の候補でスニペットが展開されるのでv:completed_itemを見て展開しないようにする
   imap <expr> <CR>
       \ pumvisible() ?
-      \   v:completed_item.menu =~# '^snip\>' && neosnippet#expandable() ?
+      \   get(v:completed_item, 'menu', '') =~# '^snip\>' && neosnippet#expandable() ?
       \     '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   snoremap <silent> <CR> <C-r>"a<BS><C-r>"
   snoremap <silent> <BS> <C-r>_a<BS>
