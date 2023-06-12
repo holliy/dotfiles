@@ -12,6 +12,7 @@ vim = { target="~/.vim", type="symbolic" }
 
 [bash.files]
 bashrc = "~/.bashrc"
+inputrc = "~/.inputrc"
 
 [neovim.files]
 "config/nvim/init.vim" = { target="~/.config/nvim/init.vim", type="symbolic" }
