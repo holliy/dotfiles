@@ -812,9 +812,9 @@ nnoremap go `^
 nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
 
-nnoremap <silent> gf :<C-u>e %:h/<cfile><CR>
-nnoremap <silent> <C-w><C-f> :<C-u>split %:h/<cfile><CR>
-nnoremap <silent> <C-w>f :<C-u>split %:h/<cfile><CR>
+nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> <C-w><C-f> :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 "}}}
 
 " search "{{{
@@ -1455,8 +1455,6 @@ augroup END
 
 " plugin "{{{
 packadd! matchit
-
-let &runtimepath = g:vimrc#dotvim .. ',' .. &runtimepath
 
 " 画面切り替え前のメッセージを遅延させる
 augroup filetypedetect " Neovimで未定義エラーが出るので
