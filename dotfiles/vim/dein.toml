@@ -905,6 +905,7 @@ hook_post_source = '''
       \ },
       \ vim-lsp: #{
       \   mark: 'L',
+      \   minAutoCompleteLength: 0,
       \   sorters: ['sorter_rank', 'sorter_ascii']
       \ },
       \ file: #{
@@ -914,6 +915,7 @@ hook_post_source = '''
       \ },
       \ necovim: #{
       \   mark: 'vim',
+      \   minAutoCompleteLength: 0,
       \   sorters: ['sorter_rank', 'sorter_ascii']
       \ },
       \ neosnippet: #{ mark: 'snip' },
