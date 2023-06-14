@@ -873,10 +873,10 @@ repo = 'Shougo/context_filetype.vim'
 repo = 'Shougo/ddc.vim'
 depends = ['denops']
 hook_post_source = '''
-  if !exists('#denops_plugin_internal')
-    " denopsがサポートされてない
-    return
-  endif
+  " if !exists('#denops_plugin_internal')
+  "   " denopsがサポートされてない
+  "   return
+  " endif
 
   call ddc#custom#set_global({})
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
@@ -975,7 +975,7 @@ hook_post_source = '''
         \ })
   endif
 
-  call ddc#enable()
+  call ddc#enable(#{ context_filetype: 'context_filetype' })
 
   inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
   inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
@@ -1079,9 +1079,19 @@ repo = 'thinca/vim-partedit'
 hook_source = '''
   let g:partedit#opener = 'split'
 
+  function! OpenContext() abort
+    " {'filetype': 'vim', 'range': [[1114, 1], [1128, 90]]}
+    let context = context_filetype#get()
+    let ft = context.filetype
+    let lines = [context.range[0][0], context.range[1][0]]
+
+    call partedit#start(lines[0], lines[1], #{ filetype: ft })
+    nnoremap <silent><buffer> <Leader>p :<C-u>ParteditEnd<CR><C-w>c
+  endfunction
+
   Autocmd BufReadPost dein.toml let b:partedit_filetype = 'vim'
   Autocmd BufReadPost dein.toml let b:partedit_prefix = '\s*'
-  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p V<Plug>(textobj-indent-indent-i):Partedit<CR>:nnoremap <lt>silent><lt>buffer> <lt>Leader>p :<lt>C-u>ParteditEnd<lt>CR><lt>C-w>c<CR>
+  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p :<C-u>call OpenContext()<CR>
 '''
 
 [[plugins]]
