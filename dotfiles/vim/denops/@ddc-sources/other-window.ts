@@ -1,66 +1,13 @@
 import { GatherArguments } from 'https://deno.land/x/ddc_vim@v3.4.1/base/source.ts';
-import { Denops, fn } from 'https://deno.land/x/ddc_vim@v3.4.1/deps.ts';
+import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v3.4.1/deps.ts';
 import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v3.4.1/types.ts';
 
 type Params = {
-  include_current_filetype: boolean;
+  include_same_filetype: boolean;
   include_filetypes: string[];
   only_current_tabpage: boolean;
   only_viewport: boolean;
 };
-
-type WinInfo = {
-  botline: number;
-  bufnr: number;
-  quickfix: boolean;
-  terminal: boolean;
-  tabnr: number;
-  topline: number;
-  winid: number;
-  winnr: number;
-};
-
-function from1(max: number): number[] {
-  return [...new Array(max).keys()].map((n) => n + 1);
-}
-
-async function get_tabpages(
-  denops: Denops,
-  only_current_tabpage: boolean,
-): Promise<number[]> {
-  if (only_current_tabpage) {
-    return [await fn.tabpagenr(denops)];
-  }
-
-  return from1(await fn.tabpagenr(denops, '$'));
-}
-
-async function get_windows(denops: Denops, tn: number): Promise<number[]> {
-  const last_wn = await fn.tabpagewinnr(denops, tn, '$');
-  const wns = from1(last_wn);
-  const winids = await Promise.all(wns.map(async (wn) => {
-    return await fn.win_getid(denops, wn, tn);
-  }));
-
-  return winids;
-}
-
-async function get_wininfos(denops: Denops): Promise<{ [k: number]: WinInfo }> {
-  return Object.fromEntries(
-    (await fn.getwininfo(denops) as WinInfo[]).map((
-      winfo,
-    ) => [winfo.winid, winfo]),
-  );
-}
-
-async function get_bufinfos(
-  denops: Denops,
-): Promise<{ [k: number]: fn.BufInfo }> {
-  return Object.fromEntries(
-    (await fn.getbufinfo(denops, { bufloaded: true }))
-      .map((binfo) => [binfo.bufnr, binfo]),
-  );
-}
 
 function filetype_list(filetypes: string): string[] {
   return filetypes.split('.');
@@ -75,15 +22,15 @@ function is_filetype_include(
 
 async function get_lines(
   denops: Denops,
-  winfo: WinInfo,
-  binfo: fn.BufInfo,
+  wid: number,
   only_viewport: boolean,
 ): Promise<string[]> {
   const [top, bottom] = only_viewport
-    ? [winfo.topline, winfo.botline]
-    : [1, binfo.linecount];
+    ? [await fn.line(denops, 'w0', wid), await fn.line(denops, 'w$', wid)]
+    : [1, await fn.line(denops, '$', wid)];
 
-  return await fn.getbufline(denops, binfo.bufnr, top, bottom);
+  const wbn = await fn.winbufnr(denops, wid);
+  return await fn.getbufline(denops, wbn, top, bottom);
 }
 
 function get_words(str: string, pattern: string): string[] {
@@ -96,61 +43,61 @@ function get_words(str: string, pattern: string): string[] {
 
 export class Source extends BaseSource<Params> {
   override async gather(args: GatherArguments<Params>): Promise<Item[]> {
-    const tabs = await get_tabpages(
-      args.denops,
-      args.sourceParams.only_current_tabpage,
-    );
-    const winfo = await get_wininfos(args.denops);
-    const binfo = await get_bufinfos(args.denops);
+    const winids = await args.denops.eval(
+      'map(getwininfo(), { _, v -> v.winid })',
+    ) as number[];
+
+    const tn = await fn.tabpagenr(args.denops);
     const bn = await fn.bufnr(args.denops);
     const bft = filetype_list(
       await fn.getbufvar(args.denops, bn, '&filetype') as string,
     );
 
-    const winids: number[] = [];
-    for (const tn of tabs) {
-      for (const wid of await get_windows(args.denops, tn)) {
-        if (winfo[wid].bufnr === bn) {
-          continue;
-        }
-        if (winfo[wid].quickfix) {
-          continue;
-        }
-        if (winfo[wid].terminal) {
-          continue;
-        }
-
-        const wbn = winfo[wid].bufnr;
-        const wft = filetype_list(
-          await fn.getbufvar(
-            args.denops,
-            wbn,
-            '&filetype',
-          ) as string,
-        );
-        if (
-          args.sourceParams.include_current_filetype &&
-          is_filetype_include(wft, bft)
-        ) {
-          // nop
-        } else if (
-          is_filetype_include(wft, args.sourceParams.include_filetypes)
-        ) {
-          // nop
-        } else {
-          continue;
-        }
-
-        winids.push(wid);
+    const source_winids: number[] = [];
+    for (const wid of winids) {
+      const wtn = (await fn.win_id2tabwin(args.denops, wid))[0] as number;
+      if (args.sourceParams.only_current_tabpage && wtn !== tn) {
+        continue;
       }
+
+      const wbn = await fn.winbufnr(args.denops, wid);
+      if (wbn === bn) {
+        continue;
+      }
+
+      const wbtype = await op.buftype.getBuffer(args.denops, wbn);
+      if (wbtype === 'quickfix') {
+        continue;
+      }
+      if (wbtype === 'terminal') {
+        continue;
+      }
+
+      const wft = filetype_list(
+        await op.filetype.getBuffer(args.denops, wbn),
+      );
+      if (
+        args.sourceParams.include_same_filetype &&
+        is_filetype_include(wft, bft)
+      ) {
+        // nop
+      } else if (
+        args.sourceParams.include_filetypes.includes('*') ||
+        is_filetype_include(wft, args.sourceParams.include_filetypes)
+      ) {
+        // nop
+      } else {
+        continue;
+      }
+
+      source_winids.push(wid);
     }
 
-    const lines = (await Promise.all(winids.map(
+    const lines = (await Promise.all(source_winids.map(
       async (wid) =>
         await get_lines(
           args.denops,
-          winfo[wid],
-          binfo[winfo[wid].bufnr],
+          wid,
           args.sourceParams.only_viewport,
         ),
     ))).flat().flat();
@@ -165,8 +112,8 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
-      include_current_filetype: true,
-      include_filetypes: [],
+      include_same_filetype: true,
+      include_filetypes: ['*'],
       only_current_tabpage: false,
       only_viewport: true,
     };
