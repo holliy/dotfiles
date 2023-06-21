@@ -885,7 +885,10 @@ nnoremap g# <Nop>
 nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
+nmap <Leader>w <C-w>
+
 nnoremap <silent> <Leader>a :<C-u>Lexplore<CR>
+nnoremap <silent> <Leader>A :<C-u>Lexplore %:h<CR>
 
 " 誤爆防止
 nnoremap Z <Nop>
