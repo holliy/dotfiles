@@ -193,7 +193,7 @@ hook_post_source = '''
         \ )
   endfor "}}}
 
-  " imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+  " inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
   call mapset('i', 0, save_cr_mapping)
   call mapset('i', 0, save_tab_mapping)
 '''
@@ -719,7 +719,7 @@ hook_source = '''
   let g:undotree_SetFocusWhenToggle = 1
   let g:undotree_WindowLayout = 2
 
-  nmap <Leader>u :<C-u>UndotreeToggle<CR>
+  nnoremap <Leader>u :<C-u>UndotreeToggle<CR>
 '''
 
 [[plugins]]
@@ -853,12 +853,12 @@ hook_post_source = '''
 repo = 'rhysd/vim-operator-surround'
 depends = ['operator-user']
 hook_source = '''
-  nmap s <Plug>(operator-surround-append)
-  xmap s <Plug>(operator-surround-append)
-  nmap ds <Plug>(operator-surround-delete)a
-  nmap dsi <Plug>(operator-surround-delete)i
-  nmap cs <Plug>(operator-surround-replace)a
-  nmap csi <Plug>(operator-surround-replace)i
+  nnoremap s <Plug>(operator-surround-append)
+  xnoremap s <Plug>(operator-surround-append)
+  nnoremap ds <Plug>(operator-surround-delete)a
+  nnoremap dsi <Plug>(operator-surround-delete)i
+  nnoremap cs <Plug>(operator-surround-replace)a
+  nnoremap csi <Plug>(operator-surround-replace)i
 '''
 
 [[plugins]]
@@ -1031,14 +1031,14 @@ hook_source = '''
   " let g:neosnippet#enable_completed_snippet = 1
   " let g:neosnippet#enable_complete_done = 1
 
-  smap <expr> <Tab> neosnippet#jumpable() ?
+  snoremap <expr> <Tab> neosnippet#jumpable() ?
      \ '<Esc>a<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
-  imap <expr> <Tab>
+  inoremap <expr> <Tab>
       \ pumvisible() ?
       \   neosnippet#expandable_or_jumpable() ? '<Plug>(neosnippet_expand_or_jump)' : '' :
       \   neosnippet#jumpable() ? '<Plug>(neosnippet_jump)' : '<Plug>(vimrc_tab)'
   " neosnippet がソースになくても同名の候補でスニペットが展開されるのでv:completed_itemを見て展開しないようにする
-  imap <expr> <CR>
+  inoremap <expr> <CR>
       \ pumvisible() ?
       \   get(v:completed_item, 'menu', '') =~# '^snip\>' && neosnippet#expandable() ?
       \     '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
@@ -1120,20 +1120,21 @@ hook_source = '''
   AutocmdFT haskell let b:caw_wrap_oneline_comment = ['{-', '-}']
   AutocmdFT haskell let b:caw_wrap_multiline_comment = #{ left: '{-', right: '-}', top: '-', bottom: '-' }
 
-  " nmap <silent><expr> <Leader>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
-  nmap <Leader>cc <Plug>(caw:hatpos:toggle)
-  xmap <Leader>cc <Plug>(caw:hatpos:toggle)
+  " nnoremap <silent><expr> <Leader>cc '<C-c>V' .. (v:count <= 1 ? 'V' : v:count - 1 .. 'gj') .. '<Plug>(caw:hatpos:toggle)'
+  nnoremap <Leader>cc <Plug>(caw:hatpos:toggle)
+  xnoremap <Leader>cc <Plug>(caw:hatpos:toggle)
   noremap <silent> <Leader>ct :normal 1 cc<CR>
   sunmap <Leader>ct
   ounmap <Leader>ct
-  nmap <Leader>cu <Plug>(caw:hatpos:uncomment)
-  xmap <Leader>cu <Plug>(caw:hatpos:uncomment)
-  nmap <Leader>cd <Plug>(caw:hatpos:toggle:operator)
-  nmap <Leader>ca <Plug>(caw:dollarpos:toggle)
-  nmap <Leader>cw <Plug>(caw:wrap:toggle:operator)
-  xmap <Leader>cw <Plug>(caw:wrap:toggle)
-  nmap <Leader>co <Plug>(caw:jump:comment-next)
-  nmap <Leader>cO <Plug>(caw:jump:comment-prev)
+
+  nnoremap <Leader>cu <Plug>(caw:hatpos:uncomment)
+  xnoremap <Leader>cu <Plug>(caw:hatpos:uncomment)
+  nnoremap <Leader>cd <Plug>(caw:hatpos:toggle:operator)
+  nnoremap <Leader>ca <Plug>(caw:dollarpos:toggle)
+  nnoremap <Leader>cw <Plug>(caw:wrap:toggle:operator)
+  xnoremap <Leader>cw <Plug>(caw:wrap:toggle)
+  nnoremap <Leader>co <Plug>(caw:jump:comment-next)
+  nnoremap <Leader>cO <Plug>(caw:jump:comment-prev)
 '''
 
 [[plugins]]

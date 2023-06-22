@@ -955,9 +955,9 @@ inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
 inoremap <expr> <Plug>(vimrc_cancel-complete) pumvisible() ? '<C-e>' : ''
 
-imap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
-imap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
+inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
 inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
 "}}}
 
