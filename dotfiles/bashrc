@@ -61,11 +61,24 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
+alias cdl='cd -P'
+
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
 export PROMPT_COMMAND=('history -a' 'history -c' 'history -r')
+
+if [ -v TERM_PROGRAM ] && [ "$TERM_PROGRAM" == 'WezTerm' ]; then
+  osc_save_curdir()
+  {
+     printf "\e]7;file://%s\e\\" "$PWD"
+  }
+fi
+
+if command -v osc_save_curdir >/dev/null; then
+  export PROMPT_COMMAND+=('osc_save_curdir')
+fi
 
 findf() {
   dir=$1
