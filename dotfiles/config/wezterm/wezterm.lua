@@ -35,13 +35,13 @@ local config = {
     disable_default_key_bindings = true,
     -- disable_default_mouse_bindings = true,
     keys = {
-      { key = 'Insert', mods = 'SHIFT', action = act.PasteFrom 'PrimarySelection' },
-      { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
-      { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
-      { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
-      { key = 'F2', mods = 'CTRL', action = act.SpawnTab 'CurrentPaneDomain' },
-      { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowDebugOverlay },
-      { key = 'n', mods = 'CTRL|SHIFT', action = act.SpawnWindow },
+        { key = 'Insert', mods = 'SHIFT', action = act.PasteFrom 'PrimarySelection' },
+        { key = 'Insert', mods = 'CTRL', action = act.CopyTo 'PrimarySelection' },
+        { key = 'Tab', mods = 'CTRL', action = act.ActivateTabRelative(1) },
+        { key = 'Tab', mods = 'CTRL|SHIFT', action = act.ActivateTabRelative(-1) },
+        { key = 'F2', mods = 'CTRL', action = act.SpawnTab 'CurrentPaneDomain' },
+        { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowDebugOverlay },
+        { key = 'n', mods = 'CTRL|SHIFT', action = act.SpawnWindow },
     },
     mouse_bindings = {
         {
@@ -77,6 +77,9 @@ local config = {
 if wezterm.target_triple == 'x86_64-pc-windows-msvc' then
     config.default_prog = {"wsl.exe", "~", --[[ "-e", ]] "/bin/bash", "--login"}
     config.ssh_backend = "Ssh2"
+
+    config.wsl_domains = wezterm.default_wsl_domains()
+    config.default_domain = 'WSL:Ubuntu'
 else
     config.default_prog = {"bash", "--login"}
 end
