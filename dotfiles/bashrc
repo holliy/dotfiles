@@ -81,9 +81,20 @@ if command -v osc_save_curdir >/dev/null; then
 fi
 
 findf() {
-  dir=$1
+  dir=($1)
   shift
-  find ${dir} -type f $*
+  while (( $# > 0 )); do
+    case $1 in
+      -*)
+        break
+        ;;
+      *)
+        dir+=($1)
+        shift
+    esac
+  done
+
+  find ${dir[@]} -type f $*
 }
 
 # enable programmable completion features (you don't need to enable
