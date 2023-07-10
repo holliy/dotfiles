@@ -116,19 +116,19 @@ if type "gh" > /dev/null 2>&1; then
 fi
 
 _fzf_compgen_path() {
-  find -L $1 -type f -not -readable -prune -o \
+  find -L "$1" -not -readable -prune -o \
     -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
     -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-    -prune -o -name site-packages -prune -o \
-    -print | sed 's@^\./@@'
+    -prune -o -name site-packages -prune -o -name vendor -prune -o \
+    -not -path "$1" -print | sed 's@^\./@@'
 }
 
 _fzf_compgen_dir() {
-  find -L $1 -type d -not -readable -prune -o \
+  find -L "$1" -not -readable -prune -o \
     -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
     -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-    -prune -o -name site-packages -prune -o \
-    -print | sed 's@^\./@@'
+    -prune -o -name site-packages -prune -o -name vendor -prune -o \
+    -type d -a -not -path "$1" -print | sed 's@^\./@@'
 }
 
 if [ -f ~/.fzf.bash ]; then
@@ -141,6 +141,8 @@ else
     . /usr/share/doc/fzf/examples/completion.bash
   fi
 fi
+
+_fzf_setup_completion dir cdl
 
 GIT_PS1_STATESEPARATOR=""
 GIT_PS1_SHOWDIRTYSTATE=1
