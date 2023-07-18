@@ -669,8 +669,10 @@ hook_source = '''
   command! -nargs=* -bang -bar G GinStatus<bang> <args>
   command! -nargs=* -bang -bar GB GinBuffer<bang> <args>
   " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
-  command! -nargs=1 -complete=file -bar DiffIndex call DiffRevision('INDEX', v:null, <f-args>)
-  command! -nargs=1 -complete=file -bar DiffStage call DiffRevision('HEAD', 'INDEX', <f-args>)
+  " command! -nargs=1 -complete=file -bar DiffIndex call DiffRevision('INDEX', v:null, <f-args>)
+  " command! -nargs=1 -complete=file -bar DiffStage call DiffRevision('HEAD', 'INDEX', <f-args>)
+  command! -nargs=1 -complete=file -bar DiffIndex execute 'GinPatch& ++opener=tabnew ++no-head' fnamemodify(<f-args>, ':p') | wincmd l
+  command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch& ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p')
 
   nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
   nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
@@ -704,6 +706,9 @@ hook_source = '''
 [[plugins]]
 repo = 'LumaKernel/ddc-source-file'
 depends = ['ddc']
+
+[[plugins]]
+repo = 'machakann/vim-vimhelplint'
 
 [[plugins]]
 repo = 'mattn/benchvimrc-vim'
@@ -834,7 +839,9 @@ repo = 'rbtnn/vim-ambiwidth'
 [[plugins]]
 repo = 'rhysd/conflict-marker.vim'
 hook_source = '''
+  let g:conflict_marker_enable_mapping = 0
   let g:conflict_marker_highlight_group = ''
+  let g:conflict_marker_hooks = #{ on_detected: expand('<SID>') .. 'conflict_marker_on_detected' }
 
   Highlight link ConflictMarkerBegin Error
   Highlight link ConflictMarkerEnd Error
@@ -842,6 +849,11 @@ hook_source = '''
   Highlight link ConflictMarkerCommonAncestors Error
   Highlight link ConflictMarkerCommonAncestorsHunk Folded
   Highlight link ConflictMarkerTheirs DiffAdd
+
+  function! s:conflict_marker_on_detected() abort
+    nnoremap <buffer> ]x <Plug>(conflict-marker-next-hunk)
+    nnoremap <buffer> [x <Plug>(conflict-marker-prev-hunk)
+  endfunction
 '''
 hook_post_source = '''
   " 読み込まれてないときがある？
@@ -892,9 +904,9 @@ hook_post_source = '''
   call ddc#custom#patch_global('sourceOptions', #{
       \ _: #{
       \   dup: 'keep',
-      \   ignoreCase: v:true,
       \   matchers: ['matcher_head'],
       \   sorters: ['sorter_rank'],
+      \   ignoreCase: v:true,
       \   minAutoCompleteLength: 1,
       \   timeout: 5000
       \ },
@@ -904,18 +916,19 @@ hook_post_source = '''
       \ },
       \ vim-lsp: #{
       \   mark: 'L',
+      \   forceCompletionPattern: '(::|->|\.)',
       \   minAutoCompleteLength: 0,
       \   sorters: ['sorter_rank', 'sorter_ascii']
       \ },
       \ file: #{
       \   sorters: ['sorter_ascii'],
-      \   isVolatile: v:true,
-      \   forceCompletionPattern: '/'
+      \   forceCompletionPattern: '/',
+      \   isVolatile: v:true
       \ },
       \ necovim: #{
       \   mark: 'vim',
-      \   minAutoCompleteLength: 0,
-      \   sorters: ['sorter_rank', 'sorter_ascii']
+      \   sorters: ['sorter_rank', 'sorter_ascii'],
+      \   minAutoCompleteLength: 0
       \ },
       \ neosnippet: #{ mark: 'snip' },
       \ other-window: #{
@@ -985,7 +998,8 @@ hook_post_source = '''
       \ ddc#map#manual_complete(#{
       \   sources: ['file'], ui: 'native'
       \ })
-  inoremap <silent><expr> <C-l>
+  inoremap <C-l> <Nop>
+  inoremap <silent><expr> <C-l>s
       \ ddc#map#manual_complete(#{
       \   sources: ['neosnippet'], ui: 'native'
       \ })
