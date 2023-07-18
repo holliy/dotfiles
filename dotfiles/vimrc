@@ -761,6 +761,9 @@ xnoremap za zo
 "}}}
 
 " scroll "{{{
+nnoremap zH zt
+nnoremap zL zb
+
 nnoremap <expr> <C-e>
     \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
 nnoremap <expr> <C-y>
@@ -886,6 +889,8 @@ nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
 nmap <Leader>w <C-w>
+nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<CR>
+nmap <silent> <C-w><C-z> <C-w>z
 
 nnoremap <silent> <Leader>a :<C-u>Lexplore<CR>
 nnoremap <silent> <Leader>A :<C-u>Lexplore %:h<CR>
