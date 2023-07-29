@@ -194,8 +194,12 @@ hook_post_source = '''
   endfor "}}}
 
   " inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
-  call mapset('i', 0, save_cr_mapping)
-  call mapset('i', 0, save_tab_mapping)
+  if !empty(save_cr_mapping)
+    call mapset('i', 0, save_cr_mapping)
+  endif
+  if !empty(save_tab_mapping)
+    call mapset('i', 0, save_tab_mapping)
+  endif
 '''
 
 # [[plugins]]
@@ -220,7 +224,8 @@ hook_post_source = '''
 [[plugins]]
 repo = 'editorconfig/editorconfig-vim'
 hook_source = '''
-  let g:EditorConfig_enable_for_new_buf = 1
+  " バッファ作成時にmodifiedになるので一旦無効化
+  " let g:EditorConfig_enable_for_new_buf = 1
 '''
 hook_post_source = '''
   function! s:editorconfig_enabled(config) abort
@@ -265,6 +270,10 @@ repo = 'itchyny/lightline.vim'
 hook_source = '''
   " g:lightline "{{{
   let g:lightline = #{
+      \ enable: #{
+      \   statusline: 1,
+      \   tabline: 1,
+      \ },
       \ colorscheme: 'landscape',
       \ active: #{
       \   left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
@@ -320,7 +329,7 @@ hook_source = '''
       \ }
 
   " 使うけど'statusline'を自動で設定されたくないので
-  let g:lightline['enable'] = #{ statusline: 0 }
+  let g:lightline.enable.statusline = 0
 
   if g:vimrc#is_windows && g:vimrc#is_gui
     let g:lightline.subseparator = #{ left: "|", right: "|" }
@@ -639,6 +648,7 @@ hook_source = '''
       \ ]
 
   let g:gin_status_default_args = ['++opener=tabnew']
+  let g:gin_chaperon_default_args = ['++opener=tabnew']
 
   function! DiffRevision(commit1, commit2, path)
     " 前提: commit2が新しい
