@@ -815,6 +815,11 @@ nnoremap go `^
 nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
 
+nnoremap <expr> <C-w>w v:count > 0 ? '<C-w>w' : '<C-w>p'
+nnoremap <C-w>p <C-w>P
+nnoremap <C-w>j <C-w>w
+nnoremap <C-w>k <C-w>W
+
 nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nnoremap <silent> <C-w><C-f> :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
