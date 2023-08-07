@@ -29,4 +29,8 @@
 	listadded = diff --cached --name-only --relative --diff-filter=A
 	listuntracked = ls-files --others --exclude-standard
 	pushf = push --force-with-lease --force-if-includes
+	synonym = switch --no-track --create
+	# show branch list command from bash-completions
+	branches = for-each-ref --format="%(refname:strip=2)" "refs/heads/*" "refs/heads/*/**"
+	remote-branches = for-each-ref --format="%(refname:strip=2)" "refs/remotes/*" "refs/remotes/*/**"
 # vi: noet ts=4 sw=4 ft=gitconfig:
