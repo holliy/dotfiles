@@ -80,6 +80,12 @@ if command -v osc_save_curdir >/dev/null; then
   export PROMPT_COMMAND+=('osc_save_curdir')
 fi
 
+if type "vim" > /dev/null 2>&1; then
+  export EDITOR=vim
+elif type "vi" > /dev/null 2>&1; then
+  export EDITOR=vi
+fi
+
 findf() {
   dir=($1)
   shift
