@@ -25,8 +25,10 @@ hook_post_source = '''
       \   #{ start: '[', end: ']' }
       \ ]
   let comments = [
-      \   #{ start: '/*', end: '*/', head: '*',
-      \     filetype: ['c', 'cpp', 'cs', 'java', 'rust', 'scala'] },
+      \   #{
+      \     start: '/*', end: '*/', head: '*',
+      \     filetype: ['c', 'cpp', 'cs', 'java', 'rust', 'scala']
+      \   },
       \   #{ start: '{-', end: '-}', with_bracket: 1, filetype: ['haskell'] },
       \   #{ start: '{-#', end: '#-}', filetype: ['haskell'] },
       \ ]
@@ -187,7 +189,8 @@ hook_post_source = '''
   " 補完メニューを開いている間に入力したときにleximaのマッピングの途中でCompleteDoneが発火してそう
   " 先にCompleteDoneを処理させると選択モードになる場合があって<C-]>が誤爆するので適当に入力して選択モードを抜ける
   for char in keys(lexima#insmode#get_rules())
-    execute printf("inoremap <expr><silent> %s (pumvisible() ? '<C-y>a<BS>' : '') .. lexima#expand(%s, 'i')",
+    execute printf(
+        \   "inoremap <expr><silent> %s (pumvisible() ? '<C-y>a<BS>' : '') .. lexima#expand(%s, 'i')",
         \   char,
         \   string(lexima#string#to_mappable(char))
         \ )
@@ -270,62 +273,62 @@ repo = 'itchyny/lightline.vim'
 hook_source = '''
   " g:lightline "{{{
   let g:lightline = #{
-      \ enable: #{
-      \   statusline: 1,
-      \   tabline: 1,
-      \ },
-      \ colorscheme: 'landscape',
-      \ active: #{
-      \   left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
-      \   right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
-      \ },
-      \ inactive: #{
-      \   left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
-      \   right: [['lineinfo'], ['percent']]
-      \ },
-      \ tabline: #{
-      \   left: [['buffers']],
-      \   right: [['close']]
-      \ },
-      \ tab: #{
-      \   active: ['tabnum', 'filename', 'modified'],
-      \   inactive: ['bufnum', 'filename', 'modified'],
-      \ },
-      \ component: #{
-      \   close: '%999X x ',
-      \   lineinfo: "L %3l:%-2v",
-      \   paste: '%{&paste?"P":""}',
-      \   percent: '%4P',
-      \   showcmd: exists('+showcmdloc') ? '%S' : ''
-      \ },
-      \ component_function: #{
-      \   git: 'LightlineGit',
-      \   directory: 'LightlineDirectory',
-      \   filename: 'LightlineFilename',
-      \   fileinfo: 'LightlineFileinfo',
-      \   filetype: 'LightlineFiletype',
-      \   mode: 'LightlineMode',
-      \   modified: 'LightlineModified',
-      \   readonly: 'LightlineReadonly'
-      \ },
-      \ component_expand: #{
-      \   buffers: 'LightlineBuffers',
-      \   trailing: 'LightlineTrailingSpaceWarning'
-      \ },
-      \ component_function_visible_condition: #{
-      \   directory: '&filetype!=#"netrw"'
-      \ },
-      \ component_type: #{
-      \   buffers: 'tabsel',
-      \   trailing: 'error'
-      \ },
-      \ tab_component_function: #{
-      \   bufnum: 'lightline#tab#tabnum',
-      \   filename: 'LightlineFilenameB',
-      \   modified: 'LightlineModified',
-      \   tabnum: 'LightlineTabnum'
-      \ },
-      \ separator: #{ left: "", right: "" },
+      \   enable: #{
+      \     statusline: 1,
+      \     tabline: 1,
+      \   },
+      \   colorscheme: 'landscape',
+      \   active: #{
+      \     left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \     right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
+      \   },
+      \   inactive: #{
+      \     left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
+      \     right: [['lineinfo'], ['percent']]
+      \   },
+      \   tabline: #{
+      \     left: [['buffers']],
+      \     right: [['close']]
+      \   },
+      \   tab: #{
+      \     active: ['tabnum', 'filename', 'modified'],
+      \     inactive: ['bufnum', 'filename', 'modified'],
+      \   },
+      \   component: #{
+      \     close: '%999X x ',
+      \     lineinfo: "L %3l:%-2v",
+      \     paste: '%{&paste?"P":""}',
+      \     percent: '%4P',
+      \     showcmd: exists('+showcmdloc') ? '%S' : ''
+      \   },
+      \   component_function: #{
+      \     git: 'LightlineGit',
+      \     directory: 'LightlineDirectory',
+      \     filename: 'LightlineFilename',
+      \     fileinfo: 'LightlineFileinfo',
+      \     filetype: 'LightlineFiletype',
+      \     mode: 'LightlineMode',
+      \     modified: 'LightlineModified',
+      \     readonly: 'LightlineReadonly'
+      \   },
+      \   component_expand: #{
+      \     buffers: 'LightlineBuffers',
+      \     trailing: 'LightlineTrailingSpaceWarning'
+      \   },
+      \   component_function_visible_condition: #{
+      \     directory: '&filetype!=#"netrw"'
+      \   },
+      \   component_type: #{
+      \     buffers: 'tabsel',
+      \     trailing: 'error'
+      \   },
+      \   tab_component_function: #{
+      \     bufnum: 'lightline#tab#tabnum',
+      \     filename: 'LightlineFilenameB',
+      \     modified: 'LightlineModified',
+      \     tabnum: 'LightlineTabnum'
+      \   },
+      \   separator: #{ left: "", right: "" },
       \ }
 
   " 使うけど'statusline'を自動で設定されたくないので
@@ -794,7 +797,8 @@ hook_source = '''
     highlight LspErrorVirtualText ctermfg=red ctermbg=61 guifg=red guibg=royalblue4
     highlight LspWarningVirtualText ctermfg=yellow ctermbg=61 guifg=yellow2 guibg=royalblue4
     execute 'highlight LspInformationVirtualText'
-        \ printf('ctermfg=%s ctermbg=61 guifg=%s guibg=royalblue4',
+        \ printf(
+        \   'ctermfg=%s ctermbg=61 guifg=%s guibg=royalblue4',
         \   hl_question.ctermfg, hl_question_guifg
         \ )
     highlight link LspHintVirtualText LspInformationVirtualText
@@ -819,12 +823,20 @@ hook_source = '''
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened
         \ if lsp#document_hover_preview_winid() isnot v:null |
-        \   call nvim_win_set_option(lsp#document_hover_preview_winid(), 'winhighlight', 'MatchParen') |
+        \   call nvim_win_set_option(
+        \     lsp#document_hover_preview_winid(),
+        \     'winhighlight',
+        \     'MatchParen'
+        \   ) |
         \ endif
   else
     Autocmd User lsp_float_opened
         \ if lsp#document_hover_preview_winid() isnot v:null |
-        \   call setwinvar(lsp#document_hover_preview_winid(), '&wincolor', 'MatchParen') |
+        \   call setwinvar(
+        \     lsp#document_hover_preview_winid(),
+        \     '&wincolor',
+        \     'MatchParen'
+        \   ) |
         \ endif
   endif
 '''
@@ -912,49 +924,49 @@ hook_post_source = '''
       \ })
 
   call ddc#custom#patch_global('sourceOptions', #{
-      \ _: #{
-      \   dup: 'keep',
-      \   matchers: ['matcher_head'],
-      \   sorters: ['sorter_rank'],
-      \   ignoreCase: v:true,
-      \   minAutoCompleteLength: 1,
-      \   timeout: 5000
-      \ },
-      \ around: #{
-      \   mark: 'A',
-      \   minAutoCompleteLength: 2
-      \ },
-      \ vim-lsp: #{
-      \   mark: 'L',
-      \   forceCompletionPattern: '(::|->|\.)',
-      \   minAutoCompleteLength: 0,
-      \   sorters: ['sorter_rank', 'sorter_ascii']
-      \ },
-      \ file: #{
-      \   sorters: ['sorter_ascii'],
-      \   forceCompletionPattern: '/',
-      \   isVolatile: v:true
-      \ },
-      \ necovim: #{
-      \   mark: 'vim',
-      \   sorters: ['sorter_rank', 'sorter_ascii'],
-      \   minAutoCompleteLength: 0
-      \ },
-      \ neosnippet: #{ mark: 'snip' },
-      \ other-window: #{
-      \   mark: 'win',
-      \   minAutoCompleteLength: 2
-      \ }
+      \   _: #{
+      \     dup: 'keep',
+      \     matchers: ['matcher_head'],
+      \     sorters: ['sorter_rank'],
+      \     ignoreCase: v:true,
+      \     minAutoCompleteLength: 1,
+      \     timeout: 5000
+      \   },
+      \   around: #{
+      \     mark: 'A',
+      \     minAutoCompleteLength: 2
+      \   },
+      \   vim-lsp: #{
+      \     mark: 'L',
+      \     forceCompletionPattern: '(::|->|\.)',
+      \     minAutoCompleteLength: 0,
+      \     sorters: ['sorter_rank', 'sorter_ascii']
+      \   },
+      \   file: #{
+      \     sorters: ['sorter_ascii'],
+      \     forceCompletionPattern: '/',
+      \     isVolatile: v:true
+      \   },
+      \   necovim: #{
+      \     mark: 'vim',
+      \     sorters: ['sorter_rank', 'sorter_ascii'],
+      \     minAutoCompleteLength: 0
+      \   },
+      \   neosnippet: #{ mark: 'snip' },
+      \   other-window: #{
+      \     mark: 'win',
+      \     minAutoCompleteLength: 2
+      \   }
       \ })
   call ddc#custom#patch_global('sourceParams', #{
-      \ around: #{
-      \   maxSize: 500
-      \ },
-      \ file: #{
-      \   displayCwd: 'c',
-      \   displayBuf: 'b',
-      \   filenameChars: '\-@.[:alnum:]_~'
-      \ }
+      \   around: #{
+      \     maxSize: 500
+      \   },
+      \   file: #{
+      \     displayCwd: 'c',
+      \     displayBuf: 'b',
+      \     filenameChars: '\-@.[:alnum:]_~'
+      \   }
       \ })
 
   if dein#is_available('skkeleton')
@@ -989,14 +1001,14 @@ hook_post_source = '''
     execute printf('Autocmd User skkeleton-disable-pre call %sskkeleton_disable()', expand('<SID>'))
 
     call ddc#custom#patch_global('sourceOptions', #{
-        \ skkeleton: #{
-        \   mark: 'SKK',
-        \   matchers: ['skkeleton'],
-        \   sorters: [],
-        \   converters: [],
-        \   minAutoCompleteLength: 1,
-        \   isVolatile: v:true
-        \ }
+        \   skkeleton: #{
+        \     mark: 'SKK',
+        \     matchers: ['skkeleton'],
+        \     sorters: [],
+        \     converters: [],
+        \     minAutoCompleteLength: 1,
+        \     isVolatile: v:true
+        \   }
         \ })
   endif
 

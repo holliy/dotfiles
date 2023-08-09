@@ -701,11 +701,11 @@ else
 endif "}}}
 
 " バックアップフォルダ等を作成 "{{{
-for s:d in filter(
-    \ [&backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
+for s:d in filter([
+    \   &backup || &writebackup || &patchmode !=# '' ? 'backupdir' : '',
     \   &swapfile ? 'directory' : '', &undofile ? 'undodir' : '',
-    \   &loadplugins ? 'packpath' : '', 'viewdir'],
-    \ { _, v -> v !=# '' })
+    \   &loadplugins ? 'packpath' : '', 'viewdir'
+    \ ], { _, v -> !empty(v) })
   if s:d != '' && !s:mkdir(eval('&' .. s:d))
     execute 'set' s:d .. '&'
   endif
@@ -1045,7 +1045,8 @@ execute 'set fileencodings+=' .. &encoding
 " 日本語を含まない場合は fileencoding に encoding を使うようにする
 Autocmd BufReadPost,FileReadPost,FilterReadPost *
     \ if &fileencoding =~# 'iso-2022-jp' && search("[^\x01-\x7e]", 'n', 0, 1000) == 0 |
-    \   let &fileencoding = &encoding | endif "}}}
+    \   let &fileencoding = &encoding |
+    \ endif "}}}
 
 " terminal "{{{
 " https://ttssh2.osdn.jp/manual/4/ja/usage/tips/vim.html
@@ -1473,7 +1474,7 @@ packadd! matchit
 augroup filetypedetect " Neovimで未定義エラーが出るので
 augroup END
 let s:msg = execute([
-    \   'source ' .. g:vimrc#dotvim .. '/dein.vim',
+    \   'source ' .. g:vimrc#dotvim .. '/dein.vim'
     \ ], 'silent')
 Autocmd VimEnter * ++once
     \ for s:line in split(s:msg, "\n") |
