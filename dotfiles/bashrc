@@ -121,6 +121,8 @@ if type "gh" > /dev/null 2>&1; then
   eval "$(gh completion -s bash)"
 fi
 
+export FZF_DEFAULT_OPTS='--height 10 --reverse'
+
 _fzf_compgen_path() {
   find -L "$1" -not -readable -prune -o \
     -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
