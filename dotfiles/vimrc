@@ -960,12 +960,15 @@ nnoremap <C-CR> i<CR><Esc>
 inoremap <Plug>(vimrc_cr) <CR>
 inoremap <Plug>(vimrc_tab) <Tab>
 snoremap <Plug>(vimrc_tab) <Tab>
-inoremap <Plug>(vimrc_complete-select) <C-y>
+inoremap <expr> <Plug>(vimrc_complete-next) pumvisible() ? '<C-n>' : ''
+inoremap <expr> <Plug>(vimrc_complete-prev) pumvisible() ? '<C-p>' : ''
+inoremap <expr> <Plug>(vimrc_complete-manual_complete) pumvisible() ? '' : '<C-n>'
+inoremap <expr> <Plug>(vimrc_complete-confirm) pumvisible() ? '<C-y>' : ''
 inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
 inoremap <expr> <Plug>(vimrc_cancel-complete) pumvisible() ? '<C-e>' : ''
 
-inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
 inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
 inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'

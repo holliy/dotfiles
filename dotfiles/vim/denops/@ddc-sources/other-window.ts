@@ -1,6 +1,8 @@
-import { GatherArguments } from 'https://deno.land/x/ddc_vim@v3.4.1/base/source.ts';
-import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v3.4.1/deps.ts';
-import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v3.4.1/types.ts';
+import { GatherArguments } from 'https://deno.land/x/ddc_vim@v4.0.4/base/source.ts';
+import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v4.0.4/deps.ts';
+import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v4.0.4/types.ts';
+import { convertKeywordPattern } from 'https://deno.land/x/ddc_vim@v4.0.4/util.ts';
+import { ensure, is } from 'https://deno.land/x/unknownutil@v3.4.0/mod.ts';
 
 type Params = {
   include_same_filetype: boolean;
@@ -43,19 +45,23 @@ function get_words(str: string, pattern: string): string[] {
 
 export class Source extends BaseSource<Params> {
   override async gather(args: GatherArguments<Params>): Promise<Item[]> {
-    const winids = await args.denops.eval(
-      'map(getwininfo(), { _, v -> v.winid })',
-    ) as number[];
+    const winids = ensure(
+      await args.denops.eval('map(getwininfo(), { _, v -> v.winid })'),
+      is.ArrayOf(is.Number),
+    );
 
     const tn = await fn.tabpagenr(args.denops);
     const bn = await fn.bufnr(args.denops);
     const bft = filetype_list(
-      await fn.getbufvar(args.denops, bn, '&filetype') as string,
+      await op.filetype.getBuffer(args.denops, bn),
     );
 
     const source_winids: number[] = [];
     for (const wid of winids) {
-      const wtn = (await fn.win_id2tabwin(args.denops, wid))[0] as number;
+      const wtn = ensure(
+        (await fn.win_id2tabwin(args.denops, wid))[0],
+        is.Number,
+      );
       if (args.sourceParams.only_current_tabpage && wtn !== tn) {
         continue;
       }
@@ -93,19 +99,24 @@ export class Source extends BaseSource<Params> {
       source_winids.push(wid);
     }
 
-    const lines = (await Promise.all(source_winids.map(
-      async (wid) =>
-        await get_lines(
+    const words = (await Promise.all(source_winids.map(
+      async (wid) => {
+        const lines = await get_lines(
           args.denops,
           wid,
           args.sourceParams.only_viewport,
-        ),
-    ))).flat().flat();
+        );
+        const wbn = await fn.winbufnr(args.denops, wid);
+        const keywordPattern = await convertKeywordPattern(
+          args.denops,
+          args.sourceOptions.keywordPattern,
+          wbn,
+        );
 
-    const str = lines.length > 0 ? lines.join(' ') : '';
-
-    const words: Item[] = get_words(str, args.options.keywordPattern)
-      .map((word) => ({ word }));
+        return get_words(lines.join(' '), keywordPattern)
+          .map((word) => ({ word }));
+      },
+    ))).flat();
 
     return words;
   }

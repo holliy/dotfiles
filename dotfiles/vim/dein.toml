@@ -196,7 +196,7 @@ hook_post_source = '''
         \ )
   endfor "}}}
 
-  " inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+  " inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
   if !empty(save_cr_mapping)
     call mapset('i', 0, save_cr_mapping)
   endif
@@ -913,10 +913,12 @@ hook_post_source = '''
 
   call ddc#custom#set_global({})
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
+
+  let g:ddc_display_ui = 'native'
   call ddc#custom#patch_global('ui', 'none')
+  " call ddc#custom#patch_global('ui', g:ddc_display_ui)
 
   call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'other-window'])
-  call ddc#custom#patch_filetype('vim', 'specialBufferCompletion', v:true)
   call ddc#custom#patch_filetype('vim', 'sourceParams', #{
       \   other-window: #{
       \     include_filetypes: ['help']
@@ -981,7 +983,7 @@ hook_post_source = '''
       endif
 
       call ddc#custom#set_buffer(#{
-          \   ui: 'native',
+          \   ui: g:ddc_display_ui,
           \   sources: ['skkeleton', 'around'],
           \   keywordPattern: '[ぁ-ゖァ-ヶー]+',
           \   sourceOptions: #{
@@ -1014,16 +1016,17 @@ hook_post_source = '''
 
   call ddc#enable(#{ context_filetype: 'context_filetype' })
 
-  inoremap <silent><expr> <C-n> pumvisible() ? '<C-n>' : ddc#map#complete('native')
-  inoremap <silent><expr> <C-p> pumvisible() ? '<C-p>' : ddc#map#complete('native')
+  inoremap <silent><expr> <C-n> pumvisible() ? '<Plug>(vimrc_complete-next)' : '<Plug>(vimrc_complete-manual_complete)'
+  inoremap <silent><expr> <C-p> pumvisible() ? '<Plug>(vimrc_complete-prev)' : '<Plug>(vimrc_complete-manual_complete)'
+  inoremap <silent><expr> <Plug>(vimrc_complete-manual_complete) ddc#map#complete(g:ddc_display_ui)
   inoremap <silent><expr> <Plug>(vimrc_complete-file)
       \ ddc#map#manual_complete(#{
-      \   sources: ['file'], ui: 'native'
+      \   sources: ['file'], ui: g:ddc_display_ui
       \ })
   inoremap <C-l> <Nop>
   inoremap <silent><expr> <C-l>s
       \ ddc#map#manual_complete(#{
-      \   sources: ['neosnippet'], ui: 'native'
+      \   sources: ['neosnippet'], ui: g:ddc_display_ui
       \ })
   " imap <C-Space> <C-n>
 
@@ -1054,6 +1057,10 @@ depends = ['ddc']
 repo = 'Shougo/ddc-ui-none'
 depends = ['ddc']
 
+# [[plugins]]
+# repo = 'Shougo/ddc-ui-pum'
+# depends = ['ddc', 'pum']
+
 [[plugins]]
 repo = 'Shougo/neco-vim'
 depends = ['ddc']
@@ -1077,7 +1084,7 @@ hook_source = '''
   inoremap <expr> <CR>
       \ pumvisible() ?
       \   get(v:completed_item, 'menu', '') =~# '^snip\>' && neosnippet#expandable() ?
-      \     '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-select)' : '<Plug>(vimrc_cr)'
+      \     '<Plug>(neosnippet_expand)' : '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
   snoremap <silent> <CR> <C-r>"a<BS><C-r>"
   snoremap <silent> <BS> <C-r>_a<BS>
 
@@ -1095,6 +1102,19 @@ merged = 0
 hook_source = '''
   let g:neosnippet#snippets_directory = g:dein#plugin.path .. '/neosnippet'
 '''
+
+# [[plugins]]
+# repo = 'Shougo/pum.vim'
+# hook_source = '''
+#   " WIP
+#   inoremap <expr> <Plug>(vimrc_complete-next) pum#visible() ? pum#map#insert_relative(1, 'loop') : ''
+#   inoremap <expr> <Plug>(vimrc_complete-prev) pum#visible() ? pum#map#insert_relative(-1, 'loop') : ''
+# '''
+# hook_post_source = '''
+#   " WIP
+#   call pum#set_option(#{
+#       \ })
+# '''
 
 [[plugins]]
 repo = 'shun/ddc-source-vim-lsp'
@@ -1125,6 +1145,10 @@ hook_source = '''
 
     call partedit#start(lines[0], lines[1], #{ filetype: ft })
     nnoremap <silent><buffer> <Leader>p :<C-u>ParteditEnd<CR><C-w>c
+
+    if dein#is_available('ddc')
+      call ddc#custom#patch_buffer('specialBufferCompletion', v:true)
+    endif
   endfunction
 
   Autocmd BufReadPost dein.toml let b:partedit_filetype = 'vim'
