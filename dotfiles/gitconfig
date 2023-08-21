@@ -11,6 +11,7 @@
 	algorithm = histogram
 	indentHeuristic = true
 [log]
+	date = iso8601
 	decorate = short
 [alias]
 	partialclone = clone --filter=blob:none
@@ -21,7 +22,7 @@
 	diffs = diff --stat
 	logline = log --oneline --graph
 	s = status
-	sa = status --ignored
+	sa = status --ignored --untracked-files=normal
 	detail = show --format=fuller --stat
 	detailpatch = show --format=fuller
 	listmodified = diff --name-only --relative --diff-filter=M
