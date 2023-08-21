@@ -56,7 +56,7 @@ endif "}}}
 runtime! plugin/**/*.vim
 call dein#call_hook('source')
 
-Autocmd BufReadPost dein.toml call dein#toml#syntax()
+Autocmd BufReadPost dein.toml,dein/*.toml call dein#toml#syntax()
 
 Autocmd VimEnter * ++once call dein#call_hook('post_source')
 "}}}

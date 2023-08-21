@@ -440,6 +440,11 @@ function! BDeleteSaveWindow(bn) abort "{{{
     return []
   endif
 
+  if getbufvar(a:bn, '&modified')
+    " バッファ削除時のプロンプトが<silent>なマッピングで表示されないので回避
+    return []
+  endif
+
   let save_bh = getbufvar(a:bn, '&bufhidden')
   if save_bh !=# 'wipe'
     call setbufvar(a:bn, '&bufhidden', 'delete')
@@ -586,7 +591,7 @@ set backup backupskip+=*~,*.o
 let &backupdir = g:vimrc#dotvim .. '/.backup'
 SetG breakindent breakindentopt=shift:2
 set browsedir=buffer
-SetG complete-=u | set completeopt=menuone,longest,preview pumheight=8
+SetG complete-=u | set completeopt=menuone,noselect,preview pumheight=8
 set cmdheight=2
 set confirm
 SetG nocursorline
@@ -758,6 +763,9 @@ snoremap jk <Esc>
 
 " fold "{{{
 xnoremap za zo
+
+" xnoremap <expr> zc 'zx' ..
+"    \ index([min([foldclosed('`<'), foldclosed('`>')]), max([foldclosedend('`<'), foldclosedend('`>')])], line('.')) > 0 ? '<Esc>' : 'zo'
 "}}}
 
 " scroll "{{{
@@ -768,10 +776,10 @@ nnoremap <expr> <C-e>
     \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
 nnoremap <expr> <C-y>
     \ '<C-y>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'k'
-noremap <C-u> <C-u>zz
-noremap <C-d> <C-d>zz
-noremap <C-f> <C-f>zz
-noremap <C-b> <C-b>zz
+" noremap <C-u> <C-u>zz
+" noremap <C-d> <C-d>zz
+" noremap <C-f> <C-f>zz
+" noremap <C-b> <C-b>zz
 " noremap <ScrollWheelUp> 3<C-y>
 " noremap <ScrollWheelDown> 3<C-e>
 "}}}
@@ -812,6 +820,8 @@ cnoremap <C-z> <C-Left>
 " jump (other) "{{{
 nnoremap go `^
 
+nnoremap <expr> M winheight(winnr())/2 .. 'H'
+
 nnoremap <Tab> <C-i>
 nnoremap <S-Tab> <C-o>
 
@@ -821,8 +831,8 @@ nnoremap <C-w>j <C-w>w
 nnoremap <C-w>k <C-w>W
 
 nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
-nnoremap <silent> <C-w><C-f> :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nmap <silent> <C-w><C-f> <C-w>f
 "}}}
 
 " search "{{{
@@ -897,6 +907,8 @@ nmap <Leader>w <C-w>
 nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
 
+nnoremap <silent> <Leader>diff :<C-u>windo diff<C-r>=&diff?'off':'this'<CR><CR>
+
 nnoremap <silent> <Leader>a :<C-u>Lexplore<CR>
 nnoremap <silent> <Leader>A :<C-u>Lexplore %:h<CR>
 
@@ -945,6 +957,9 @@ inoremap <C-k> <C-o>"_d$
 
 xnoremap p P
 xnoremap P I<C-r>=getreg(v:register)<CR><Esc>
+
+" undoしたときのカーソルの位置を行末にしたくないのでAではなくoから始める
+" nmap o o<C-o>"_d0<BS><CR>
 
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'

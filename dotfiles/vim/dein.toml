@@ -280,7 +280,7 @@ hook_source = '''
       \   colorscheme: 'landscape',
       \   active: #{
       \     left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
-      \     right: [['trailing', 'lineinfo'], ['percent'], ['fileinfo', 'filetype']]
+      \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype']]
       \   },
       \   inactive: #{
       \     left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
@@ -299,7 +299,11 @@ hook_source = '''
       \     lineinfo: "L %3l:%-2v",
       \     paste: '%{&paste?"P":""}',
       \     percent: '%4P',
-      \     showcmd: exists('+showcmdloc') ? '%S' : ''
+      \     showcmd: exists('+showcmdloc') ? '%S' : '',
+      \     truncate: '%<'
+      \   },
+      \   component_visible_condition: #{
+      \     truncate: '0'
       \   },
       \   component_function: #{
       \     git: 'LightlineGit',
@@ -516,7 +520,7 @@ hook_source = '''
           else
             let commitish = params[0][10:]
             let revision = substitute(commitish, '%\(\x\{2}\)', '\=nr2char(str2nr(submatch(1), 16))', 'g')
-            let revision = substitute(revision, '@', 'HEAD', 'g')
+            let revision = substitute(revision, '^@', 'HEAD', 'g')
           endif
 
           return revision
@@ -577,6 +581,7 @@ hook_post_update = 'call fzf#install()'
 hook_source = '''
   nnoremap <Leader>b :<C-u>Buffers<CR>
   nnoremap <Leader>e :<C-u>Files<CR>
+  nnoremap <Leader>gl :<C-u>GFiles?<CR>
 '''
 
 [[plugins]]
@@ -685,8 +690,9 @@ hook_source = '''
   " command! -nargs=1 -complete=file -bar DiffIndex call DiffRevision('INDEX', v:null, <f-args>)
   " command! -nargs=1 -complete=file -bar DiffStage call DiffRevision('HEAD', 'INDEX', <f-args>)
   command! -nargs=1 -complete=file -bar DiffIndex execute 'GinPatch& ++opener=tabnew ++no-head' fnamemodify(<f-args>, ':p') | wincmd l
-  command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch& ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p')
+  command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch& ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p') | wincmd l
 
+  nnoremap <silent> <Leader>gg :<C-u>G<CR>
   nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
   nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
 
@@ -749,6 +755,7 @@ hook_source = '''
   " let g:lsp_diagnostics_signs_enabled = 0
   let g:lsp_diagnostics_signs_insert_mode_enabled = 0
   let g:lsp_diagnostics_virtual_text_enabled = 1
+  let g:lsp_diagnostics_virtual_text_align = 'after'
   let g:lsp_inlay_hints_enabled = 1
   let g:lsp_hover_ui = 'preview'
   let g:lsp_preview_float = 0
@@ -914,7 +921,7 @@ hook_post_source = '''
   call ddc#custom#set_global({})
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
 
-  let g:ddc_display_ui = 'native'
+  let g:ddc_display_ui = dein#is_available(['pum', 'ddc-ui-pum']) ? 'pum' : 'native'
   call ddc#custom#patch_global('ui', 'none')
   " call ddc#custom#patch_global('ui', g:ddc_display_ui)
 
@@ -1151,8 +1158,8 @@ hook_source = '''
     endif
   endfunction
 
-  Autocmd BufReadPost dein.toml let b:partedit_filetype = 'vim'
-  Autocmd BufReadPost dein.toml let b:partedit_prefix = '\s*'
+  Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_filetype = 'vim'
+  Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_prefix = '\s*'
   AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p :<C-u>call OpenContext()<CR>
 '''
 
