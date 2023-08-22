@@ -26,7 +26,7 @@
 	detail = show --format=fuller --stat
 	detailpatch = show --format=fuller
 	listmodified = diff --name-only --relative --diff-filter=M
-	liststaged = diff --cached --name-only --relative --diff-filter=AM
+	liststaged = diff --cached --name-only --relative --diff-filter=AMR
 	listadded = diff --cached --name-only --relative --diff-filter=A
 	listuntracked = ls-files --others --exclude-standard
 	pushf = push --force-with-lease --force-if-includes
@@ -34,4 +34,6 @@
 	# show branch list command from bash-completions
 	branches = for-each-ref --format="%(refname:strip=2)" "refs/heads/*" "refs/heads/*/**"
 	remote-branches = for-each-ref --format="%(refname:strip=2)" "refs/remotes/*" "refs/remotes/*/**"
+	prebase = pull --rebase
+	edit = config --global --edit
 # vi: noet ts=4 sw=4 ft=gitconfig:
