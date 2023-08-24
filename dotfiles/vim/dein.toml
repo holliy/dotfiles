@@ -1,4 +1,22 @@
 [[plugins]]
+repo = 'bkad/CamelCaseMotion'
+hook_source = '''
+noremap gw <Plug>CamelCaseMotion_w
+noremap gb <Plug>CamelCaseMotion_b
+noremap ge <Plug>CamelCaseMotion_e
+sunmap gw
+sunmap gb
+sunmap ge
+
+onoremap icw <Plug>CamelCaseMotion_iw
+xnoremap icw <Plug>CamelCaseMotion_iw
+onoremap icb <Plug>CamelCaseMotion_ib
+xnoremap icb <Plug>CamelCaseMotion_ib
+onoremap ice <Plug>CamelCaseMotion_ie
+xnoremap ice <Plug>CamelCaseMotion_ie
+'''
+
+[[plugins]]
 repo = 'cohama/lexima.vim'
 hook_source = '''
   let g:lexima_map_escape = 'jk'
@@ -723,6 +741,15 @@ hook_source = '''
 '''
 
 [[plugins]]
+repo = 'lambdalisue/reword.vim'
+hook_source = '''
+  let g:reword_disable_live = 1
+
+  nnoremap gS :<C-u>%Reword/
+  cnoreabbrev <expr> ss Cmdwhen(':', 'ss', 'Reword')
+'''
+
+[[plugins]]
 repo = 'LumaKernel/ddc-source-file'
 depends = ['ddc']
 
@@ -1202,6 +1229,12 @@ hook_source = '''
   xnoremap <Leader>cw <Plug>(caw:wrap:toggle)
   nnoremap <Leader>co <Plug>(caw:jump:comment-next)
   nnoremap <Leader>cO <Plug>(caw:jump:comment-prev)
+'''
+
+[[plugins]]
+repo = 'tyru/operator-camelize.vim'
+hook_source = '''
+nnoremap sc <Plug>(operator-camelize-toggle)
 '''
 
 [[plugins]]
