@@ -150,7 +150,9 @@ else
   fi
 fi
 
-_fzf_setup_completion dir cdl
+if type "_fzf_setup_completion" > /dev/null 2>&1; then
+  _fzf_setup_completion dir cdl
+fi
 
 GIT_PS1_STATESEPARATOR=""
 GIT_PS1_SHOWDIRTYSTATE=1
