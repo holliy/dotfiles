@@ -1,4 +1,4 @@
-if !(g:vimrc#is_nvim || v:version >= 802)
+if !(g:vimrc#is_nvim || v:version >= 900)
   echomsg 'no plugins loaded.'
   finish
 endif
@@ -8,6 +8,7 @@ if !g:vimrc#is_nvim
 endif
 
 " dein "{{{
+" install & load "{{{
 let s:dein_dir = g:vimrc#dotvim .. '/dein'
 let s:dein_repo_dir = s:dein_dir .. '/repos/github.com/Shougo/dein.vim'
 if !isdirectory(s:dein_repo_dir)
@@ -23,7 +24,9 @@ endif
 if index(split(&runtimepath, ','), s:dein_repo_dir) < 0
   let &runtimepath = s:dein_repo_dir .. ',' .. &runtimepath
 endif
+"}}}
 
+" options "{{{
 let g:dein#auto_recache = 1
 let g:dein#enable_name_conversion = 1
 let g:dein#install_check_diff = 1
@@ -33,9 +36,10 @@ let g:dein#install_log_filename = s:dein_dir .. '/dein.log'
 let g:dein#install_progress_type = 'floating'
 let g:dein#install_message_type = 'echo'
 let g:dein#types#git#enable_partial_clone = 1
+"}}}
 
 let s:dein_toml = expand('<sfile>:r') .. '.toml'
-call dein#min#_init()
+call dein#min#_init() " clear hook cache
 if dein#load_state(s:dein_dir) "{{{
   call dein#begin(s:dein_dir, [expand('<sfile>'), s:dein_toml])
 

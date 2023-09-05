@@ -586,6 +586,9 @@ hook_post_source = '''
 '''
 
 [[plugins]]
+repo = 'itchyny/vim-qfedit'
+
+[[plugins]]
 repo = 'itchyny/vim-haskell-indent'
 on_ft = 'haskell'
 hook_source = '''
@@ -600,6 +603,7 @@ hook_source = '''
   nnoremap <Leader>b :<C-u>Buffers<CR>
   nnoremap <Leader>e :<C-u>Files<CR>
   nnoremap <Leader>gl :<C-u>GFiles?<CR>
+  nnoremap <Leader>mru :<C-u>History<CR>
 '''
 
 [[plugins]]
@@ -851,8 +855,10 @@ hook_source = '''
   AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
 
   " inlay表示でカーソル位置がずれるので
-  " https://github.com/vim/vim/issues/5713
-  Autocmd User lsp_buffer_enabled setlocal nobreakindent breakindentopt= showbreak=NONE
+  " https://github.com/vim/vim/issues/12769
+  if !has('patch-9.0.1851')
+    Autocmd User lsp_buffer_enabled setlocal nobreakindent breakindentopt= showbreak=NONE
+  endif
 
   if g:vimrc#is_nvim
     Autocmd User lsp_float_opened
@@ -1172,7 +1178,7 @@ hook_source = '''
   let g:partedit#opener = 'split'
 
   function! OpenContext() abort
-    " {'filetype': 'vim', 'range': [[1114, 1], [1128, 90]]}
+    " ex. {'filetype': 'vim', 'range': [[1114, 1], [1128, 90]]}
     let context = context_filetype#get()
     let ft = context.filetype
     let lines = [context.range[0][0], context.range[1][0]]
