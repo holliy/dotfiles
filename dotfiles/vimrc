@@ -18,6 +18,7 @@ if !exists('g:vimrc#is_starting')
       " embed
       let g:vimrc#is_gui = 0
     else
+      " UI process is separated even in CUI since nvim v0.9.0
       let s:ui_name = nvim_get_proc(nvim_get_proc(getpid()).ppid).name
       let g:vimrc#is_gui = s:ui_name !~# '^nvim\(\.exe\)\?$'
       unlet s:ui_name
@@ -687,6 +688,9 @@ endif
 if has('patch-8.2.4325') || has('nvim-0.8.0')
   set wildoptions=pum
 endif
+if has('patch-9.0.0656')
+  SetG fillchars+=lastline:>
+endif
 
 if g:vimrc#is_nvim
   set clipboard=
@@ -765,7 +769,10 @@ snoremap jk <Esc>
 xnoremap za zo
 
 " xnoremap <expr> zc 'zx' ..
-"    \ index([min([foldclosed('`<'), foldclosed('`>')]), max([foldclosedend('`<'), foldclosedend('`>')])], line('.')) > 0 ? '<Esc>' : 'zo'
+"    \ index([
+"    \   min([foldclosed('`<'), foldclosed('`>')]),
+"    \   max([foldclosedend('`<'), foldclosedend('`>')])
+"    \ ], line('.')) > 0 ? '<Esc>' : 'zo'
 "}}}
 
 " scroll "{{{
@@ -813,6 +820,8 @@ sunmap ^
 
 cnoremap <C-a> <Home>
 
+" cnoremap <A-b> <C-Right>
+" cnoremap <A-f> <C-Left>
 cnoremap <C-x> <C-Right>
 cnoremap <C-z> <C-Left>
 "}}}
@@ -830,6 +839,7 @@ nnoremap <C-w>p <C-w>P
 nnoremap <C-w>j <C-w>w
 nnoremap <C-w>k <C-w>W
 
+nnoremap gm gf
 nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nmap <silent> <C-w><C-f> <C-w>f
@@ -903,6 +913,9 @@ nnoremap g# <Nop>
 nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
+cnoremap <C-n> <Down>
+cnoremap <C-p> <Up>
+
 nmap <Leader>w <C-w>
 nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
@@ -963,6 +976,7 @@ xnoremap P I<C-r>=getreg(v:register)<CR><Esc>
 
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
+inoremap <S-CR> <C-o>O
 inoremap <C-CR> <C-o>o
 nnoremap <C-Space> i<CR><Esc>
 nnoremap <C-CR> i<CR><Esc>
@@ -1447,16 +1461,20 @@ endif
 
 if exists('+vartabstop')
   AutocmdFT diff setlocal vartabstop=9,8
+  AutocmdFT diff let &l:varsofttabstop =
+      \ printf('%d,%d', &l:softtabstop + 1, &l:softtabstop)
 endif
 
-Autocmd BufWinLeave * if &diff | diffoff | endif
+Autocmd BufWinLeave * ++nested if &diff | diffoff | endif
 Autocmd OptionSet diff
     \ if v:option_new |
     \   execute 'nnoremap <buffer> dp dp]c' |
     \   execute 'nnoremap <buffer> do do]c' |
+    \   setlocal cursorlineopt=number norelativenumber |
     \ else |
-    \   silent! execute 'nunmap <buffer> dp' |
-    \   silent! execute 'nunmap <buffer> do' |
+    \   silent! execute 'unmap <buffer> dp' |
+    \   silent! execute 'unmap <buffer> do' |
+    \   setlocal cursorlineopt< relativenumber |
     \ endif
 
 " netrwのバッファに飛ぶのでそのときに削除する
@@ -1488,16 +1506,18 @@ augroup END
 " plugin "{{{
 packadd! matchit
 
-" 画面切り替え前のメッセージを遅延させる
-augroup filetypedetect " Neovimで未定義エラーが出るので
-augroup END
-let s:msg = execute([
-    \   'source ' .. g:vimrc#dotvim .. '/dein.vim'
-    \ ], 'silent')
-Autocmd VimEnter * ++once
-    \ for s:line in split(s:msg, "\n") |
-    \   echomsg s:line |
-    \ endfor
+if g:vimrc#is_starting
+  " 画面切り替え前のメッセージを遅延させる
+  let s:msg = execute([
+      \   'source ' .. g:vimrc#dotvim .. '/dein.vim'
+      \ ], 'silent')
+  Autocmd VimEnter * ++once
+      \ for s:line in split(s:msg, "\n") |
+      \   echomsg s:line |
+      \ endfor
+else
+  execute 'source ' .. g:vimrc#dotvim .. '/dein.vim'
+endif
 "}}}
 
 Autocmd VimEnter * ++once doautoall Vimrc ColorScheme,FileType
