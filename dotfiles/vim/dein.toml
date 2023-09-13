@@ -375,7 +375,9 @@ hook_source = '''
     let fold = '...'
     let max_side_tabs = min([max([&columns/50, 2]), 8]) " left, rightそれぞれから表示する数
 
-    if IgnoreBuffer(active_bn)
+    if getbufvar(active_bn, '&buftype') ==# 'popup'
+      let active_bn = winbufnr(t:winid)
+    elseif IgnoreBuffer(active_bn)
       if !IgnoreBuffer(alt_bn)
         let active_bn = alt_bn
       else
@@ -389,7 +391,7 @@ hook_source = '''
       endif
     endif
 
-    for binfo in getbufinfo(#{ buflisted: 1 })
+    for binfo in getbufinfo()
       let bn = binfo.bufnr
       if bn ==# active_bn
         call add(mid, printf('%%%dT%%{lightline#onetab(%d, 1)}', tn, bn))
@@ -581,8 +583,10 @@ hook_post_source = '''
   call lightline#colorscheme()
   call lightline#update()
 
+  " ポップアップ表示中のカーソルがあるwinidを退避
+  Autocmd WinEnter,VimEnter * let t:winid = win_getid()
   " parteditなどでローカルの値が設定されないのでグローバルに設定
-  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#(win_gettype()==#'popup'?win_getid(winnr('#')):win_getid()))
+  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#(winnr()==#0?t:winid:win_getid()))
 '''
 
 [[plugins]]
