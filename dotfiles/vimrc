@@ -143,7 +143,7 @@ function! IgnoreBuffer(bn = 0) abort
     return 1
   elseif !(empty(bh) || bh ==# 'hide')
     return 1
-  elseif !(wt ==# '' || wt ==# 'unknown')
+  elseif !(empty(wt) || wt ==# 'unknown')
     return 1
   endif
 
@@ -917,7 +917,7 @@ cnoremap <C-n> <Down>
 cnoremap <C-p> <Up>
 
 nmap <Leader>w <C-w>
-nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<CR>
+nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<Bar>helpclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
 
 nnoremap <silent> <Leader>diff :<C-u>windo diff<C-r>=&diff?'off':'this'<CR><CR>
