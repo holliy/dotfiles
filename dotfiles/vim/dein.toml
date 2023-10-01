@@ -960,6 +960,33 @@ repo = 'rhysd/vim-textobj-word-column'
 depends = ['textobj-user']
 
 [[plugins]]
+repo = 'ronakg/quickr-preview.vim'
+hook_source = '''
+  " let g:quickr_preview_position = 'above'
+  " let g:quickr_preview_keymaps = 0
+  let g:quickr_preview_line_hl = 'CursorLine'
+  let g:quickr_preview_on_cursor = 0
+  let g:quickr_preview_open = 1
+  let g:quickr_preview_options = 'cursorline nolist nonumber norelativenumber nofoldenable'
+
+  AutocmdFT qf
+      \ nnoremap <silent><buffer> p
+      \   <Plug>(quickr_preview):let g:quickr_preview_open = !g:quickr_preview_open<CR>
+  AutocmdFT qf
+      \ nnoremap <expr><silent><buffer> <C-j>
+      \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set nolazyredraw<CR>' : ''
+  AutocmdFT qf
+      \ nnoremap <expr><silent><buffer> <C-k>
+      \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set nolazyredraw<CR>' : ''
+  AutocmdFT qf Autocmd CursorMoved <buffer>
+      \ if g:quickr_preview_open |
+      \   call QFMove(line('.')) |
+      \ endif
+  AutocmdFT qf doautocmd CursorMoved
+  AutocmdFT qf execute 'Autocmd WinClosed' win_getid() 'call ClosePreviewWindow()'
+'''
+
+[[plugins]]
 repo = 'Shougo/context_filetype.vim'
 
 [[plugins]]
@@ -1324,49 +1351,6 @@ hook_source = '''
 [[plugins]]
 repo = 'equalsraf/neovim-gui-shim'
 if = 'g:vimrc#is_nvim'
-
-[[plugins]]
-repo = 'kevinhwang91/nvim-bqf'
-if = 'g:vimrc#is_nvim'
-hook_source = '''
-  " Highlight link BqfPreviewBorder Pmenu
-  Highlight BqfPreviewFloat ctermbg=18 guibg=midnightblue
-'''
-lua_post_source = '''
-  require('bqf').setup({
-    func_map = {
-      pscrollup = '<C-u>',
-      pscrolldown = '<C-d>',
-    },
-    magic_window = false,
-    preview = {
-      border_chars = {'', '', '─', '─', '─', '─', '─', '─', '█'},
-      show_title = true
-    },
-    wrap = true
-  })
-'''
-
-[[plugins]]
-repo = 'bfrg/vim-qf-preview'
-if = '!g:vimrc#is_nvim'
-hook_source = '''
-  let g:qfpreview = #{
-      \   close: 'q',
-      \   halfpageup: "\<C-u>",
-      \   harlpagedown: "\<C-d>",
-      \   next: 'n',
-      \   number: 1,
-      \   offset: 2,
-      \   previous: 'p',
-      \ }
-
-  Highlight QfPreview ctermbg=18 guibg=midnightblue
-
-  AutocmdFT qf nnoremap <buffer> p <Plug>(qf-preview-open)
-  AutocmdFT qf execute "normal! \<Plug>(qf-preview-open)"
-  " AutocmdFT qf Autocmd CursorMoved <buffer> execute "normal! \<Plug>(qf-preview-open)"
-'''
 
 [[plugins]]
 repo = 'phaazon/hop.nvim'
