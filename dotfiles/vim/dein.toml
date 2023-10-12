@@ -566,7 +566,10 @@ hook_source = '''
     endif
 
     silent let branch = trim(system('git rev-parse --abbrev-ref --short @'))
-    if branch !=# 'HEAD'
+    if v:shell_error > 0
+      " コミットが積まれてないとき
+      return 'NO REVISIONS'
+    elseif branch !=# 'HEAD'
       return branch
     endif
 
@@ -830,8 +833,9 @@ hook_source = '''
   nnoremap <silent> <Leader>ls :<C-u>LspWorkspaceSymbol <C-r>=expand('<lt>cword>')<CR><CR>
   nnoremap <Leader>lt <Plug>(lsp-peek-type-definition)
   nnoremap <Leader>ll <Plug>(lsp-document-diagnostics)
-  nnoremap <Leader>lr <Plug>(lsp-rename)
+  nnoremap <Leader>lr <Plug>(lsp-references)
   nnoremap <Leader>lc <Plug>(lsp-code-action)
+  nnoremap <Leader>lm <Plug>(lsp-rename)
   xnoremap <silent> <Leader>lc :LspCodeAction<CR>
 
   " 非同期でカーソルが動くのでスリープを挟む
@@ -872,6 +876,12 @@ hook_source = '''
   " Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
+  Autocmd OptionSet diff
+      \ if v:option_new |
+      \   call lsp#disable_diagnostics_for_buffer() |
+      \ else |
+      \   call lsp#enable_diagnostics_for_buffer() |
+      \ endif
   AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
 
   " inlay表示でカーソル位置がずれるので
@@ -967,11 +977,15 @@ hook_source = '''
   let g:quickr_preview_line_hl = 'CursorLine'
   let g:quickr_preview_on_cursor = 0
   let g:quickr_preview_open = 1
-  let g:quickr_preview_options = 'cursorline nolist nonumber norelativenumber nofoldenable'
+  let g:quickr_preview_options = 'cursorline nofoldenable nolist nonumber norelativenumber scrolloff=999'
 
+  AutocmdFT qf let b:prvlinenr = 0
   AutocmdFT qf
       \ nnoremap <silent><buffer> p
       \   <Plug>(quickr_preview):let g:quickr_preview_open = !g:quickr_preview_open<CR>
+  AutocmdFT qf
+      \ nnoremap <silent><buffer> <CR>
+      \   :<C-u>call ClosePreviewWindow()<CR><CR>zv
   AutocmdFT qf
       \ nnoremap <expr><silent><buffer> <C-j>
       \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set nolazyredraw<CR>' : ''
@@ -980,6 +994,7 @@ hook_source = '''
       \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set nolazyredraw<CR>' : ''
   AutocmdFT qf Autocmd CursorMoved <buffer>
       \ if g:quickr_preview_open |
+      \   let b:prvlinenr = 0 |
       \   call QFMove(line('.')) |
       \ endif
   AutocmdFT qf doautocmd CursorMoved
@@ -1353,7 +1368,7 @@ repo = 'equalsraf/neovim-gui-shim'
 if = 'g:vimrc#is_nvim'
 
 [[plugins]]
-repo = 'phaazon/hop.nvim'
+repo = 'smoka7/hop.nvim'
 if = 'g:vimrc#is_nvim'
 hook_source = '''
   nnoremap <Leader><Leader>w :<C-u>HopWord<CR>
