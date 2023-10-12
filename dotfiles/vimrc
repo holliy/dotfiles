@@ -598,6 +598,7 @@ set confirm
 SetG nocursorline
 set diffopt+=context:2,vertical,indent-heuristic,algorithm:histogram
 set display=lastline,uhex
+SetG noequalalways
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
 SetG foldenable foldlevel=1 foldmethod=syntax foldtext=Foldtext()
@@ -758,8 +759,6 @@ map! <Nul> <C-Space>
 " map <C-j> <S-CR>
 " map! <C-j> <S-CR>
 
-nnoremap Y y$
-
 noremap! jk <Esc>
 snoremap jk <Esc>
 
@@ -776,8 +775,8 @@ xnoremap za zo
 "}}}
 
 " scroll "{{{
-nnoremap zH zt
-nnoremap zL zb
+" nnoremap zH zt
+" nnoremap zL zb
 
 nnoremap <expr> <C-e>
     \ '<C-e>' .. (exists('+smoothscroll') && &smoothscroll ? 'g' : '') .. 'j'
@@ -836,12 +835,12 @@ nnoremap <S-Tab> <C-o>
 
 nnoremap <expr> <C-w>w v:count > 0 ? '<C-w>w' : '<C-w>p'
 nnoremap <C-w>p <C-w>P
-nnoremap <C-w>j <C-w>w
-nnoremap <C-w>k <C-w>W
+" nnoremap <C-w>j <C-w>w
+" nnoremap <C-w>k <C-w>W
 
 nnoremap gm gf
-nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
-nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nmap <silent> <C-w><C-f> <C-w>f
 "}}}
 
@@ -961,7 +960,11 @@ nnoremap <silent> <Leader>sf
     \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
 "}}}
 
-" insert / delete / paste "{{{
+" insert / delete / yank / paste "{{{
+nnoremap Y y$
+xnoremap <expr> y mode() ==# "\<C-v>" ? 'zy' : 'y'
+xnoremap zy y
+
 inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
 
@@ -1435,12 +1438,16 @@ if g:vimrc#is_nvim
   Autocmd TermOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
   Autocmd TermOpen * startinsert
   Autocmd TermClose * if !v:event.status | execute 'bdelete! ' .. expand('<abuf>') | endif
-  Autocmd TermOpen * resize 15
+  Autocmd TermOpen * if winnr('$') > 1 | resize 15 | endif
+  Autocmd TermOpen * nnoremap <buffer> J <C-e>
+  Autocmd TermOpen * nnoremap <buffer> K <C-y>
 elseif has('terminal')
   Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
   Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q
       \ term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
-  Autocmd TerminalWinOpen * if empty(&termwinsize) | resize 15 | endif
+  Autocmd TerminalWinOpen * if winnr('$') > 1 && empty(&termwinsize) | resize 15 | endif
+  Autocmd TerminalWinOpen * nnoremap <buffer> J <C-e>
+  Autocmd TerminalWinOpen * nnoremap <buffer> K <C-y>
 endif
 Autocmd BufWinEnter,ColorScheme,FileType * call Highlights()
 if g:vimrc#is_nvim
@@ -1454,6 +1461,12 @@ Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
 AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
 AutocmdFT toml setlocal foldlevel=0 foldmethod=indent | normal! zv
+
+AutocmdFT netrw nnoremap <buffer> h zhg0
+AutocmdFT netrw nnoremap <buffer> l zlg0
+AutocmdFT netrw nnoremap <buffer> <LeftMouse> <Nop>
+AutocmdFT netrw nnoremap <buffer> <RightMouse> <Nop>
+" AutocmdFT netrw nnoremap <buffer> <2-LeftMouse> <Nop>
 
 if vimrc#is_nvim
   Autocmd UIEnter * doautocmd ColorScheme
@@ -1470,6 +1483,8 @@ Autocmd OptionSet diff
     \ if v:option_new |
     \   execute 'nnoremap <buffer> dp dp]c' |
     \   execute 'nnoremap <buffer> do do]c' |
+    \   execute 'xnoremap <buffer> dp :diffput<CR>]c' |
+    \   execute 'xnoremap <buffer> do :diffget<CR>]c' |
     \   setlocal cursorlineopt=number norelativenumber |
     \ else |
     \   silent! execute 'unmap <buffer> dp' |
