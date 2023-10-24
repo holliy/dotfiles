@@ -980,7 +980,7 @@ xnoremap P I<C-r>=getreg(v:register)<CR><Esc>
 nnoremap <CR> o<Esc>
 nnoremap <expr> <S-CR> 'O<Esc>j' .. v:count .. 'k'
 inoremap <S-CR> <C-o>O
-inoremap <C-CR> <C-o>o
+imap <C-CR> <End><CR>
 nnoremap <C-Space> i<CR><Esc>
 nnoremap <C-CR> i<CR><Esc>
 "}}}
@@ -1009,6 +1009,7 @@ inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
 " terminal "{{{
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
+tnoremap <S-Space> <Space>
 
 if g:vimrc#is_nvim
   tnoremap <C-w> <C-\><C-n><C-w>
@@ -1521,17 +1522,21 @@ augroup END
 " plugin "{{{
 packadd! matchit
 
+augroup filetypedetect
+augroup END
+
+let s:plugin_loader_path = g:vimrc#dotvim .. '/dein.vim'
 if g:vimrc#is_starting
   " 画面切り替え前のメッセージを遅延させる
   let s:msg = execute([
-      \   'source ' .. g:vimrc#dotvim .. '/dein.vim'
+      \   'source ' .. s:plugin_loader_path
       \ ], 'silent')
   Autocmd VimEnter * ++once
       \ for s:line in split(s:msg, "\n") |
       \   echomsg s:line |
       \ endfor
 else
-  execute 'source ' .. g:vimrc#dotvim .. '/dein.vim'
+  execute 'source ' .. s:plugin_loader_path
 endif
 "}}}
 
