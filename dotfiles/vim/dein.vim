@@ -38,7 +38,7 @@ let g:dein#install_message_type = 'echo'
 let g:dein#types#git#enable_partial_clone = 1
 "}}}
 
-let s:dein_toml = expand('<sfile>:r') .. '.toml'
+let s:dein_toml = expand('<sfile>:h') .. '/dein.toml'
 call dein#min#_init() " clear hook cache
 if dein#load_state(s:dein_dir) "{{{
   call dein#begin(s:dein_dir, [expand('<sfile>'), s:dein_toml])
@@ -60,7 +60,7 @@ endif "}}}
 runtime! plugin/**/*.vim
 call dein#call_hook('source')
 
-Autocmd BufReadPost dein.toml,dein/*.toml call dein#toml#syntax()
+Autocmd BufEnter dein.toml,dein/*.toml call dein#toml#syntax()
 
 Autocmd VimEnter * ++once call dein#call_hook('post_source')
 "}}}

@@ -1,19 +1,19 @@
 [[plugins]]
 repo = 'bkad/CamelCaseMotion'
 hook_source = '''
-noremap gw <Plug>CamelCaseMotion_w
-noremap gb <Plug>CamelCaseMotion_b
-noremap ge <Plug>CamelCaseMotion_e
-sunmap gw
-sunmap gb
-sunmap ge
+  noremap gw <Plug>CamelCaseMotion_w
+  noremap gb <Plug>CamelCaseMotion_b
+  noremap ge <Plug>CamelCaseMotion_e
+  sunmap gw
+  sunmap gb
+  sunmap ge
 
-onoremap icw <Plug>CamelCaseMotion_iw
-xnoremap icw <Plug>CamelCaseMotion_iw
-onoremap icb <Plug>CamelCaseMotion_ib
-xnoremap icb <Plug>CamelCaseMotion_ib
-onoremap ice <Plug>CamelCaseMotion_ie
-xnoremap ice <Plug>CamelCaseMotion_ie
+  onoremap icw <Plug>CamelCaseMotion_iw
+  xnoremap icw <Plug>CamelCaseMotion_iw
+  onoremap icb <Plug>CamelCaseMotion_ib
+  xnoremap icb <Plug>CamelCaseMotion_ib
+  onoremap ice <Plug>CamelCaseMotion_ie
+  xnoremap ice <Plug>CamelCaseMotion_ie
 '''
 
 [[plugins]]
@@ -223,25 +223,6 @@ hook_post_source = '''
   endif
 '''
 
-# [[plugins]]
-# repo = 'derekwyatt/vim-scala'
-# on_ft = 'scala'
-
-# [[plugins]]
-# repo = 'eagletmt/ghcmod-vim'
-# on_ft = 'haskell'
-# hook_source = '''
-#   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>ft :<C-u>GhcModType!<CR>
-#   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fi :<C-u>GhcModInfo!<CR>
-#   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader><Tab> :<C-u>nohlsearch<Bar>GhcModTypeClear<CR>
-#   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fc :<C-u>GhcModCheckAsync<CR>
-#   Autocmd Filetype haskell nnoremap <buffer><silent> <Leader>fl :<C-u>GhcModLintAsync<CR>
-# '''
-
-# [[plugins]]
-# repo = 'eagletmt/neco-ghc'
-# on_ft = 'haskell'
-
 [[plugins]]
 repo = 'editorconfig/editorconfig-vim'
 hook_source = '''
@@ -288,6 +269,7 @@ hook_post_source = '''
 
 [[plugins]]
 repo = 'itchyny/lightline.vim'
+depends = ['lightline_skk']
 hook_source = '''
   " g:lightline "{{{
   let g:lightline = #{
@@ -363,7 +345,7 @@ hook_source = '''
   endif
 
   if dein#is_available('lightline_skk')
-    let g:lightline.component_function['skk'] = 'lightline_skk#mode'
+    let g:lightline.component_function['skk'] = 'statusline_skk#mode'
   endif
   "}}}
 
@@ -373,7 +355,7 @@ hook_source = '''
     let [active_bn, alt_bn, last_bn, tn] = [bufnr(), winbufnr(winnr('#')), bufnr('$'), tabpagenr()]
     let [left, mid, right] = [[], [], []]
     let fold = '...'
-    let max_side_tabs = min([max([&columns/50, 2]), 8]) " left, rightそれぞれから表示する数
+    let max_side_tabs = min([max([&columns/20/2, 2]), 12]) " left, rightそれぞれから表示する数
 
     if getbufvar(active_bn, '&buftype') ==# 'popup'
       let active_bn = winbufnr(t:winid)
@@ -420,8 +402,8 @@ hook_source = '''
     return [left, mid, right]
   endfunction "}}}
 
-  " 更新されないので再度セットすることで更新
-  Autocmd BufAdd,BufDelete * execute 'set tabline=' .. &tabline
+  " 更新されないので再描画
+  Autocmd BufAdd,BufDelete * redrawtabline
   "}}}
 
   function! LightlineModified(bn = 0) abort "{{{
@@ -430,9 +412,10 @@ hook_source = '''
       let bn = bufnr()
     endif
 
-    return getbufvar(bn, '&modified') ? '+' :
-        \ IgnoreBuffer(bn) ? '' :
+    return IgnoreBuffer(bn) ? '' :
         \ getbufvar(bn, '&filetype') =~# 'netrw' ? '' :
+        \ getbufvar(bn, '&buftype') ==# 'terminal' ? '' :
+        \ getbufvar(bn, '&modified') ? '+' :
         \ getbufvar(bn, '&modifiable') ? '' : '-'
   endfunction "}}}
 
@@ -703,13 +686,13 @@ hook_source = '''
       let commit2 = a:commit2
     endif
 
-    execute 'GinEdit& ++opener=tabnew' commit1 fnamemodify(a:path, ':p')
+    execute 'GinEdit ++opener=tabnew' commit1 fnamemodify(a:path, ':p')
     diffthis
 
     if a:commit2 is v:null
       botright vsplit `=a:path`
     else
-      execute 'GinEdit& ++opener=botright\ vsplit' commit2 fnamemodify(a:path, ':p')
+      execute 'GinEdit ++opener=botright\ vsplit' commit2 fnamemodify(a:path, ':p')
     endif
     diffthis
   endfunction
@@ -719,12 +702,13 @@ hook_source = '''
   " command! -nargs=* -bang -bar G GinStatus<bang> ++opener=botright\ 15split <args>
   " command! -nargs=1 -complete=file -bar DiffIndex call DiffRevision('INDEX', v:null, <f-args>)
   " command! -nargs=1 -complete=file -bar DiffStage call DiffRevision('HEAD', 'INDEX', <f-args>)
-  command! -nargs=1 -complete=file -bar DiffIndex execute 'GinPatch& ++opener=tabnew ++no-head' fnamemodify(<f-args>, ':p') | wincmd l
-  command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch& ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p') | wincmd l
+  command! -nargs=1 -complete=file -bar DiffIndex execute 'GinPatch ++opener=tabnew ++no-head' fnamemodify(<f-args>, ':p') | wincmd l
+  command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p') | wincmd l
 
   nnoremap <silent> <Leader>gg :<C-u>G<CR>
   nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
   nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
+  nnoremap <silent> <Leader>ga :<C-u>Gin add %<CR>
 
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
@@ -736,7 +720,7 @@ hook_source = '''
   Autocmd BufEnter ginedit://*;commitish* setlocal nomodifiable
   " Autocmd BufEnter ginedit://*;commitish* call lsp#disable_diagnostics_for_buffer()
 
-  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus& ++opener=rightbelow\ split<CR>
+  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus ++opener=rightbelow\ split<CR>
   AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit):<C-u>diffthis<CR><C-w>x<C-w>w
   AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit):<C-u>diffthis<CR><C-w>x<C-w>w
 '''
@@ -876,13 +860,13 @@ hook_source = '''
   " Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
+  AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
   Autocmd OptionSet diff
       \ if v:option_new |
       \   call lsp#disable_diagnostics_for_buffer() |
       \ else |
       \   call lsp#enable_diagnostics_for_buffer() |
       \ endif
-  AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
 
   " inlay表示でカーソル位置がずれるので
   " https://github.com/vim/vim/issues/12769
@@ -1302,7 +1286,7 @@ hook_source = '''
 [[plugins]]
 repo = 'tyru/operator-camelize.vim'
 hook_source = '''
-nnoremap sc <Plug>(operator-camelize-toggle)
+  nnoremap sc <Plug>(operator-camelize-toggle)
 '''
 
 [[plugins]]
@@ -1338,10 +1322,10 @@ hook_source = '''
 '''
 
 [[plugins]]
-repo = 'yasunori-kirin0418/lightline_skk.vim'
+repo = 'yasunori0418/lightline_skk.vim'
 depends = ['lightline', 'skkeleton']
 hook_post_source = '''
-  call lightline_skk#option('display', #{
+  call statusline_skk#option('display', #{
       \   hiragana: 'あ',
       \   katakana: 'ア',
       \   hankaku_katakana: ' ｱ',
