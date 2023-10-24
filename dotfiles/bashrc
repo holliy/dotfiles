@@ -61,7 +61,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-alias cdl='cd -P'
+alias cdl='cd -L'
+alias cdp='cd -P'
+alias cd=cdp
 
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
@@ -70,37 +72,37 @@ fi
 export PROMPT_COMMAND=('history -a' 'history -c' 'history -r')
 
 if [ -v TERM_PROGRAM ] && [ "$TERM_PROGRAM" == 'WezTerm' ]; then
-  osc_save_curdir()
-  {
-     printf "\e]7;file://%s\e\\" "$PWD"
-  }
+    osc_save_curdir()
+    {
+        printf "\e]7;file://%s\e\\" "$PWD"
+    }
 fi
 
 if command -v osc_save_curdir >/dev/null; then
-  export PROMPT_COMMAND+=('osc_save_curdir')
+    export PROMPT_COMMAND+=('osc_save_curdir')
 fi
 
 if type "vim" > /dev/null 2>&1; then
-  export EDITOR=vim
+    export EDITOR=vim
 elif type "vi" > /dev/null 2>&1; then
-  export EDITOR=vi
+    export EDITOR=vi
 fi
 
 findf() {
-  dir=($1)
-  shift
-  while (( $# > 0 )); do
-    case $1 in
-      -*)
-        break
-        ;;
-      *)
-        dir+=($1)
-        shift
-    esac
-  done
+    dir=($1)
+    shift
+    while (( $# > 0 )); do
+        case $1 in
+            -*)
+                break
+                ;;
+            *)
+                dir+=($1)
+                shift
+        esac
+    done
 
-  find ${dir[@]} -type f $*
+    find ${dir[@]} -type f $*
 }
 
 # enable programmable completion features (you don't need to enable
@@ -110,48 +112,48 @@ findf() {
 export GIT_COMPLETION_SHOW_ALL=1
 
 if ! shopt -oq posix; then
-  if [ -f /usr/share/bash-completion/bash_completion ]; then
-    . /usr/share/bash-completion/bash_completion
-  elif [ -f /etc/bash_completion ]; then
-    . /etc/bash_completion
-  fi
+    if [ -f /usr/share/bash-completion/bash_completion ]; then
+        . /usr/share/bash-completion/bash_completion
+    elif [ -f /etc/bash_completion ]; then
+        . /etc/bash_completion
+    fi
 fi
 
 if type "gh" > /dev/null 2>&1; then
-  eval "$(gh completion -s bash)"
+    eval "$(gh completion -s bash)"
 fi
 
 export FZF_DEFAULT_OPTS='--height 10 --reverse'
 
 _fzf_compgen_path() {
-  find -L "$1" -not -readable -prune -o \
-    -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
-    -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-    -prune -o -name site-packages -prune -o -name vendor -prune -o \
-    -not -path "$1" -print | sed 's@^\./@@'
+    find -L "$1" -not -readable -prune -o \
+        -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
+        -name .vscode-server -prune -o -name target -prune -o -name node_modules \
+        -prune -o -name site-packages -prune -o -name vendor -prune -o \
+        -not -path "$1" -print | sed 's@^\./@@'
 }
 
 _fzf_compgen_dir() {
-  find -L "$1" -not -readable -prune -o \
-    -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
-    -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-    -prune -o -name site-packages -prune -o -name vendor -prune -o \
-    -type d -a -not -path "$1" -print | sed 's@^\./@@'
+    find -L "$1" -not -readable -prune -o \
+        -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
+        -name .vscode-server -prune -o -name target -prune -o -name node_modules \
+        -prune -o -name site-packages -prune -o -name vendor -prune -o \
+        -type d -a -not -path "$1" -print | sed 's@^\./@@'
 }
 
 if [ -f ~/.fzf.bash ]; then
-  . ~/.fzf.bash
+    . ~/.fzf.bash
 else
-  if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
-    . /usr/share/doc/fzf/examples/key-bindings.bash
-  fi
-  if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
-    . /usr/share/doc/fzf/examples/completion.bash
-  fi
+    if [ -f /usr/share/doc/fzf/examples/key-bindings.bash ]; then
+        . /usr/share/doc/fzf/examples/key-bindings.bash
+    fi
+    if [ -f /usr/share/doc/fzf/examples/completion.bash ]; then
+        . /usr/share/doc/fzf/examples/completion.bash
+    fi
 fi
 
 if type "_fzf_setup_completion" > /dev/null 2>&1; then
-  _fzf_setup_completion dir cdl
+    _fzf_setup_completion dir cdl
 fi
 
 GIT_PS1_STATESEPARATOR=""
@@ -166,15 +168,15 @@ GIT_PS1_SHOWCOLORHINTS=1
 GIT_PS1_HIDE_IF_PWD_IGNORED=
 
 if [ -f ~/.git-completion.bash ]; then
-  . ~/.git-completion.bash
+    . ~/.git-completion.bash
 fi
 if [ -f ~/.git-prompt.sh ]; then
-  . ~/.git-prompt.sh
+    . ~/.git-prompt.sh
 fi
 if [ "$(type -t __git_ps1)" != "function" ]; then
-  __git_ps1() {
-    :
-  }
+    __git_ps1() {
+        :
+    }
 fi
 
 # set variable identifying the chroot you work in (used in the prompt below)
@@ -225,3 +227,4 @@ export GPG_TTY=$(tty)
 # auto (tty)だとdocker buildの出力が混ざるので変更
 export BUILDKIT_PROGRESS=plain
 
+# vi: et sw=4
