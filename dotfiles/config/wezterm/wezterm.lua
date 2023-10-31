@@ -1,18 +1,11 @@
 local wezterm = require 'wezterm'
 local act = wezterm.action
 
-wezterm.on('gui-startup', function(cmd)
-    local cmd = cmd or {}
-    cmd.height = 30
-    cmd.width = 100
-
-    wezterm.mux.spawn_window(cmd or {})
-end)
 
 local config = {
     --[[ font = wezterm.font {
         family="Fira Code Retina",
-        harfbuzz_features={"calt=0", "clig=0", "liga=0"}
+        harfbuzz_features={"calt=0", "clig=0", "liga=0"},
     } ]]
     font = wezterm.font_with_fallback {
         {
@@ -23,8 +16,8 @@ local config = {
         }, {
             family="Cica",
             scale=1.2,
-            stretch="Normal"
-        }
+            stretch="Normal",
+        },
     },
     font_size = 10.8,
     line_height = 0.98,
@@ -42,36 +35,39 @@ local config = {
         { key = 'F2', mods = 'CTRL', action = act.SpawnTab 'CurrentPaneDomain' },
         { key = 'l', mods = 'CTRL|SHIFT', action = act.ShowDebugOverlay },
         { key = 'n', mods = 'CTRL|SHIFT', action = act.SpawnWindow },
+        { key = 'F5', mods = 'CTRL', action = act.ReloadConfiguration },
     },
     mouse_bindings = {
         {
-            event = {Up = {streak = 1, button = 'Left'}},
+            event = { Up = {streak = 1, button = 'Left'} },
             mods = 'NONE',
-            action = act.CompleteSelection 'PrimarySelection'
+            action = act.CompleteSelection 'PrimarySelection',
         }, {
-            event = {Up = {streak = 1, button = 'Left'}},
+            event = { Up = {streak = 1, button = 'Left'} },
             mods = 'SHIFT',
-            action = act.CompleteSelection 'PrimarySelection'
+            action = act.CompleteSelection 'PrimarySelection',
         }, {
-            event = {Up = {streak = 1, button = 'Left'}},
+            event = { Up = {streak = 1, button = 'Left'} },
             mods = 'CTRL',
-            action = act.OpenLinkAtMouseCursor
-        }
+            action = act.OpenLinkAtMouseCursor,
+        },
     },
     -- for modifyOtherKeys
     enable_csi_u_key_encoding = false,
     allow_win32_input_mode = false,
 
     use_fancy_tab_bar = false,
-    window_background_opacity = 0.85,
-    text_background_opacity = 0.6,
+    window_background_opacity = 0.60,
+    text_background_opacity = 0.60,
 
+    initial_rows = 30,
+    initial_cols = 100,
     window_padding = {
         left = "6px",
         right = "4px",
         top = "2px",
         bottom = "2px",
-    }
+    },
 }
 
 if wezterm.target_triple == 'x86_64-pc-windows-msvc' then
