@@ -5,13 +5,16 @@
 	defaultBranch = main
 [pull]
 	ff = only
+[merge]
+	conflictStyle = diff3
+	# conflictStyle = zdiff3 # 2.35~
 [status]
 	showUntrackedFiles = all
 [diff]
 	algorithm = histogram
 	indentHeuristic = true
 [log]
-	date = iso8601
+	date = format:%Y-%m-%d %H:%M %z
 	decorate = short
 [alias]
 	partialclone = clone --filter=blob:none
@@ -34,6 +37,9 @@
 	# show branch list command from bash-completions
 	branches = for-each-ref --format="%(refname:strip=2)" "refs/heads/*" "refs/heads/*/**"
 	remote-branches = for-each-ref --format="%(refname:strip=2)" "refs/remotes/*" "refs/remotes/*/**"
+	merged-branches = for-each-ref --format="%(refname:strip=2)" --merged="remotes/origin/HEAD" "refs/heads/*" "refs/heads/*/**"
 	prebase = pull --rebase
 	edit = config --global --edit
+	uncached = !cd ${GIT_PREFIX:-.} && git ls-files -v | grep ^[^H]
+	loglinetime = logline --format="%C(auto)%h%C(reset)\\ %cd%C(auto)%d%C(reset)\\ %s"
 # vi: noet ts=4 sw=4 ft=gitconfig:
