@@ -607,6 +607,14 @@ repo = 'kana/vim-operator-user'
 
 [[plugins]]
 repo = 'kana/vim-repeat'
+hook_source = '''
+  let g:repeat_no_default_key_mappings = 1
+'''
+hook_post_source = '''
+  let g:repeat_no_default_key_mappings = 1
+  runtime! plugin/repeat.vim
+  RepeatDefaultKeyMappings!
+'''
 
 [[plugins]]
 repo = 'kana/vim-textobj-user'
@@ -907,6 +915,9 @@ hook_source = '''
 
   " Highlight link IndentGuidesOdd Comment
   " Highlight link IndentGuidesEven Folded
+
+  Autocmd OptionSet shiftwidth
+      \ if g:indent_guides_autocmds_enabled | call indent_guides#enable() | endif
 '''
 
 [[plugins]]
@@ -1371,7 +1382,7 @@ repo = 'monkoose/vim9-stargate'
 if = '!g:vimrc#is_nvim'
 hook_source = '''
   let g:stargate_chars = 'fjdkslaghrueiwoqptyvmcxzbn'
-  let g:stargate_limit = 1000
+  let g:stargate_limit = 2000
 
   nnoremap <Leader><Leader>w <Cmd>call stargate#OKvim('\<')<CR>
   nnoremap <Leader><Leader>j <Cmd>call stargate#OKvim('\_^\s*\zs\S')<CR>

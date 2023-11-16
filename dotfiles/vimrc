@@ -802,8 +802,12 @@ sunmap gk
 
 noremap - ^
 noremap ^ $
+noremap g- g^
+noremap g^ g$
 sunmap -
 sunmap ^
+sunmap g-
+sunmap g^
 
 " noremap! <C-p> <Up>
 " noremap! <C-l> <Down>
@@ -837,6 +841,10 @@ nnoremap <expr> <C-w>w v:count > 0 ? '<C-w>w' : '<C-w>p'
 nnoremap <C-w>p <C-w>P
 " nnoremap <C-w>j <C-w>w
 " nnoremap <C-w>k <C-w>W
+nnoremap <C-w><Tab> <C-w>gt
+tnoremap <C-w><Tab> <C-w>gt
+nnoremap <C-w><S-Tab> <C-w>gT
+tnoremap <C-w><S-Tab> <C-w>gT
 
 nnoremap gm gf
 nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
@@ -1387,6 +1395,10 @@ Highlight DiffChange ctermfg=NONE guifg=NONE
 Highlight DiffDelete ctermfg=NONE guifg=NONE
 Highlight DiffText ctermfg=NONE guifg=NONE
 
+if !g:vimrc#is_gui
+  Highlight Normal guibg=NONE
+endif
+
 " コメントのハイライトがおかしいので以前のシンタックスを適用
 " https://github.com/vim/vim/issues/11307
 if has('patch-9.0.652') && !has('patch-9.0.1025')
@@ -1425,6 +1437,7 @@ AutocmdFT * if &omnifunc ==# '' |
 AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
 AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
+AutocmdFT qf nnoremap <buffer> <Leader><CR> <CR>zv:cclose<Bar>lclose<CR>
 AutocmdFT qf nnoremap <buffer> j j
 AutocmdFT qf nnoremap <buffer> k k
 AutocmdFT qf nnoremap <buffer> gj gj
@@ -1484,8 +1497,8 @@ Autocmd OptionSet diff
     \ if v:option_new |
     \   execute 'nnoremap <buffer> dp dp]c' |
     \   execute 'nnoremap <buffer> do do]c' |
-    \   execute 'xnoremap <buffer> dp :diffput<CR>]c' |
-    \   execute 'xnoremap <buffer> do :diffget<CR>]c' |
+    \   execute 'xnoremap <buffer><silent> dp :diffput<CR>]c' |
+    \   execute 'xnoremap <buffer><silent> do :diffget<CR>]c' |
     \   setlocal cursorlineopt=number norelativenumber |
     \ else |
     \   silent! execute 'unmap <buffer> dp' |
@@ -1530,7 +1543,7 @@ if g:vimrc#is_starting
   " 画面切り替え前のメッセージを遅延させる
   let s:msg = execute([
       \   'source ' .. s:plugin_loader_path
-      \ ], 'silent')
+      \ ], 'silent!')
   Autocmd VimEnter * ++once
       \ for s:line in split(s:msg, "\n") |
       \   echomsg s:line |
