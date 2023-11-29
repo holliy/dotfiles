@@ -1,0 +1,18 @@
+// %LOCALAPPDATA%\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState
+{
+    "$schema": "https://aka.ms/winget-settings.schema.json",
+
+    // For documentation on these settings, see: 
+    // "source": {
+    //    "autoUpdateIntervalInMinutes": 5
+    // },
+    "installBehavior": {
+        "preferences": {
+            "scope": "user",
+            "locale": [ "ja-JP", "en-US" ]
+        }
+    },
+    "interactivity": {
+        "disable": false
+    }
+}

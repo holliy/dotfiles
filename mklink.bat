@@ -32,7 +32,10 @@ if not %ERRORLEVEL% == 0 (
 )
 
 cd dotfiles
-
 %DOTTER% deploy --local-config .dotter/windows.toml
+
+cd ..
+winget import --no-upgrade winget_packages.json
+
 pause
 
