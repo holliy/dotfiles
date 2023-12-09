@@ -1009,13 +1009,13 @@ hook_post_source = '''
   " endif
 
   call ddc#custom#set_global({})
-  call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'other-window'])
+  call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'window'])
 
   let g:ddc_display_ui = dein#is_available(['pum', 'ddc-ui-pum']) ? 'pum' : 'native'
   call ddc#custom#patch_global('ui', 'none')
   " call ddc#custom#patch_global('ui', g:ddc_display_ui)
 
-  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'other-window'])
+  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'window'])
   call ddc#custom#patch_filetype('vim', 'sourceParams', #{
       \   other-window: #{
       \     include_filetypes: ['help']
@@ -1035,6 +1035,9 @@ hook_post_source = '''
       \     mark: 'A',
       \     minAutoCompleteLength: 2
       \   },
+      \   line: #{
+      \     mark: 'line'
+      \   },
       \   vim-lsp: #{
       \     mark: 'L',
       \     forceCompletionPattern: '(::|->|\.)',
@@ -1052,9 +1055,10 @@ hook_post_source = '''
       \     minAutoCompleteLength: 0
       \   },
       \   neosnippet: #{ mark: 'snip' },
-      \   other-window: #{
+      \   window: #{
       \     mark: 'win',
-      \     minAutoCompleteLength: 2
+      \     minAutoCompleteLength: 2,
+      \     keywordPattern: '\w+',
       \   }
       \ })
   call ddc#custom#patch_global('sourceParams', #{
@@ -1079,10 +1083,9 @@ hook_post_source = '''
         " set completeopt-=preview
       endif
 
-      call ddc#custom#set_buffer(#{
+      call ddc#custom#set_buffer(#
           \   ui: g:ddc_display_ui,
           \   sources: ['skkeleton', 'around'],
-          \   keywordPattern: '[ぁ-ゖァ-ヶー]+',
           \   sourceOptions: #{
           \     _: #{
           \       sorters: [],
@@ -1102,7 +1105,7 @@ hook_post_source = '''
     call ddc#custom#patch_global('sourceOptions', #{
         \   skkeleton: #{
         \     mark: 'SKK',
-        \     matchers: ['skkeleton'],
+        \     matchers: [],
         \     sorters: [],
         \     converters: [],
         \     minAutoCompleteLength: 1,
@@ -1125,6 +1128,10 @@ hook_post_source = '''
       \ ddc#map#manual_complete(#{
       \   sources: ['neosnippet'], ui: g:ddc_display_ui
       \ })
+  inoremap <silent><expr> <C-l>l
+      \ ddc#map#manual_complete(#{
+      \   sources: ['line'], ui: g:ddc_display_ui
+      \ })
   " imap <C-Space> <C-n>
 
   Autocmd InsertLeave * if !IsCommandLineWindow() | pclose | endif
@@ -1142,9 +1149,9 @@ depends = ['ddc']
 repo = 'Shougo/ddc-source-around'
 depends = ['ddc']
 
-# [[plugins]]
-# repo = 'Shougo/ddc-source-line'
-# depends = ['ddc']
+[[plugins]]
+repo = 'Shougo/ddc-source-line'
+depends = ['ddc']
 
 [[plugins]]
 repo = 'Shougo/ddc-ui-native'
