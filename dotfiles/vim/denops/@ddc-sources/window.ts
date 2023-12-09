@@ -1,14 +1,15 @@
-import { GatherArguments } from 'https://deno.land/x/ddc_vim@v4.0.4/base/source.ts';
-import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v4.0.4/deps.ts';
-import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v4.0.4/types.ts';
-import { convertKeywordPattern } from 'https://deno.land/x/ddc_vim@v4.0.4/util.ts';
-import { ensure, is } from 'https://deno.land/x/unknownutil@v3.4.0/mod.ts';
+import { GatherArguments } from 'https://deno.land/x/ddc_vim@v4.3.1/base/source.ts';
+import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v4.3.1/deps.ts';
+import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v4.3.1/types.ts';
+import { convertKeywordPattern } from 'https://deno.land/x/ddc_vim@v4.3.1/utils.ts';
+import { ensure, is } from 'https://deno.land/x/unknownutil@v3.11.0/mod.ts';
 
 type Params = {
   include_same_filetype: boolean;
   include_filetypes: string[];
   only_current_tabpage: boolean;
   only_viewport: boolean;
+  context_lines: number;
 };
 
 function filetype_list(filetypes: string): string[] {
@@ -22,15 +23,26 @@ function is_filetype_include(
   return filetype1.some((ft) => filetype2.includes(ft));
 }
 
-async function get_lines(
+async function calc_range(
   denops: Denops,
   wid: number,
   only_viewport: boolean,
-): Promise<string[]> {
+  context_lines: number,
+): Promise<[number, number]> {
+  const cursor_line = await fn.line(denops, '.', wid);
   const [top, bottom] = only_viewport
     ? [await fn.line(denops, 'w0', wid), await fn.line(denops, 'w$', wid)]
-    : [1, await fn.line(denops, '$', wid)];
+    : [Math.max(cursor_line - context_lines, 0), cursor_line + context_lines];
 
+  return [top, bottom];
+}
+
+async function get_lines(
+  denops: Denops,
+  wid: number,
+  top: number,
+  bottom: number,
+): Promise<string[]> {
   const wbn = await fn.winbufnr(denops, wid);
   return await fn.getbufline(denops, wbn, top, bottom);
 }
@@ -101,11 +113,13 @@ export class Source extends BaseSource<Params> {
 
     const words = (await Promise.all(source_winids.map(
       async (wid) => {
-        const lines = await get_lines(
+        const [top, bottom] = await calc_range(
           args.denops,
           wid,
           args.sourceParams.only_viewport,
+          args.sourceParams.context_lines,
         );
+        const lines = await get_lines(args.denops, wid, top, bottom);
         const wbn = await fn.winbufnr(args.denops, wid);
         const keywordPattern = await convertKeywordPattern(
           args.denops,
@@ -127,6 +141,7 @@ export class Source extends BaseSource<Params> {
       include_filetypes: ['*'],
       only_current_tabpage: false,
       only_viewport: true,
+      context_lines: 50,
     };
   }
 }
