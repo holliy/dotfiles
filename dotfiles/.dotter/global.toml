@@ -15,7 +15,7 @@ bashrc = "~/.bashrc"
 inputrc = "~/.inputrc"
 
 [neovim.files]
-"config/nvim/init.vim" = { target="~/.config/nvim/init.vim", type="symbolic" }
+"config/nvim" = { target="~/.config/nvim", type="symbolic" }
 
 [alacritty.files]
 # see (windows|linux).toml
@@ -23,7 +23,7 @@ inputrc = "~/.inputrc"
 "config/alacritty/linux.yml" = ""
 
 [wezterm.files]
-"config/wezterm/wezterm.lua" = "~/.config/wezterm/wezterm.lua"
+"config/wezterm" = "~/.config/wezterm"
 
 [x.files]
 Xresources = "~/.Xresources"
@@ -34,5 +34,8 @@ gitconfig = "~/.gitconfig"
 [winget.files]
 # see windows.toml
 "winget.json" = ""
+
+[byobu.files]
+byobu = "~/.byobu"
 
 [default.variables]

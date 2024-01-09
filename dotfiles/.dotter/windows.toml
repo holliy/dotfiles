@@ -1,7 +1,7 @@
 packages = ["vim", "neovim", "alacritty", "wezterm", "git", "winget"]
 
 [files]
-"config/nvim/init.vim" = "~/AppData/Local/nvim/init.vim"
-"config/wezterm/wezterm.lua" = "~/.config/wezterm/wezterm.lua"
+"config/nvim" = "~/AppData/Local/nvim"
+"config/wezterm" = "~/.config/wezterm"
 "config/alacritty/windows.yml" = "~/AppData/Roaming/alacritty/alacritty.yml"
 "winget.json" = "~/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/settings.json"

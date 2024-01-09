@@ -1,3 +1,5 @@
 # Auto detect text files and perform LF normalization
 *.bat eol=crlf encoding=cp932
 gitconfig linguist-language=Git-Config
+.tmux.conf linguist-language=sh
+.byoburc linguist-language=sh

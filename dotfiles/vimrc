@@ -1096,6 +1096,9 @@ Autocmd BufReadPost,FileReadPost,FilterReadPost *
 " https://ttssh2.osdn.jp/manual/4/ja/usage/tips/vim.html
 if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " set t_Co=256
+  if g:vimrc#is_starting && &term =~# '\v^(screen|tmux)'
+    set ttymouse=sgr
+  endif
 
   " for RLogin "{{{
   if &term ==# 'rlogin-color' && !g:vimrc#is_nvim
@@ -1203,6 +1206,14 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
       \ endif
   "}}}
   "}}}
+
+  " bracketed paste in tmux
+  if g:vimrc#is_starting && &term =~# '\v^(screen|tmux)'
+    let &t_BE = "\e[?2004h"
+    let &t_BD = "\e[?2004l"
+    let &t_PS = "\e[200~"
+    let &t_PE = "\e[201~"
+  endif
 
   " OSC52でのコピー "{{{
   if g:vimrc#is_nvim
