@@ -269,7 +269,6 @@ hook_post_source = '''
 
 [[plugins]]
 repo = 'itchyny/lightline.vim'
-depends = ['lightline_skk']
 hook_source = '''
   " g:lightline "{{{
   let g:lightline = #{
@@ -279,7 +278,7 @@ hook_source = '''
       \   },
       \   colorscheme: 'landscape',
       \   active: #{
-      \     left: [['mode', 'paste', 'skk'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
+      \     left: [['mode', 'skk', 'paste'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
       \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype']]
       \   },
       \   inactive: #{
@@ -306,7 +305,6 @@ hook_source = '''
       \     truncate: '0'
       \   },
       \   component_function: #{
-      \     git: 'LightlineGit',
       \     directory: 'LightlineDirectory',
       \     filename: 'LightlineFilename',
       \     fileinfo: 'LightlineFileinfo',
@@ -344,8 +342,11 @@ hook_source = '''
     let g:lightline.subseparator = #{ left: "│", right: "│" }
   endif
 
-  if dein#is_available('lightline_skk')
+  if dein#is_available('statusline_skk')
     let g:lightline.component_function['skk'] = 'statusline_skk#mode'
+  endif
+  if dein#is_available('gitbranch')
+    let g:lightline.component_function['git'] = 'gitbranch#name'
   endif
   "}}}
 
@@ -508,60 +509,6 @@ hook_source = '''
     let &shellslash = save_shellslash
     return pathshorten(dir)
   endfunction "}}}
-
-  function! LightlineGit() abort "{{{
-    if dein#is_available('gin')
-      " https://deno.land/x/denops_std@v4.1.5/bufname/mod.ts
-      let matches = matchlist(bufname(), '^\(\w\+\)://\(\f\+\);\([^#]*\)#\(\f\+\)$')[1:4]
-      if !empty(matches)
-        let [scheme, expr, params, fragment] = matches
-        if !empty(scheme) && scheme =~# '^gin.*'
-          let params = split(params, '&')
-          let params = filter(params, { _, v -> v =~# '^commitish=' })
-          if empty(params)
-            let revision = 'INDEX'
-          else
-            let commitish = params[0][10:]
-            let revision = substitute(commitish, '%\(\x\{2}\)', '\=nr2char(str2nr(submatch(1), 16))', 'g')
-            let revision = substitute(revision, '^@', 'HEAD', 'g')
-          endif
-
-          return revision
-        endif
-      endif
-    endif
-
-    if !exists('t:git_branch')
-      let t:git_branch = LightlineBranch()
-    endif
-
-    return t:git_branch
-  endfunction
-
-  function! LightlineBranch() abort
-    if !executable('git')
-      return ''
-    endif
-
-    silent let is_worktree = trim(system('git rev-parse --is-inside-work-tree'))
-    if is_worktree !=# 'true'
-      return ''
-    endif
-
-    silent let branch = trim(system('git rev-parse --abbrev-ref --short @'))
-    if v:shell_error > 0
-      " コミットが積まれてないとき
-      return 'NO REVISIONS'
-    elseif branch !=# 'HEAD'
-      return branch
-    endif
-
-    silent let commithash = trim(system('git rev-parse --short @'))
-    return commithash
-  endfunction
-
-  Autocmd BufRead,BufWrite,BufFilePost,DirChanged,FileChangedShell,ShellCmdPost,ShellFilterPost,TabEnter,VimResume *
-      \ let t:git_branch = LightlineBranch()
   "}}}
 '''
 hook_post_source = '''
@@ -575,6 +522,9 @@ hook_post_source = '''
   " parteditなどでローカルの値が設定されないのでグローバルに設定
   setglobal statusline=%!lightline#statusline(g:statusline_winid!=#(winnr()==#0?t:winid:win_getid()))
 '''
+
+[[plugins]]
+repo = 'itchyny/vim-gitbranch'
 
 [[plugins]]
 repo = 'itchyny/vim-qfedit'
@@ -617,56 +567,17 @@ hook_post_source = '''
 '''
 
 [[plugins]]
-repo = 'kana/vim-textobj-user'
+repo = 'kana/vim-textobj-indent'
+depends = ['textobj-user']
 hook_source = '''
-  function! SameIndent() abort "{{{
-    let line = getline('.')
-    if empty(line)
-      return 0
-    endif
-
-    let indent = matchstr(line, '^\s\+')
-
-    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'bW')
-    let head_pos = getpos('.')
-
-    normal! j
-    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'eW')
-    let tail_pos = getpos('.')
-
-    return ['V', head_pos, tail_pos]
-  endfunction "}}}
-
-  function! SameIndent_i() abort "{{{
-    let line = getline('.')
-    if empty(line)
-      return 0
-    endif
-
-    let indent = matchstr(line, '^\s\+')
-
-    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'bW')
-    call search('^' .. indent .. '\zs.*$', 'W')
-    let head_pos = getpos('.')
-
-    normal! j
-    call search('^\(' .. indent .. '\|$\)\@!\zs.*$', 'eW')
-    call search('^' .. indent .. '\zs.*$', 'beW')
-    let tail_pos = getpos('.')
-
-    return ['V', head_pos, tail_pos]
-  endfunction "}}}
+  xnoremap it <Plug>(textobj-indent-a)
+  onoremap it <Plug>(textobj-indent-a)
+  xnoremap at <Plug>(textobj-indent-a)joko
+  onoremap at <Plug>(textobj-indent-a)joko
 '''
-hook_post_source = '''
-  call textobj#user#plugin('indent', #{
-      \   indent: #{
-      \     select-a-function: 'SameIndent',
-      \     select-a: 'at',
-      \     select-i-function: 'SameIndent_i',
-      \     select-i: 'it'
-      \   }
-      \ })
-'''
+
+[[plugins]]
+repo = 'kana/vim-textobj-user'
 
 [[plugins]]
 repo = 'lambdalisue/gin.vim'
@@ -1340,8 +1251,8 @@ hook_source = '''
 '''
 
 [[plugins]]
-repo = 'yasunori0418/lightline_skk.vim'
-depends = ['lightline', 'skkeleton']
+repo = 'yasunori0418/statusline_skk.vim'
+depends = ['skkeleton']
 hook_post_source = '''
   call statusline_skk#option('display', #{
       \   hiragana: 'あ',
