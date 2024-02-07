@@ -580,6 +580,32 @@ hook_source = '''
 repo = 'kana/vim-textobj-user'
 
 [[plugins]]
+repo = 'lambdalisue/fern.vim'
+hook_source = '''
+  call add(g:vimrc#generate_filetypes, 'fern')
+  let g:fern#drawer_width = 30
+
+  nnoremap <silent> <Leader>a :<C-u>Fern -drawer -toggle -reveal=% .<CR>
+  nnoremap <silent> <Leader>A :<C-u>Fern -drawer -toggle -reveal=% %:h<CR>
+
+  AutocmdFT fern nnoremap <silent><buffer> q :<C-u>bwipeout<CR>
+  AutocmdFT fern nnoremap <buffer> h zhg0
+  AutocmdFT fern nnoremap <buffer> l zlg0
+  AutocmdFT fern nnoremap <silent><buffer> - :<Home>execute "<End>normal \<lt>Plug>(fern-action-mark)"<CR>gj
+  AutocmdFT fern nnoremap <buffer><expr> <CR>
+      \ fern#smart#leaf(
+      \   '<Plug>(fern-action-open)',
+      \   '<Plug>(fern-action-expand:stay)',
+      \   '<Plug>(fern-action-collapse)',
+      \ )
+  AutocmdFT fern nnoremap <buffer> <S-CR> <Plug>(fern-action-enter)
+  AutocmdFT fern nnoremap <buffer> zo <Plug>(fern-action-expand:stay)
+  AutocmdFT fern nnoremap <buffer> zO <Plug>(fern-action-expand-tree:stay)
+  AutocmdFT fern nnoremap <buffer> zc <Plug>(fern-action-collapse)
+  AutocmdFT fern nmap <buffer> <2-LeftMouse> <CR>
+'''
+
+[[plugins]]
 repo = 'lambdalisue/gin.vim'
 depends = ['denops']
 hook_source = '''
