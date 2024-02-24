@@ -65,6 +65,10 @@ alias cdl='cd -L'
 alias cdp='cd -P'
 alias cd=cdp
 
+if type "bfs" > /dev/null 2>&1; then
+    alias find="bfs -s"
+fi
+
 if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
@@ -140,6 +144,13 @@ _fzf_compgen_dir() {
         -prune -o -name site-packages -prune -o -name vendor -prune -o \
         -type d -a -not -path "$1" -print | sed 's@^\./@@'
 }
+
+export FZF_CTRL_T_COMMAND="find -L . -mindepth 1 \
+    \( -path '*/.*' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \) -prune \
+    -o -type f -print -o -type d -print -o -type l -print 2> /dev/null | command cut -b3-"
+export FZF_ALT_C_COMMAND="find -L . -mindepth 1 \
+    \( -path '*/.*' -o -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \) -prune \
+    -o -type d -print 2> /dev/null | command cut -b3-"
 
 if [ -f ~/.fzf.bash ]; then
     . ~/.fzf.bash
