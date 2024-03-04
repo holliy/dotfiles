@@ -168,6 +168,7 @@ hook_post_source = '''
       \ })
   "}}}
 
+  " 継続行
   call lexima#add_rule(#{
       \   at: '^\s*\\\(\s*\).\{-}\%#',
       \   char: '<CR>',
@@ -265,6 +266,8 @@ repo = 'itchyny/landscape.vim'
 hook_post_source = '''
   colorscheme landscape
   doautocmd ColorScheme
+  Highlight ModeMsg NONE
+  Highlight WarningMsg ctermbg=NONE guibg=NONE
 '''
 
 [[plugins]]
@@ -539,18 +542,44 @@ hook_source = '''
 [[plugins]]
 repo = 'junegunn/fzf'
 merged = 0
-hook_post_update = 'call fzf#install()'
+hook_post_update = 'call fzf#install() | unlet g:loaded_fzf | runtime! plugin/fzf.vim'
 hook_source = '''
-  nnoremap <Leader>b :<C-u>Buffers<CR>
-  nnoremap <Leader>e :<C-u>Files<CR>
-  nnoremap <Leader>gl :<C-u>GFiles?<CR>
-  nnoremap <Leader>mru :<C-u>History<CR>
+  let g:fzf_colors = #{
+      \   border: ['fg', 'Folded']
+      \ }
 '''
 
 [[plugins]]
 repo = 'junegunn/fzf.vim'
 name = 'fzf-plugin'
 depends = ['fzf']
+hook_source = '''
+  let g:fzf_vim = #{
+      \   command_prefix: 'Fzf',
+      \ }
+
+  " 既に定義されていることがあるので再読み込み
+  if exists('g:loaded_fzf_vim')
+    unlet g:loaded_fzf_vim
+    runtime! plugin/fzf.vim
+  endif
+
+  nnoremap <Leader>b :<C-u>FzfBuffers<CR>
+  nnoremap <Leader>e :<C-u>FzfFiles<CR>
+  nnoremap <Leader>gl :<C-u>FzfGFiles?<CR>
+  nnoremap <Leader>mru :<C-u>FzfHistory<CR>
+'''
+hook_post_source = '''
+  " オプションを上書き
+  " 上書きする前に読み込まれている必要があるのでautoloadファイル (と依存するpluginファイル)を読み込む
+  runtime! plugin/fzf.vim
+  call fzf#vim#with_preview()
+  function! fzf#vim#with_preview(...) abort
+    let spec = a:0 ? copy(a:1) : {}
+    let spec.options = get(spec, 'options', []) + ['--no-unicode']
+    return spec
+  endfunction
+'''
 
 [[plugins]]
 repo = 'kana/vim-operator-user'
@@ -599,10 +628,13 @@ hook_source = '''
       \   '<Plug>(fern-action-collapse)',
       \ )
   AutocmdFT fern nnoremap <buffer> <S-CR> <Plug>(fern-action-enter)
+  " AutocmdFT fern nnoremap <buffer><nowait> D <Plug>(fern-action-remove)
   AutocmdFT fern nnoremap <buffer> zo <Plug>(fern-action-expand:stay)
   AutocmdFT fern nnoremap <buffer> zO <Plug>(fern-action-expand-tree:stay)
   AutocmdFT fern nnoremap <buffer> zc <Plug>(fern-action-collapse)
   AutocmdFT fern nmap <buffer> <2-LeftMouse> <CR>
+
+  AutocmdFT fern setlocal shiftwidth=1
 '''
 
 [[plugins]]
@@ -653,7 +685,7 @@ hook_source = '''
   nnoremap <silent> <Leader>gg :<C-u>G<CR>
   nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
   nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
-  nnoremap <silent> <Leader>ga :<C-u>Gin add %<CR>
+  nnoremap <silent> <Leader>ga :<C-u>Gin add <C-r>=expand('%:p')<CR><CR>
 
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
@@ -718,13 +750,15 @@ hook_source = '''
 repo = 'mhinz/vim-signify'
 hook_source = '''
   let g:signify_priority = 9
+  let g:signify_sign_change = '*'
   let g:signify_skip = { 'vcs': { 'allow': ['git'] } }
   let g:signify_skip_filename_pattern = ['gitgutter://.*']
 
   let g:signify_vcs_cmds = get(g:, 'signify_vcs_cmds', {})
   let g:signify_vcs_cmds['git'] = 'git diff --no-color --no-ext-diff --ignore-space-change -U0 -- %f'
 
-  nnoremap <Leader>gp :<C-u>SignifyHunkDiff<CR>
+  " popup のハイライトを上書き
+  nnoremap <Leader>gp :<C-u>SignifyHunkDiff<CR><Cmd>sleep 1m <CR><Cmd>call popup_setoptions(popup_locate(screenrow()+1,screencol()),#{highlight:'Normal'})<CR>
 
   Autocmd OptionSet diff if v:option_new | SignifyDisable | else | SignifyEnable | endif
 '''
@@ -920,17 +954,18 @@ hook_source = '''
       \   :<C-u>call ClosePreviewWindow()<CR><CR>zv
   AutocmdFT qf
       \ nnoremap <expr><silent><buffer> <C-j>
-      \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set nolazyredraw<CR>' : ''
+      \   g:quickr_preview_open ? ':<C-u>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
   AutocmdFT qf
       \ nnoremap <expr><silent><buffer> <C-k>
-      \   g:quickr_preview_open ? ':<C-u>set lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set nolazyredraw<CR>' : ''
+      \   g:quickr_preview_open ? ':<C-u>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
   AutocmdFT qf Autocmd CursorMoved <buffer>
-      \ if g:quickr_preview_open |
+      \ if g:quickr_preview_open && exists('*QFMove') |
       \   let b:prvlinenr = 0 |
       \   call QFMove(line('.')) |
       \ endif
   AutocmdFT qf doautocmd CursorMoved
   AutocmdFT qf execute 'Autocmd WinClosed' win_getid() 'call ClosePreviewWindow()'
+  Autocmd BufEnter,WinEnter,BufLeave,WinLeave setglobal modifiable&
 '''
 
 [[plugins]]
@@ -1020,7 +1055,7 @@ hook_post_source = '''
         " set completeopt-=preview
       endif
 
-      call ddc#custom#set_buffer(#
+      call ddc#custom#set_buffer(#{
           \   ui: g:ddc_display_ui,
           \   sources: ['skkeleton', 'around'],
           \   sourceOptions: #{
@@ -1310,10 +1345,10 @@ if = 'g:vimrc#is_nvim'
 repo = 'smoka7/hop.nvim'
 if = 'g:vimrc#is_nvim'
 hook_source = '''
-  nnoremap <Leader><Leader>w :<C-u>HopWord<CR>
-  nnoremap <Leader><Leader>j :<C-u>HopLineStart<CR>
-  nnoremap <Leader><Leader>f :<C-u>HopChar1<CR>
-  nnoremap <Leader><Leader>n :<C-u>call v:lua.require('hop').hint_patterns({}, @/)<CR>
+  nnoremap <silent> <Leader><Leader>w :<C-u>HopWord<CR>
+  nnoremap <silent> <Leader><Leader>j :<C-u>HopLineStart<CR>
+  nnoremap <silent> <Leader><Leader>f :<C-u>HopChar1<CR>
+  nnoremap <silent> <Leader><Leader>n :<C-u>call v:lua.require('hop').hint_patterns({}, @/)<CR>
 '''
 lua_post_source = '''
   require('hop').setup({

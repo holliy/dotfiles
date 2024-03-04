@@ -592,7 +592,7 @@ set backup backupskip+=*~,*.o
 let &backupdir = g:vimrc#dotvim .. '/.backup'
 SetG breakindent breakindentopt=shift:2
 set browsedir=buffer
-SetG complete-=u | set completeopt=menuone,noselect,preview pumheight=8
+SetG complete-=u | set completeopt=menuone,noselect,preview pumheight=8 previewheight=6
 set cmdheight=2
 set confirm
 SetG nocursorline
@@ -704,8 +704,12 @@ if g:vimrc#is_unix
   set shell=bash
 endif
 if g:vimrc#is_nvim
+  let &runtimepath = g:vimrc#dotvim .. ',' .. &runtimepath
+endif
+if g:vimrc#is_nvim
   " 互換性がないので
-  SetG noundofile
+  " SetG noundofile
+  let &undodir = g:vimrc#dotvim .. '/.undo/nvim'
 else
   SetG undofile
 endif "}}}
@@ -744,6 +748,7 @@ let g:netrw_sizestyle = 'H'
 let g:netrw_use_errorwindow = 2
 let g:netrw_winsize = -30
 let g:netrw_wiw = 10
+
 let g:vim_indent_cont = shiftwidth()*2
 let g:vim_json_conceal = 0
 "}}}
@@ -847,8 +852,8 @@ nnoremap <C-w><S-Tab> <C-w>gT
 tnoremap <C-w><S-Tab> <C-w>gT
 
 nnoremap gm gf
-nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
-nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
 nmap <silent> <C-w><C-f> <C-w>f
 "}}}
 
@@ -858,8 +863,8 @@ noremap N Nzzzv
 sunmap n
 sunmap N
 
-nnoremap <silent> * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
-nnoremap <silent> g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<CR>wb
+nnoremap * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V%s', escape(expand('<cword>'), '\'))<CR>wb
+nnoremap g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V\<lt>%s\>', escape(expand('<cword>'), '\'))<CR>wb
 "}}}
 
 " カット時にブラックホールレジスタを使う "{{{
@@ -1008,13 +1013,15 @@ inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
 inoremap <expr> <Plug>(vimrc_cancel-complete) pumvisible() ? '<C-e>' : ''
 
-inoremap <expr><silent> <CR> pumvisible() ? '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
+inoremap <expr> <CR> pumvisible() ? '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
 inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
 inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
 "}}}
 
 " terminal "{{{
+" TODO: 既に開いているときはそのバッファを表示
+nnoremap <Leader>term :<C-u>tab terminal<CR>
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
 tnoremap <S-Space> <Space>
@@ -1093,7 +1100,7 @@ Autocmd BufReadPost,FileReadPost,FilterReadPost *
     \ endif "}}}
 
 " terminal "{{{
-" https://ttssh2.osdn.jp/manual/4/ja/usage/tips/vim.html
+" https://teratermproject.github.io/manual/4/ja/usage/tips/vim.html
 if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   " set t_Co=256
   if g:vimrc#is_starting && &term =~# '\v^(screen|tmux)'
@@ -1387,7 +1394,8 @@ Highlight ColorColumn ctermbg=233 guibg=#181818
 " Highlight Folded ctermfg=247 ctermbg=234 guibg=#303030
 Highlight NonText ctermfg=blue guifg=blue
 
-Highlight CursorLineNr ctermbg=NONE guibg=NONE
+" Highlight CursorLineNr ctermbg=NONE guibg=NONE
+Highlight LineNr ctermbg=NONE guibg=NONE
 " Highlight LineNr ctermfg=darkgreen guifg=#00c000
 Highlight SignColumn ctermbg=NONE guibg=NONE
 " Highlight StatusLineNC ctermfg=235
@@ -1447,6 +1455,7 @@ AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
 AutocmdFT diff,git,help,netrw,qf
     \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
+
 AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
 AutocmdFT qf nnoremap <buffer> <Leader><CR> <CR>zv:cclose<Bar>lclose<CR>
 AutocmdFT qf nnoremap <buffer> j j
@@ -1551,7 +1560,7 @@ augroup END
 
 let s:plugin_loader_path = g:vimrc#dotvim .. '/dein.vim'
 if g:vimrc#is_starting
-  " 画面切り替え前のメッセージを遅延させる
+  " 画面切り替え前のメッセージを遅延して表示する
   let s:msg = execute([
       \   'source ' .. s:plugin_loader_path
       \ ], 'silent!')
