@@ -130,18 +130,20 @@ fi
 export FZF_DEFAULT_OPTS='--height 10 --reverse'
 
 _fzf_compgen_path() {
-    find -L "$1" -not -readable -prune -o \
+    find -L "$1" -not -readable -prune -o -path "${1:-.}" -o \
         -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
-        -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-        -prune -o -name site-packages -prune -o -name vendor -prune -o \
+        -name .vscode-server -prune -o -name target -prune -o \
+        -name node_modules -prune -o -name site-packages -prune -o \
+        -name vendor -prune -o -name .next -prune -o \
         -not -path "$1" -print | sed 's@^\./@@'
 }
 
 _fzf_compgen_dir() {
-    find -L "$1" -not -readable -prune -o \
+    find -L "$1" -not -readable -prune -o -path "${1:-.}" -o \
         -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
-        -name .vscode-server -prune -o -name target -prune -o -name node_modules \
-        -prune -o -name site-packages -prune -o -name vendor -prune -o \
+        -name .vscode-server -prune -o -name target -prune -o \
+        -name node_modules -prune -o -name site-packages -prune -o \
+        -name vendor -prune -o -name .next -prune -o \
         -type d -a -not -path "$1" -print | sed 's@^\./@@'
 }
 
@@ -170,7 +172,7 @@ fi
 GIT_PS1_STATESEPARATOR=""
 GIT_PS1_SHOWDIRTYSTATE=1
 GIT_PS1_SHOWSTASHSTATE=
-GIT_PS1_SHOWUNTRACKEDFILES=
+GIT_PS1_SHOWUNTRACKEDFILES=1
 GIT_PS1_SHOWUPSTREAM="auto"
 GIT_PS1_COMPRESSSPARSESTATE=
 GIT_PS1_OMITSPARSESTATE=1
@@ -184,6 +186,7 @@ fi
 if [ -f ~/.git-prompt.sh ]; then
     . ~/.git-prompt.sh
 fi
+# or /usr/share/bash-completion/completions/git, /etc/bash_completion.d/git-prompt
 if [ "$(type -t __git_ps1)" != "function" ]; then
     __git_ps1() {
         :
@@ -217,7 +220,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;36m\]$(__git_ps1 "(%s)")\[\033[00m\]\$ '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\[\033[01;36m\]$(__git_ps1 "(%s\[\033[01;36m\])")\[\033[00m\]\$ '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w$(__git_ps1 "(%s)")\$ '
 fi
