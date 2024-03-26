@@ -130,21 +130,40 @@ fi
 export FZF_DEFAULT_OPTS='--height 10 --reverse'
 
 _fzf_compgen_path() {
-    find -L "$1" -not -readable -prune -o -path "${1:-.}" -o \
-        -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
-        -name .vscode-server -prune -o -name target -prune -o \
-        -name node_modules -prune -o -name site-packages -prune -o \
-        -name vendor -prune -o -name .next -prune -o \
-        -not -path "$1" -print | sed 's@^\./@@'
+    local n base fname_pattern
+    n=2 # trigger ("**") の文字数
+    base="${COMP_WORDS[COMP_CWORD]}"
+    base=$(basename "$base")
+    base=${base:0:${#base}-${n}}
+    if [[ "$base" == "."* ]]; then
+        fname_pattern=".*"
+    else
+        fname_pattern="[^.]*"
+    fi
+
+    # .**<tab> で起動したときに1階層だけ隠しファイルを含める
+    find -L "$1" \( -not -readable -prune -o \
+        -path "$1/*/.cache" -prune -o -path "$1/*/.local" -prune -o \
+        -path "$1/*/.git" -prune -o -path "$1/*/.vscode-server" -prune -o \
+        -path "$1/*/target" -prune -o -path "$1/*/node_modules" -prune -o \
+        -path "$1/*/site-packages" -prune -o -path "$1/*/vendor" -prune -o \
+        -path "$1/*/.next" -prune -o -true \) \
+        -path "$1/${fname_pattern}" -not -path "$1/*/.*" \
+        \( -path "$1/.cache" -prune -o -path "$1/.local" -prune -o \
+        -path "$1/.git" -prune -o -path "$1/.vscode-server" -prune -o \
+        -path "$1/target" -prune -o -path "$1/node_modules" -prune -o \
+        -path "$1/site-packages" -prune -o -path "$1/vendor" -prune -o \
+        -path "$1/.next" -prune -o -true \) \
+        -print | sed -e 's@^\./@@' -e 's@/\./@/@'
 }
 
 _fzf_compgen_dir() {
-    find -L "$1" -not -readable -prune -o -path "${1:-.}" -o \
+    find -L "$1" -not -readable -prune -o \
         -name .cache -prune -o -name .local -prune -o -name .git -prune -o \
         -name .vscode-server -prune -o -name target -prune -o \
         -name node_modules -prune -o -name site-packages -prune -o \
-        -name vendor -prune -o -name .next -prune -o \
-        -type d -a -not -path "$1" -print | sed 's@^\./@@'
+        -name vendor -prune -o -name .next -prune -o -true \
+        \( -type d -not -path "$1" -print \) | sed -e 's@^\./@@' -e 's@/\./@/@'
 }
 
 export FZF_CTRL_T_COMMAND="find -L . -mindepth 1 \
