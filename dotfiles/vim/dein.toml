@@ -564,10 +564,10 @@ hook_source = '''
     runtime! plugin/fzf.vim
   endif
 
-  nnoremap <Leader>b :<C-u>FzfBuffers<CR>
-  nnoremap <Leader>e :<C-u>FzfFiles<CR>
-  nnoremap <Leader>gl :<C-u>FzfGFiles?<CR>
-  nnoremap <Leader>mru :<C-u>FzfHistory<CR>
+  nnoremap <Leader>b <Cmd>FzfBuffers<CR>
+  nnoremap <Leader>e <Cmd>FzfFiles<CR>
+  nnoremap <Leader>gl <Cmd>FzfGFiles?<CR>
+  nnoremap <Leader>mru <Cmd>FzfHistory<CR>
 '''
 hook_post_source = '''
   " オプションを上書き
@@ -614,10 +614,10 @@ hook_source = '''
   call add(g:vimrc#generate_filetypes, 'fern')
   let g:fern#drawer_width = 30
 
-  nnoremap <silent> <Leader>a :<C-u>Fern -drawer -toggle -reveal=% .<CR>
-  nnoremap <silent> <Leader>A :<C-u>Fern -drawer -toggle -reveal=% %:h<CR>
+  nnoremap <silent> <Leader>a <Cmd>Fern -drawer -toggle -reveal=% .<CR>
+  nnoremap <silent> <Leader>A <Cmd>Fern -drawer -toggle -reveal=% %:h<CR>
 
-  AutocmdFT fern nnoremap <silent><buffer> q :<C-u>bwipeout<CR>
+  AutocmdFT fern nnoremap <silent><buffer> q <Cmd>bwipeout<CR>
   AutocmdFT fern nnoremap <buffer> h zhg0
   AutocmdFT fern nnoremap <buffer> l zlg0
   AutocmdFT fern nnoremap <silent><buffer> - :<Home>execute "<End>normal \<lt>Plug>(fern-action-mark)"<CR>gj
@@ -682,24 +682,24 @@ hook_source = '''
   command! -nargs=1 -complete=file -bar DiffIndex execute 'GinPatch ++opener=tabnew ++no-head' fnamemodify(<f-args>, ':p') | wincmd l
   command! -nargs=1 -complete=file -bar DiffStage execute 'GinPatch ++opener=tabnew ++no-worktree' fnamemodify(<f-args>, ':p') | wincmd l
 
-  nnoremap <silent> <Leader>gg :<C-u>G<CR>
-  nnoremap <silent> <Leader>gd :<C-u>DiffIndex %<CR>
-  nnoremap <silent> <Leader>gs :<C-u>DiffStage %<CR>
-  nnoremap <silent> <Leader>ga :<C-u>Gin add <C-r>=expand('%:p')<CR><CR>
+  nnoremap <silent> <Leader>gg <Cmd>G<CR>
+  nnoremap <silent> <Leader>gd <Cmd>DiffIndex %<CR>
+  nnoremap <silent> <Leader>gs <Cmd>DiffStage %<CR>
+  nnoremap <expr><silent> <Leader>ga printf('<Cmd>Gin add %s<CR>', expand('%:p'))
 
   " コミットメッセージ入力時に先頭の行へ移動
   AutocmdFT gitcommit normal! gg
 
-  AutocmdFT gitcommit nnoremap <silent><buffer> <Leader>gd :<C-u>DiffIndex <C-r>=gin#util#worktree()<CR>/<cfile><CR>
-  AutocmdFT gitcommit nnoremap <silent><buffer> <Leader>gs :<C-u>DiffStage <C-r>=gin#util#worktree()<CR>/<cfile><CR>
+  AutocmdFT gitcommit nnoremap <expr><silent><buffer> <Leader>gd printf('<Cmd>DiffIndex %s/<cfile><CR>', gin#util#worktree())
+  AutocmdFT gitcommit nnoremap <expr><silent><buffer> <Leader>gs printf('<Cmd>DiffStage %s/<cfile><CR>', gin#util#worktree())
 
   Autocmd BufEnter gin*://* setlocal nobuflisted
   Autocmd BufEnter ginedit://*;commitish* setlocal nomodifiable
   " Autocmd BufEnter ginedit://*;commitish* call lsp#disable_diagnostics_for_buffer()
 
-  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl :<C-u>GinStatus ++opener=rightbelow\ split<CR>
-  AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit):<C-u>diffthis<CR><C-w>x<C-w>w
-  AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit):<C-u>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit):<C-u>diffthis<CR><C-w>x<C-w>w
+  AutocmdFT gitcommit nnoremap <buffer> <Leader>gl <Cmd>GinStatus ++opener=rightbelow\ split<CR>
+  AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
+  AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
 '''
 
 [[plugins]]
@@ -743,7 +743,7 @@ hook_source = '''
   let g:undotree_SetFocusWhenToggle = 1
   let g:undotree_WindowLayout = 2
 
-  nnoremap <Leader>u :<C-u>UndotreeToggle<CR>
+  nnoremap <Leader>u <Cmd>UndotreeToggle<CR>
 '''
 
 [[plugins]]
@@ -758,7 +758,7 @@ hook_source = '''
   let g:signify_vcs_cmds['git'] = 'git diff --no-color --no-ext-diff --ignore-space-change -U0 -- %f'
 
   " popup のハイライトを上書き
-  nnoremap <Leader>gp :<C-u>SignifyHunkDiff<CR><Cmd>sleep 1m <CR><Cmd>call popup_setoptions(popup_locate(screenrow()+1,screencol()),#{highlight:'Normal'})<CR>
+  nnoremap <Leader>gp <Cmd>SignifyHunkDiff<CR><Cmd>sleep 1m <CR><Cmd>call popup_setoptions(popup_locate(screenrow()+1,screencol()),#{highlight:'Normal'})<CR>
 
   Autocmd OptionSet diff if v:option_new | SignifyDisable | else | SignifyEnable | endif
 '''
@@ -793,7 +793,7 @@ hook_source = '''
       \ }
 
   nnoremap <Leader>lh <Plug>(lsp-hover)
-  nnoremap <silent> <Leader>ls :<C-u>LspWorkspaceSymbol <C-r>=expand('<lt>cword>')<CR><CR>
+  nnoremap <expr><silent> <Leader>ls printf('<Cmd>LspWorkspaceSymbol %s<CR>', expand('<lt>cword>'))
   nnoremap <Leader>lt <Plug>(lsp-peek-type-definition)
   nnoremap <Leader>ll <Plug>(lsp-document-diagnostics)
   nnoremap <Leader>lr <Plug>(lsp-references)
@@ -802,8 +802,8 @@ hook_source = '''
   xnoremap <silent> <Leader>lc :LspCodeAction<CR>
 
   " 非同期でカーソルが動くのでスリープを挟む
-  nnoremap <silent> <Leader>ld <Plug>(lsp-definition):<C-u>sleep 1m<CR>zvzz
-  nnoremap <silent> <Leader>li <Plug>(lsp-implementation):<C-u>sleep 1m<CR>zvzz
+  nnoremap <silent> <Leader>ld <Plug>(lsp-definition)<Cmd>sleep 1m<CR>zvzz
+  nnoremap <silent> <Leader>li <Plug>(lsp-implementation)<Cmd>sleep 1m<CR>zvzz
 
   Highlight link LspHintText Question
   Highlight link LspInlayHintsType Comment
@@ -839,7 +839,7 @@ hook_source = '''
   " Autocmd User lsp_buffer_enabled setlocal foldexpr=lsp#ui#vim#folding#foldexpr()
   " Autocmd User lsp_buffer_enabled setlocal foldtext=lsp#ui#vim#folding#foldtext()
   Autocmd User lsp_buffer_enabled setlocal signcolumn=yes
-  AutocmdFT lsp-hover noremap <buffer><silent> q :<C-u>bwipeout<CR>
+  AutocmdFT lsp-hover noremap <buffer><silent> q <Cmd>bwipeout<CR>
   Autocmd OptionSet diff
       \ if v:option_new |
       \   call lsp#disable_diagnostics_for_buffer() |
@@ -951,13 +951,13 @@ hook_source = '''
       \   <Plug>(quickr_preview):let g:quickr_preview_open = !g:quickr_preview_open<CR>
   AutocmdFT qf
       \ nnoremap <silent><buffer> <CR>
-      \   :<C-u>call ClosePreviewWindow()<CR><CR>zv
+      \   <Cmd>call ClosePreviewWindow()<CR><CR>zv
   AutocmdFT qf
       \ nnoremap <expr><silent><buffer> <C-j>
-      \   g:quickr_preview_open ? ':<C-u>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
+      \   g:quickr_preview_open ? '<Cmd>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-e><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
   AutocmdFT qf
       \ nnoremap <expr><silent><buffer> <C-k>
-      \   g:quickr_preview_open ? ':<C-u>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
+      \   g:quickr_preview_open ? '<Cmd>set eventignore+=CursorMoved lazyredraw<CR><C-w>P' .. v:count .. '<C-y><C-w>p:set eventignore-=CursorMoved nolazyredraw<CR>' : ''
   AutocmdFT qf Autocmd CursorMoved <buffer>
       \ if g:quickr_preview_open && exists('*QFMove') |
       \   let b:prvlinenr = 0 |
@@ -1220,7 +1220,7 @@ hook_source = '''
     let lines = [context.range[0][0], context.range[1][0]]
 
     call partedit#start(lines[0], lines[1], #{ filetype: ft })
-    nnoremap <silent><buffer> <Leader>p :<C-u>ParteditEnd<CR><C-w>c
+    nnoremap <silent><buffer> <Leader>p <Cmd>ParteditEnd<CR><C-w>c
 
     if dein#is_available('ddc')
       call ddc#custom#patch_buffer('specialBufferCompletion', v:true)
@@ -1229,7 +1229,7 @@ hook_source = '''
 
   Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_filetype = 'vim'
   Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_prefix = '\s*'
-  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p :<C-u>call OpenContext()<CR>
+  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p <Cmd>call OpenContext()<CR>
 '''
 
 [[plugins]]
@@ -1333,7 +1333,7 @@ hook_source = '''
     let g:fuzzy_motion_matchers = ['fzf', 'kensaku']
   endif
 
-  nnoremap <silent> <Leader>f :<C-u>FuzzyMotion<CR>
+  nnoremap <silent> <Leader>f <Cmd>FuzzyMotion<CR>
 '''
 
 
@@ -1345,10 +1345,10 @@ if = 'g:vimrc#is_nvim'
 repo = 'smoka7/hop.nvim'
 if = 'g:vimrc#is_nvim'
 hook_source = '''
-  nnoremap <silent> <Leader><Leader>w :<C-u>HopWord<CR>
-  nnoremap <silent> <Leader><Leader>j :<C-u>HopLineStart<CR>
-  nnoremap <silent> <Leader><Leader>f :<C-u>HopChar1<CR>
-  nnoremap <silent> <Leader><Leader>n :<C-u>call v:lua.require('hop').hint_patterns({}, @/)<CR>
+  nnoremap <silent> <Leader><Leader>w <Cmd>HopWord<CR>
+  nnoremap <silent> <Leader><Leader>j <Cmd>HopLineStart<CR>
+  nnoremap <silent> <Leader><Leader>f <Cmd>HopChar1<CR>
+  nnoremap <silent> <Leader><Leader>n <Cmd>call v:lua.require('hop').hint_patterns({}, @/)<CR>
 '''
 lua_post_source = '''
   require('hop').setup({

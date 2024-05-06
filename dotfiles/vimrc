@@ -257,8 +257,8 @@ ounmap J
 sunmap <Leader>J
 ounmap <Leader>J
 
-nnoremap <silent> <Leader><Leader>J :<C-u>set operatorfunc=Concat<CR>g@
-nnoremap <silent> <Leader><Leader>JJ :<C-u>set operatorfunc=Concat<CR>g@g@
+nnoremap <silent> <Leader><Leader>J <Cmd>set operatorfunc=Concat<CR>g@
+nnoremap <silent> <Leader><Leader>JJ <Cmd>set operatorfunc=Concat<CR>g@g@
 "}}}
 
 " ウィンドウの左側の余白の幅 "{{{
@@ -852,8 +852,8 @@ nnoremap <C-w><S-Tab> <C-w>gT
 tnoremap <C-w><S-Tab> <C-w>gT
 
 nnoremap gm gf
-nnoremap <silent> gf :<C-u>e <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
-nnoremap <silent> <C-w>f :<C-u>split <C-r>=empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/'<CR><cfile><CR>
+nnoremap <expr><silent> gf printf('<Cmd>e %s<cfile><CR>', empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/')
+nnoremap <expr><silent> <C-w>f printf('<Cmd>split %s<cfile><CR>', empty(bufname()) \|\| expand('<cfile>') =~# '^\~\?/' ? '' : expand('%:h') .. '/')
 nmap <silent> <C-w><C-f> <C-w>f
 "}}}
 
@@ -863,8 +863,8 @@ noremap N Nzzzv
 sunmap n
 sunmap N
 
-nnoremap * :<C-u>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V%s', escape(expand('<cword>'), '\'))<CR>wb
-nnoremap g* :<C-u>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V\<lt>%s\>', escape(expand('<cword>'), '\'))<CR>wb
+nnoremap * <Cmd>let @/ = printf('\V%s', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V%s', escape(expand('<cword>'), '\'))<CR>wb
+nnoremap g* <Cmd>let @/ = printf('\V\<lt>%s\>', escape(expand('<cword>'), '\'))<Bar>set hlsearch<Bar>echo printf('/\V\<lt>%s\>', escape(expand('<cword>'), '\'))<CR>wb
 "}}}
 
 " カット時にブラックホールレジスタを使う "{{{
@@ -929,48 +929,48 @@ cnoremap <C-n> <Down>
 cnoremap <C-p> <Up>
 
 nmap <Leader>w <C-w>
-nnoremap <silent> <C-w>z :<C-u>pclose<Bar>cclose<Bar>lclose<Bar>helpclose<CR>
+nnoremap <silent> <C-w>z <Cmd>pclose<Bar>cclose<Bar>lclose<Bar>helpclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
 
-nnoremap <silent> <Leader>diff :<C-u>windo diff<C-r>=&diff?'off':'this'<CR><CR>
+nnoremap <expr><silent> <Leader>diff printf('<Cmd>windo %s<CR>', &diff ? 'diffoff' : 'diffthis')
 
-nnoremap <silent> <Leader>a :<C-u>Lexplore<CR>
-nnoremap <silent> <Leader>A :<C-u>Lexplore %:h<CR>
+nnoremap <silent> <Leader>a <Cmd>Lexplore<CR>
+nnoremap <silent> <Leader>A <Cmd>Lexplore %:h<CR>
 
 " 誤爆防止
 nnoremap Z <Nop>
-nnoremap <silent> ZZ :<C-u>update<CR>
-nnoremap <silent> ZQ
-    \ :<C-u>call BDeleteSaveWindow(<C-r>=v:count > 0 ? v:count : bufnr()<CR>)<CR>
+nnoremap <silent> ZZ <Cmd>update<CR>
+nnoremap <expr><silent> ZQ
+    \ printf('<Cmd>call BDeleteSaveWindow(%d)<CR>', v:count > 0 ? v:count : bufnr())
 
-nnoremap <silent> <Leader><Tab> :<C-u>nohlsearch<CR>
+nnoremap <silent> <Leader><Tab> <Cmd>nohlsearch<CR>
 
-nnoremap <silent> <Leader>tt :<C-u>tab split<CR>
-nnoremap <expr><silent> <Leader>tc ':<C-u>' .. (v:count > 0 ? v:count : '') .. 'tabclose<CR>'
+nnoremap <silent> <Leader>tt <Cmd>tab split<CR>
+nnoremap <expr><silent> <Leader>tc printf('<Cmd>%dtabclose<CR>', v:count > 0 ? v:count : tabpagenr())
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
-nnoremap <silent> <C-n> :<C-u><C-r>=v:count1<CR>bnext<CR>
-nnoremap <silent> <C-p> :<C-u><C-r>=v:count1<CR>bprevious<CR>
-nnoremap <silent> <Leader>bn :<C-u><C-r>=v:count1<CR>bnext<CR>
-nnoremap <silent> <Leader>bN :<C-u><C-r>=v:count1<CR>bNext<CR>
-nnoremap <silent> <Leader>bp :<C-u><C-r>=v:count1<CR>bprevious<CR>
+nnoremap <expr><silent> <C-n> printf('<Cmd>%dbnext<CR>', v:count1)
+nnoremap <expr><silent> <C-p> printf('<Cmd>%dbprevious<CR>', v:count1)
+nnoremap <expr><silent> <Leader>bn printf('<Cmd>%dbnext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>bN printf('<Cmd>%dbNext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>bp printf('<Cmd>%dbprevious<CR>', v:count1)
 
-nnoremap <silent> <Leader>cn :<C-u><C-r>=v:count1<CR>cnext<CR>
-nnoremap <silent> <Leader>cN :<C-u><C-r>=v:count1<CR>cNext<CR>
-nnoremap <silent> <Leader>cp :<C-u><C-r>=v:count1<CR>cprevious<CR>
+nnoremap <expr><silent> <Leader>cn printf('<Cmd>%dcnext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>cN printf('<Cmd>%dcNext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>cp printf('<Cmd>%dcprevious<CR>', v:count1)
 
-nnoremap <silent> <Leader>ln :<C-u><C-r>=v:count1<CR>lnext<CR>
-nnoremap <silent> <Leader>lN :<C-u><C-r>=v:count1<CR>lNext<CR>
-nnoremap <silent> <Leader>lp :<C-u><C-r>=v:count1<CR>lprevious<CR>
+nnoremap <expr><silent> <Leader>ln printf('<Cmd>%dlnext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>lN printf('<Cmd>%dlNext<CR>', v:count1)
+nnoremap <expr><silent> <Leader>lp printf('<Cmd>%dlprevious<CR>', v:count1)
 
 nnoremap <silent> <Leader>h
-    \ :<C-u>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
+    \ <Cmd>echo map(synstack(line('.'),col('.')),{_,v->synIDattr(v,'name')})<CR>
 
 let g:foldmethods = ['indent', 'marker', 'syntax', 'expr']
 call add(g:foldmethods, g:foldmethods[0])
-nnoremap <silent> <Leader>sf
-    \ :<C-u>setlocal foldmethod=<C-r>=g:foldmethods[index(g:foldmethods,&foldmethod)+1]<CR> foldmethod?<CR>zv
+nnoremap <expr><silent> <Leader>sf
+    \ printf('<Cmd>setlocal foldmethod=%s foldmethod?<CR>zv', g:foldmethods[index(g:foldmethods, &foldmethod) + 1])
 "}}}
 
 " insert / delete / yank / paste "{{{
@@ -1021,7 +1021,7 @@ inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
 
 " terminal "{{{
 " TODO: 既に開いているときはそのバッファを表示
-nnoremap <Leader>term :<C-u>tab terminal<CR>
+nnoremap <Leader>term <Cmd>tab terminal<CR>
 tnoremap <ScrollWheelUp> <C-\><C-n>
 tnoremap <ScrollWheelDown> <C-\><C-n>
 tnoremap <S-Space> <Space>
@@ -1247,7 +1247,7 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
     endif
   endfunction
 
-  nnoremap <silent> <Leader>y :<C-u>call <SID>paste64(@")<CR>
+  nnoremap <silent> <Leader>y <Cmd>call <SID>paste64(@")<CR>
 
   if g:vimrc#is_nvim
     let g:clipboard = #{
@@ -1454,7 +1454,7 @@ AutocmdFT c setlocal omnifunc=ccomplete#Complete
 AutocmdFT * if &omnifunc ==# '' |
     \ setlocal omnifunc=syntaxcomplete#Complete | endif
 AutocmdFT diff,git,help,netrw,qf
-    \ noremap <buffer><silent> q :<C-u>bwipeout<CR>
+    \ noremap <buffer><silent> q <Cmd>bwipeout<CR>
 
 AutocmdFT qf nnoremap <buffer> <CR> <CR>zv
 AutocmdFT qf nnoremap <buffer> <Leader><CR> <CR>zv:cclose<Bar>lclose<CR>
@@ -1462,7 +1462,7 @@ AutocmdFT qf nnoremap <buffer> j j
 AutocmdFT qf nnoremap <buffer> k k
 AutocmdFT qf nnoremap <buffer> gj gj
 AutocmdFT qf nnoremap <buffer> gk gk
-Autocmd CmdwinEnter * nnoremap <buffer><silent> q :<C-u>q<CR>
+Autocmd CmdwinEnter * nnoremap <buffer><silent> q <Cmd>q<CR>
 Autocmd CmdwinEnter * nnoremap <buffer><silent> <CR> <CR>
 AutocmdFT vim,help setlocal keywordprg=:help
 Autocmd BufNewFile *.bat setlocal fileencoding=cp932 fileformat=dos
@@ -1478,7 +1478,7 @@ if g:vimrc#is_nvim
 elseif has('terminal')
   Autocmd TerminalWinOpen * setlocal nobuflisted nonumber norelativenumber winfixheight
   Autocmd TerminalWinOpen * nnoremap <buffer><silent><expr> q
-      \ term_getstatus(bufnr()) =~# 'finished' ? ':<C-u>q<CR>' : ''
+      \ term_getstatus(bufnr()) =~# 'finished' ? '<Cmd>q<CR>' : ''
   Autocmd TerminalWinOpen * if winnr('$') > 1 && empty(&termwinsize) | resize 15 | endif
   Autocmd TerminalWinOpen * nnoremap <buffer> J <C-e>
   Autocmd TerminalWinOpen * nnoremap <buffer> K <C-y>
