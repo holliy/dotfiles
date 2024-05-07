@@ -527,22 +527,22 @@ unlet s:vimrc s:gvimrc
 "}}}
 
 " setglobal, autocmd, highlight のラッパー "{{{
-command! -complete=event -nargs=* Autocmd autocmd Vimrc <args>
-command! -bar -complete=highlight -nargs=*
+command! -complete=event -keepscript -nargs=* Autocmd autocmd Vimrc <args>
+command! -bar -complete=highlight -keepscript -nargs=*
     \ Highlight Autocmd ColorScheme * highlight <args>
 
 if g:vimrc#is_starting
-  command -complete=filetype -nargs=*
+  command -complete=filetype -keepscript -nargs=*
       \ AutocmdFT Autocmd VimEnter * ++once Autocmd FileType <args>
-  command -bar -complete=option -nargs=* SetG set <args>
+  command -bar -complete=option -keepscript -nargs=* SetG set <args>
 
-  Autocmd VimEnter * ++once command! -complete=filetype -nargs=*
+  Autocmd VimEnter * ++once command! -complete=filetype -keepscript -nargs=*
       \ AutocmdFT Autocmd FileType <args>
-  Autocmd VimEnter * ++once command! -bar -complete=option -nargs=*
+  Autocmd VimEnter * ++once command! -bar -complete=option -keepscript -nargs=*
       \ SetG setglobal <args>
 else
-  command! -complete=filetype -nargs=* AutocmdFT Autocmd FileType <args>
-  command! -bar -complete=option -nargs=* SetG setglobal <args>
+  command! -complete=filetype -keepscript -nargs=* AutocmdFT Autocmd FileType <args>
+  command! -bar -complete=option -keepscript -nargs=* SetG setglobal <args>
 endif
 
 " syntax "{{{

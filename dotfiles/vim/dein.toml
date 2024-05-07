@@ -828,8 +828,7 @@ hook_source = '''
         \ )
     highlight link LspHintVirtualText LspInformationVirtualText
   endfunction
-  " :command-keepscript は8.2.3584以降
-  execute printf('Autocmd ColorScheme * call %slsp_highlight_virtualtext()', expand('<SID>'))
+  Autocmd ColorScheme * call <SID>lsp_highlight_virtualtext()
 
   " 重いことがあるので一旦無効化
   " Autocmd User lsp_buffer_enabled
@@ -1066,13 +1065,13 @@ hook_post_source = '''
           \   }
           \ })
     endfunction
-    execute printf('Autocmd User skkeleton-enable-pre call %sskkeleton_enable()', expand('<SID>'))
+    Autocmd User skkeleton-enable-pre call <SID>skkeleton_enable()
 
     function! s:skkeleton_disable()
       call ddc#custom#set_buffer(b:ddc_options)
       " let &completeopt = b:save_cot
     endfunction
-    execute printf('Autocmd User skkeleton-disable-pre call %sskkeleton_disable()', expand('<SID>'))
+    Autocmd User skkeleton-disable-pre call <SID>skkeleton_disable()
 
     call ddc#custom#patch_global('sourceOptions', #{
         \   skkeleton: #{
@@ -1308,7 +1307,7 @@ hook_source = '''
     call remove(g:skkeleton#mapped_keys, index(g:skkeleton#mapped_keys, '<Down>'))
     call remove(g:skkeleton#mapped_keys, index(g:skkeleton#mapped_keys, '<Up>'))
   endfunction
-  execute printf('Autocmd User skkeleton-initialize-pre call %sskk_init()', expand('<SID>'))
+  Autocmd User skkeleton-initialize-pre call <SID>skk_init()
 '''
 
 [[plugins]]
@@ -1318,9 +1317,9 @@ hook_post_source = '''
   call statusline_skk#option('display', #{
       \   hiragana: 'あ',
       \   katakana: 'ア',
-      \   hankaku_katakana: ' ｱ',
+      \   hankaku_katakana: 'ｱ ',
       \   zenkaku_alphabet: 'Ａ',
-      \   alphabet: '',
+      \   alphabet: 'a ',
       \   abbrev: 'ab'
       \ })
 '''
@@ -1351,9 +1350,9 @@ hook_source = '''
   nnoremap <silent> <Leader><Leader>n <Cmd>call v:lua.require('hop').hint_patterns({}, @/)<CR>
 '''
 lua_post_source = '''
-  require('hop').setup({
+  require'hop'.setup {
     keys = 'fjdkslaghrueiwoqptyvmcxzbn'
-  })
+  }
 '''
 
 [[plugins]]
