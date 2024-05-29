@@ -345,10 +345,10 @@ hook_source = '''
     let g:lightline.subseparator = #{ left: "│", right: "│" }
   endif
 
-  if dein#is_available('statusline_skk')
+  if !empty(dpp#get('statusline_skk'))
     let g:lightline.component_function['skk'] = 'statusline_skk#mode'
   endif
-  if dein#is_available('gitbranch')
+  if !empty(dpp#get('gitbranch'))
     let g:lightline.component_function['git'] = 'gitbranch#name'
   endif
   "}}}
@@ -499,7 +499,7 @@ hook_source = '''
 
     let fname = expand('%:p:h')
 
-    if dein#is_available('gin')
+    if !empty(dpp#get('gin'))
       let scheme = matchstr(fname, '^\w\+://')[:-4]
       if !empty(scheme) && scheme =~# '^gin.*'
         let fname = gin#util#worktree() .. '/' .. gin#util#expand('%:p:h')
@@ -982,7 +982,11 @@ hook_post_source = '''
   call ddc#custom#set_global({})
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'window'])
 
-  let g:ddc_display_ui = dein#is_available(['pum', 'ddc-ui-pum']) ? 'pum' : 'native'
+  if !empty(dpp#get('pum')) && !empty(dpp#get('ddc-ui-pum'))
+    let g:ddc_display_ui = 'pum'
+  else
+    let g:ddc_display_ui = 'native'
+  endif
   call ddc#custom#patch_global('ui', 'none')
   " call ddc#custom#patch_global('ui', g:ddc_display_ui)
 
@@ -1043,7 +1047,7 @@ hook_post_source = '''
       \   }
       \ })
 
-  if dein#is_available('skkeleton')
+  if !empty(dpp#get('skkeleton'))
     function! s:skkeleton_enable()
       if !exists('b:ddc_options')
         " skkeleton有効時の設定が入ることがあるので初回だけ
@@ -1137,6 +1141,21 @@ depends = ['ddc']
 # depends = ['ddc', 'pum']
 
 [[plugins]]
+repo = 'Shougo/dpp.vim'
+depends = ['denops']
+if = '(0)'
+
+[[plugins]]
+repo = 'Shougo/dpp-ext-toml'
+depends = ['dpp']
+if = '(0)'
+
+[[plugins]]
+repo = 'Shougo/dpp-protocol-git'
+depends = ['dpp']
+if = '(0)'
+
+[[plugins]]
 repo = 'Shougo/neco-vim'
 depends = ['ddc']
 
@@ -1175,7 +1194,7 @@ hook_source = '''
 repo = 'Shougo/neosnippet-snippets'
 merged = 0
 hook_source = '''
-  let g:neosnippet#snippets_directory = g:dein#plugin.path .. '/neosnippet'
+  let g:neosnippet#snippets_directory = dpp#get('neosnippet-snippets').path .. '/neosnippet'
 '''
 
 # [[plugins]]
@@ -1200,7 +1219,7 @@ repo = 'skk-dev/dict'
 name = 'skk-dict'
 merged = 0
 hook_source = '''
-  let s:skk_dict_dir = g:dein#plugin.path
+  let s:skk_dict_dir = dpp#get('skk-dict').path
 '''
 
 [[plugins]]
@@ -1221,13 +1240,13 @@ hook_source = '''
     call partedit#start(lines[0], lines[1], #{ filetype: ft })
     nnoremap <silent><buffer> <Leader>p <Cmd>ParteditEnd<CR><C-w>c
 
-    if dein#is_available('ddc')
+    if !empty(dpp#get('ddc'))
       call ddc#custom#patch_buffer('specialBufferCompletion', v:true)
     endif
   endfunction
 
-  Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_filetype = 'vim'
-  Autocmd BufReadPost dein.toml,dein/*.toml let b:partedit_prefix = '\s*'
+  Autocmd BufReadPost dpp.toml,dpp/*.toml let b:partedit_filetype = 'vim'
+  Autocmd BufReadPost dpp.toml,dpp/*.toml let b:partedit_prefix = '\s*'
   AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p <Cmd>call OpenContext()<CR>
 '''
 
@@ -1328,7 +1347,7 @@ hook_post_source = '''
 repo = 'yuki-yano/fuzzy-motion.vim'
 depends = ['denops']
 hook_source = '''
-  if dein#is_available('kensaku')
+  if !empty(dpp#get('kensaku'))
     let g:fuzzy_motion_matchers = ['fzf', 'kensaku']
   endif
 

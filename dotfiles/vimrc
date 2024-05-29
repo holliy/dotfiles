@@ -1558,7 +1558,7 @@ packadd! matchit
 augroup filetypedetect
 augroup END
 
-let s:plugin_loader_path = g:vimrc#dotvim .. '/dein.vim'
+let s:plugin_loader_path = g:vimrc#dotvim .. '/dpp.vim'
 if g:vimrc#is_starting
   " 画面切り替え前のメッセージを遅延して表示する
   let s:msg = execute([
