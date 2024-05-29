@@ -12,6 +12,7 @@ let s:dein_dir = g:vimrc#dotvim .. '/dein'
 let s:dpp_dir = g:vimrc#dotvim .. '/dpp'
 let s:dpp_repo_dir = s:dpp_dir .. '/repos/github.com/Shougo/dpp.vim'
 let s:denops_repo_dir = s:dpp_dir .. '/repos/github.com/vim-denops/denops.vim'
+let s:dpp_ext_installer_repo_dir = s:dpp_dir .. '/repos/github.com/Shougo/dpp-ext-installer'
 let s:dpp_ext_toml_repo_dir = s:dpp_dir .. '/repos/github.com/Shougo/dpp-ext-toml'
 let s:dpp_protocol_git_repo_dir = s:dpp_dir .. '/repos/github.com/Shougo/dpp-protocol-git'
 
@@ -36,15 +37,16 @@ endif
 
 let dpp_plugins = [
     \   'Shougo/dpp.vim',
+    \   'Shougo/dpp-ext-installer',
     \   'Shougo/dpp-ext-toml',
     \   'Shougo/dpp-protocol-git',
     \   'vim-denops/denops.vim',
     \ ]
 for s:p in dpp_plugins
-  let s:dir = printf('/repos/github.com/', s:dpp_dir, s:p)
+  let s:dir = printf('%s/repos/github.com/%s', s:dpp_dir, s:p)
   if !isdirectory(s:dir)
-    call system(printf(
-        \   'git clone --filter=blob:none https://github.com/%s %s',
+    call execute(printf(
+        \   '!git clone --filter=blob:none https://github.com/%s %s',
         \   s:p,
         \   shellescape(s:dir)
         \ ))
@@ -58,6 +60,7 @@ if index(split(&runtimepath, ','), s:dpp_repo_dir) < 0
   let &runtimepath = join([
       \   s:dpp_repo_dir,
       \   s:denops_repo_dir,
+      \   s:dpp_ext_installer_repo_dir,
       \   s:dpp_ext_toml_repo_dir,
       \   s:dpp_protocol_git_repo_dir,
       \ ], ',') .. ',' .. &runtimepath
@@ -81,21 +84,40 @@ if dpp#min#load_state(s:dpp_dir)
     redraw
     echomsg 'done'
   endfunction
+  Autocmd User Dpp:makeStatePost call s:after_make_state()
 else
   call dpp#util#_call_hook('source', values(g:dpp#_plugins))
   runtime! plugin/**/*.vim
   call dpp#source()
   call dpp#util#_call_hook('post_source', values(g:dpp#_plugins))
-
-  function! s:after_make_state() abort
-  endfunction
 endif
 "}}}
 
+function! s:install_plugins(prompt) abort
+  let plugins = dpp#async_ext_action('installer', 'getNotInstalled')
+  if empty(plugins)
+    return
+  endif
+
+  echomsg 'Not installed plugins: ' .. plugins
+  " if a:prompt
+  "   if confirm('Install now? ', "&Y\n&n") !=# 1
+  "     return
+  "   endif
+  " endif
+
+  call dpp#async_ext_action('installer', 'install', #{ names: plugins })
+endfunction
+Autocmd User Dpp:makeStatePost call s:install_plugins(!g:vimrc#is_starting)
+
+Autocmd User Dpp:ext:installer:updateDone echomsg 'done'
+
 " let g:denops#debug = 1
 " let g:denops#trace = ['dpp']
-Autocmd User Dpp:makeStatePost call s:after_make_state()
 
 Autocmd BufWritePost *.vim,*.ts,*.toml call dpp#check_files()
+
+command! -bar -nargs=* DppUpdate call dpp#async_ext_action('installer', 'update', #{ names: [<f-args>] })
+
 doautocmd denops_plugin_internal_startup VimEnter
 

@@ -609,7 +609,7 @@ hook_source = '''
 repo = 'kana/vim-textobj-user'
 
 [[plugins]]
-repo = 'lambdalisue/fern.vim'
+repo = 'lambdalisue/vim-fern'
 hook_source = '''
   call add(g:vimrc#generate_filetypes, 'fern')
   let g:fern#drawer_width = 30
@@ -638,7 +638,7 @@ hook_source = '''
 '''
 
 [[plugins]]
-repo = 'lambdalisue/gin.vim'
+repo = 'lambdalisue/vim-gin'
 depends = ['denops']
 hook_source = '''
   let g:vimrc#generate_filetypes += [
@@ -1143,6 +1143,11 @@ depends = ['ddc']
 [[plugins]]
 repo = 'Shougo/dpp.vim'
 depends = ['denops']
+if = '(0)'
+
+[[plugins]]
+repo = 'Shougo/dpp-ext-installer'
+depends = ['dpp']
 if = '(0)'
 
 [[plugins]]

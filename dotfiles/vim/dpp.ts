@@ -18,6 +18,12 @@ type ExtParams = {
     path: string;
     options?: Partial<Plugin>;
   }>;
+  installer?: Partial<{
+    checkDiff: boolean;
+    githubAPIToken: string;
+    logFilePath: string;
+    maxProcesses: number;
+  }>;
 };
 type ProtocolParams = {
   // https://github.com/Shougo/dpp-protocol-git/blob/53f8531e1e3040127287b09f8bfbb93d77ef7994/denops/%40dpp-protocols/git.ts#L18
@@ -43,7 +49,11 @@ export class Config extends BaseConfig {
   }: ConfigArguments): Promise<ConfigReturn> {
     contextBuilder.setGlobal({
       protocols: ["git"],
-      extParams: {} satisfies ExtParams,
+      extParams: {
+        installer: {
+          checkDiff: true,
+        }
+      } satisfies ExtParams,
       protocolParams: {
         git: {
           enablePartialClone: true,
