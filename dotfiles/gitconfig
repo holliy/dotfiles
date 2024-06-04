@@ -6,8 +6,8 @@
 [pull]
 	ff = only
 [merge]
-	conflictStyle = diff3
-	# conflictStyle = zdiff3 # 2.35~
+	# conflictStyle = diff3
+	conflictStyle = zdiff3 # 2.35~
 [status]
 	showUntrackedFiles = all
 [diff]
@@ -41,5 +41,7 @@
 	prebase = pull --rebase
 	edit = config --global --edit
 	uncached = !cd ${GIT_PREFIX:-.} && git ls-files -v | grep ^[^H]
-	loglinetime = logline --format="%C(auto)%h%C(reset)\\ %cd%C(auto)%d%C(reset)\\ %s"
+	loglinetime = logline --format="%C(auto)%h%C(reset)\\ %ad%C(auto)%d%C(reset)\\ %s"
+	fixup = commit --fixup
+	current-branch = rev-parse --abbrev-ref HEAD
 # vi: noet ts=4 sw=4 ft=gitconfig:
