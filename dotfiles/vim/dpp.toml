@@ -1304,7 +1304,7 @@ hook_source = '''
 
 [[plugins]]
 repo = 'vim-denops/denops.vim'
-if = 'executable("deno")'
+if = '(0)'
 
 [[plugins]]
 repo = 'vim-jp/vimdoc-ja'
