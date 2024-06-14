@@ -35,13 +35,14 @@
 	pushf = push --force-with-lease --force-if-includes
 	synonym = switch --no-track --create
 	# show branch list command from bash-completions
-	branches = for-each-ref --format="%(refname:strip=2)" "refs/heads/*" "refs/heads/*/**"
-	remote-branches = for-each-ref --format="%(refname:strip=2)" "refs/remotes/*" "refs/remotes/*/**"
-	merged-branches = for-each-ref --format="%(refname:strip=2)" --merged="remotes/origin/HEAD" "refs/heads/*" "refs/heads/*/**"
+	branches = !git for-each-ref --format=\"%(refname:strip=2)\" --exclude=\"refs/heads/$(git current-branch)\" \"refs/heads/**\"
+	remote-branches = for-each-ref --format="%(refname:strip=2)" "refs/remotes/**"
+	merged-branches = !git for-each-ref --format=\"%(refname:strip=2)\" --merged=\"remotes/origin/HEAD\" --exclude=\"refs/heads/$(git current-branch)\" \"refs/heads/**\"
 	prebase = pull --rebase
 	edit = config --global --edit
-	uncached = !cd ${GIT_PREFIX:-.} && git ls-files -v | grep ^[^H]
+	uncached = !cd ${GIT_PREFIX:-.} && git ls-files -v $(git rev-parse --show-toplevel) | grep -v ^H
 	loglinetime = logline --format="%C(auto)%h%C(reset)\\ %ad%C(auto)%d%C(reset)\\ %s"
 	fixup = commit --fixup
-	current-branch = rev-parse --abbrev-ref HEAD
+	current-branch = branch --show-current
+	squash = rebase --autosquash
 # vi: noet ts=4 sw=4 ft=gitconfig:
