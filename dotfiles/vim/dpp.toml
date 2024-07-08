@@ -336,9 +336,6 @@ hook_source = '''
       \   separator: #{ left: "", right: "" },
       \ }
 
-  " 使うけど'statusline'を自動で設定されたくないので
-  let g:lightline.enable.statusline = 0
-
   if g:vimrc#is_windows && g:vimrc#is_gui
     let g:lightline.subseparator = #{ left: "|", right: "|" }
   else
@@ -522,8 +519,6 @@ hook_post_source = '''
   " ポップアップ表示中にwin_getidの対象がポップアップウィンドウになることがあるのでwinidを退避
   let t:winid = win_getid()
   Autocmd WinEnter * let t:winid = win_getid()
-  " parteditなどでローカルの値が設定されないのでグローバルに設定
-  setglobal statusline=%!lightline#statusline(g:statusline_winid!=#(winnr()==#0?t:winid:win_getid()))
 '''
 
 [[plugins]]
@@ -1247,6 +1242,9 @@ hook_source = '''
 
     if !empty(dpp#get('ddc'))
       call ddc#custom#patch_buffer('specialBufferCompletion', v:true)
+    endif
+    if !empty(dpp#get('lightline'))
+      call lightline#update()
     endif
   endfunction
 
