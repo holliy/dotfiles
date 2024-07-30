@@ -703,7 +703,7 @@ endif
 if g:vimrc#is_unix
   set shell=bash
 endif
-if g:vimrc#is_nvim
+if g:vimrc#is_nvim || !g:vimrc#is_windows
   let &runtimepath = g:vimrc#dotvim .. ',' .. &runtimepath
 endif
 if g:vimrc#is_nvim

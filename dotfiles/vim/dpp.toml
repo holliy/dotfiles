@@ -634,7 +634,6 @@ hook_source = '''
 
 [[plugins]]
 repo = 'lambdalisue/vim-gin'
-depends = ['denops']
 hook_source = '''
   let g:vimrc#generate_filetypes += [
       \   'gin', 'gin-branch', 'gin-diff', 'gin-edit', 'gin-log', 'gin-status'
@@ -660,7 +659,6 @@ hook_source = '''
 
     execute 'GinEdit ++opener=tabnew' commit1 fnamemodify(a:path, ':p')
     diffthis
-
     if a:commit2 is v:null
       botright vsplit `=a:path`
     else
@@ -695,11 +693,14 @@ hook_source = '''
   AutocmdFT gitcommit nnoremap <buffer> <Leader>gl <Cmd>GinStatus ++opener=rightbelow\ split<CR>
   AutocmdFT gin-status nnoremap <buffer> dd <Plug>(gin-action-edit:cached:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:local:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
   AutocmdFT gin-status nnoremap <buffer> ds <Plug>(gin-action-edit:HEAD:vsplit)<Cmd>diffthis<CR><C-w>p<Plug>(gin-action-edit:cached:edit)<Cmd>diffthis<CR><C-w>x<C-w>w
+
+  if !empty(dpp#get('signify'))
+    Autocmd User GinCommandPost SignifyRefresh
+  endif
 '''
 
 [[plugins]]
 repo = 'lambdalisue/kensaku.vim'
-depends = ['denops']
 
 [[plugins]]
 repo = 'lambdalisue/kensaku-command.vim'
@@ -967,13 +968,7 @@ repo = 'Shougo/context_filetype.vim'
 
 [[plugins]]
 repo = 'Shougo/ddc.vim'
-depends = ['denops']
 hook_post_source = '''
-  " if !exists('#denops_plugin_internal')
-  "   " denopsがサポートされてない
-  "   return
-  " endif
-
   call ddc#custom#set_global({})
   call ddc#custom#patch_global('sources', ['vim-lsp', 'around', 'window'])
 
@@ -987,7 +982,7 @@ hook_post_source = '''
 
   call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'window'])
   call ddc#custom#patch_filetype('vim', 'sourceParams', #{
-      \   other-window: #{
+      \   window: #{
       \     include_filetypes: ['help']
       \   }
       \ })
@@ -1137,7 +1132,6 @@ depends = ['ddc']
 
 [[plugins]]
 repo = 'Shougo/dpp.vim'
-depends = ['denops']
 if = '(0)'
 
 [[plugins]]
@@ -1309,7 +1303,6 @@ repo = 'vim-jp/vimdoc-ja'
 
 [[plugins]]
 repo = 'vim-skk/skkeleton'
-depends = ['denops']
 hook_source = '''
   noremap! ,, <Plug>(skkeleton-enable)
 
@@ -1348,7 +1341,6 @@ hook_post_source = '''
 
 [[plugins]]
 repo = 'yuki-yano/fuzzy-motion.vim'
-depends = ['denops']
 hook_source = '''
   if !empty(dpp#get('kensaku'))
     let g:fuzzy_motion_matchers = ['fzf', 'kensaku']
