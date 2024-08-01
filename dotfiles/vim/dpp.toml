@@ -36,16 +36,16 @@ hook_post_source = '''
   let save_tab_mapping = maparg('<Tab>', 'i', 0, 1)
 
   let quotes = [
-      \   #{ start: "'", end: "'" }, #{ start: '"', end: '"' }
+      \   #{ start: "'", end: "'" }, #{ start: '"', end: '"' },
       \ ]
   let brackets = [
       \   #{ start: '(', end: ')' }, #{ start: '{', end: '}' },
-      \   #{ start: '[', end: ']' }
+      \   #{ start: '[', end: ']' },
       \ ]
   let comments = [
       \   #{
       \     start: '/*', end: '*/', head: '*',
-      \     filetype: ['c', 'cpp', 'cs', 'java', 'rust', 'scala']
+      \     filetype: ['c', 'cpp', 'cs', 'java', 'rust', 'scala'],
       \   },
       \   #{ start: '{-', end: '-}', with_bracket: 1, filetype: ['haskell'] },
       \   #{ start: '{-#', end: '#-}', filetype: ['haskell'] },
@@ -58,20 +58,20 @@ hook_post_source = '''
   " quote in lisp "{{{
   call lexima#add_rule(#{
       \   char: "'",
-      \   filetype: ['lisp', 'scheme']
+      \   filetype: ['lisp', 'scheme'],
       \ })
   call lexima#add_rule(#{
       \   char: "'",
       \   input_after: "'",
       \   filetype: ['lisp', 'scheme'],
-      \   syntax: ['Comment', 'Constant', 'String']
+      \   syntax: ['Comment', 'Constant', 'String'],
       \ })
   call lexima#add_rule(#{
       \   at: "\\%#'",
       \   char: "'",
       \   leave: 1,
       \   filetype: ['lisp', 'scheme'],
-      \   syntax: ['Comment', 'Constant', 'String']
+      \   syntax: ['Comment', 'Constant', 'String'],
       \ })
   "}}}
 
@@ -81,26 +81,26 @@ hook_post_source = '''
         \   at: '\V' .. c.start[:-2] .. '\%#\$',
         \   char: c.start[-1:],
         \   input_after: c.end,
-        \   filetype: c.filetype
+        \   filetype: c.filetype,
         \ })
     call lexima#add_rule(#{
         \   at: '\V' .. c.start .. '\%#' .. c.end,
         \   char: '<Space>',
         \   input_after: '<Space>',
-        \   filetype: c.filetype
+        \   filetype: c.filetype,
         \ })
     call lexima#add_rule(#{
         \   at: '\V' .. c.start .. '\%#' .. c.end,
         \   char: '<BS>',
         \   input: repeat('<BS>', len(c.start)),
         \   delete: len(c.end),
-        \   filetype: c.filetype
+        \   filetype: c.filetype,
         \ })
     call lexima#add_rule(#{
         \   at: '\V' .. c.start .. ' \%# ' .. c.end,
         \   char: '<BS>',
         \   delete: 1,
-        \   filetype: c.filetype
+        \   filetype: c.filetype,
         \ })
 
     if has_key(c, 'head')
@@ -108,14 +108,14 @@ hook_post_source = '''
           \   at: '\V\^ ' .. c.head .. ' \%# \?' .. c.end,
           \   char: '<BS>',
           \   input: '<BS><BS>',
-          \   filetype: c.filetype
+          \   filetype: c.filetype,
           \ })
       call lexima#add_rule(#{
           \   at: '^ \%#',
           \   char: '<Space>',
           \   input: c.head .. '<Space>',
           \   filetype: c.filetype,
-          \   syntax: ['Comment']
+          \   syntax: ['Comment'],
           \ })
     endif
 
@@ -124,7 +124,7 @@ hook_post_source = '''
           \   at: '\V' .. c.start[:-2] .. '\%#' .. c.end[1:] .. '\$',
           \   char: c.start[-1:],
           \   input_after: c.end[:0],
-          \   filetype: c.filetype
+          \   filetype: c.filetype,
           \ })
     endif
   endfor "}}}
@@ -136,7 +136,7 @@ hook_post_source = '''
         \   char: '<CR>',
         \   input: '<CR>\ ',
         \   input_after: '<CR>\ ',
-        \   filetype: ['vim']
+        \   filetype: ['vim'],
         \ })
     " カッコの間に改行を入力時、継続行にして3行に展開
     call lexima#add_rule(#{
@@ -145,18 +145,18 @@ hook_post_source = '''
         \   char: '<CR>',
         \   input: '<CR>\ ',
         \   input_after: '<CR>\ ' .. pair.end,
-        \   filetype: ['vim']
+        \   filetype: ['vim'],
         \ })
     " ↑の展開後の途中の改行でも行継続
     call lexima#add_rule(#{
         \   at: '\C\v^(\s*)\S.*\' .. pair.start .. '%#\n%(%(\s*|\1\s*\\.*)\n)*\1\s*\\\s*\' .. pair.end,
         \   char: '<CR>',
         \   input: '<CR>\ ',
-        \   filetype: ['vim']
+        \   filetype: ['vim'],
         \ })
     call lexima#add_rule(#{
         \   at: '\%#\w',
-        \   char: pair.start
+        \   char: pair.start,
         \ })
   endfor
 
@@ -164,7 +164,7 @@ hook_post_source = '''
       \   at: '\\%\?\%#',
       \   char: '(',
       \   input_after: '\)',
-      \   filetype: ['vim']
+      \   filetype: ['vim'],
       \ })
   "}}}
 
@@ -174,7 +174,7 @@ hook_post_source = '''
       \   char: '<CR>',
       \   input: '<CR>\\\1',
       \   with_submatch: 1,
-      \   filetype: ['vim']
+      \   filetype: ['vim'],
       \ })
 
   " 補完した文字の後ろに<Tab>で移動 "{{{
@@ -182,7 +182,7 @@ hook_post_source = '''
     call lexima#add_rule(#{
         \   at: '\V\%#\( \?\|\n\s\*\)' .. pair.end,
         \   char: '<Tab>',
-        \   leave: pair.end
+        \   leave: pair.end,
         \ })
   endfor
 
@@ -192,7 +192,7 @@ hook_post_source = '''
         \   char: '<Tab>',
         \   leave: c.end,
         \   filetype: c.filetype,
-        \   syntax: ['Comment']
+        \   syntax: ['Comment'],
         \ })
   endfor
 
@@ -200,7 +200,7 @@ hook_post_source = '''
       \   at: '\%#\\)',
       \   char: '<Tab>',
       \   leave: '\\)',
-      \   filetype: ['vim']
+      \   filetype: ['vim'],
       \ })
   "}}}
 
@@ -211,7 +211,7 @@ hook_post_source = '''
     execute printf(
         \   "inoremap <expr><silent> %s (pumvisible() ? '<C-y>a<BS>' : '') .. lexima#expand(%s, 'i')",
         \   char,
-        \   string(lexima#string#to_mappable(char))
+        \   string(lexima#string#to_mappable(char)),
         \ )
   endfor "}}}
 
@@ -282,15 +282,15 @@ hook_source = '''
       \   colorscheme: 'landscape',
       \   active: #{
       \     left: [['mode', 'skk', 'paste'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
-      \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype']]
+      \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype']],
       \   },
       \   inactive: #{
       \     left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
-      \     right: [['lineinfo'], ['percent']]
+      \     right: [['lineinfo'], ['percent']],
       \   },
       \   tabline: #{
       \     left: [['buffers']],
-      \     right: [['close']]
+      \     right: [['close']],
       \   },
       \   tab: #{
       \     active: ['tabnum', 'filename', 'modified'],
@@ -302,10 +302,10 @@ hook_source = '''
       \     paste: '%{&paste?"P":""}',
       \     percent: '%4P',
       \     showcmd: exists('+showcmdloc') ? '%S' : '',
-      \     truncate: '%<'
+      \     truncate: '%<',
       \   },
       \   component_visible_condition: #{
-      \     truncate: '0'
+      \     truncate: '0',
       \   },
       \   component_function: #{
       \     directory: 'LightlineDirectory',
@@ -314,24 +314,24 @@ hook_source = '''
       \     filetype: 'LightlineFiletype',
       \     mode: 'LightlineMode',
       \     modified: 'LightlineModified',
-      \     readonly: 'LightlineReadonly'
+      \     readonly: 'LightlineReadonly',
       \   },
       \   component_expand: #{
       \     buffers: 'LightlineBuffers',
-      \     trailing: 'LightlineTrailingSpaceWarning'
+      \     trailing: 'LightlineTrailingSpaceWarning',
       \   },
       \   component_function_visible_condition: #{
-      \     directory: '&filetype!=#"netrw"'
+      \     directory: '&filetype!=#"netrw"',
       \   },
       \   component_type: #{
       \     buffers: 'tabsel',
-      \     trailing: 'error'
+      \     trailing: 'error',
       \   },
       \   tab_component_function: #{
       \     bufnum: 'lightline#tab#tabnum',
       \     filename: 'LightlineFilenameB',
       \     modified: 'LightlineModified',
-      \     tabnum: 'LightlineTabnum'
+      \     tabnum: 'LightlineTabnum',
       \   },
       \   separator: #{ left: "", right: "" },
       \ }
@@ -540,7 +540,7 @@ merged = 0
 hook_post_update = 'call fzf#install() | unlet g:loaded_fzf | runtime! plugin/fzf.vim'
 hook_source = '''
   let g:fzf_colors = #{
-      \   border: ['fg', 'Folded']
+      \   border: ['fg', 'Folded'],
       \ }
 '''
 
@@ -636,7 +636,7 @@ hook_source = '''
 repo = 'lambdalisue/vim-gin'
 hook_source = '''
   let g:vimrc#generate_filetypes += [
-      \   'gin', 'gin-branch', 'gin-diff', 'gin-edit', 'gin-log', 'gin-status'
+      \   'gin', 'gin-branch', 'gin-diff', 'gin-edit', 'gin-log', 'gin-status',
       \ ]
 
   let g:gin_status_default_args = ['++opener=tabnew']
@@ -785,7 +785,7 @@ hook_source = '''
 
   let g:lsp_diagnostics_signs_priority_map = #{
       \   LspError: 12,
-      \   LspWarning: 11
+      \   LspWarning: 11,
       \ }
 
   nnoremap <Leader>lh <Plug>(lsp-hover)
@@ -820,7 +820,7 @@ hook_source = '''
     execute 'highlight LspInformationVirtualText'
         \ printf(
         \   'ctermfg=%s ctermbg=61 guifg=%s guibg=royalblue4',
-        \   hl_question.ctermfg, hl_question_guifg
+        \   hl_question.ctermfg, hl_question_guifg,
         \ )
     highlight link LspHintVirtualText LspInformationVirtualText
   endfunction
@@ -854,7 +854,7 @@ hook_source = '''
         \   call nvim_win_set_option(
         \     lsp#document_hover_preview_winid(),
         \     'winhighlight',
-        \     'MatchParen'
+        \     'MatchParen',
         \   ) |
         \ endif
   else
@@ -863,7 +863,7 @@ hook_source = '''
         \   call setwinvar(
         \     lsp#document_hover_preview_winid(),
         \     '&wincolor',
-        \     'MatchParen'
+        \     'MatchParen',
         \   ) |
         \ endif
   endif
@@ -983,8 +983,8 @@ hook_post_source = '''
   call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'window'])
   call ddc#custom#patch_filetype('vim', 'sourceParams', #{
       \   window: #{
-      \     include_filetypes: ['help']
-      \   }
+      \     include_filetypes: ['help'],
+      \   },
       \ })
 
   call ddc#custom#patch_global('sourceOptions', #{
@@ -994,47 +994,47 @@ hook_post_source = '''
       \     sorters: ['sorter_rank'],
       \     ignoreCase: v:true,
       \     minAutoCompleteLength: 1,
-      \     timeout: 5000
+      \     timeout: 5000,
       \   },
       \   around: #{
       \     mark: 'A',
-      \     minAutoCompleteLength: 2
+      \     minAutoCompleteLength: 2,
       \   },
       \   line: #{
-      \     mark: 'line'
+      \     mark: 'line',
       \   },
       \   vim-lsp: #{
       \     mark: 'L',
       \     forceCompletionPattern: '(::|->|\.)',
       \     minAutoCompleteLength: 0,
-      \     sorters: ['sorter_rank', 'sorter_ascii']
+      \     sorters: ['sorter_rank', 'sorter_ascii'],
       \   },
       \   file: #{
       \     sorters: ['sorter_ascii'],
       \     forceCompletionPattern: '/',
-      \     isVolatile: v:true
+      \     isVolatile: v:true,
       \   },
       \   necovim: #{
       \     mark: 'vim',
       \     sorters: ['sorter_rank', 'sorter_ascii'],
-      \     minAutoCompleteLength: 0
+      \     minAutoCompleteLength: 0,
       \   },
       \   neosnippet: #{ mark: 'snip' },
       \   window: #{
       \     mark: 'win',
       \     minAutoCompleteLength: 2,
       \     keywordPattern: '\w+',
-      \   }
+      \   },
       \ })
   call ddc#custom#patch_global('sourceParams', #{
       \   around: #{
-      \     maxSize: 500
+      \     maxSize: 500,
       \   },
       \   file: #{
       \     displayCwd: 'c',
       \     displayBuf: 'b',
-      \     filenameChars: '\-@.[:alnum:]_~'
-      \   }
+      \     filenameChars: '\-@.[:alnum:]_~',
+      \   },
       \ })
 
   if !empty(dpp#get('skkeleton'))
@@ -1055,8 +1055,8 @@ hook_post_source = '''
           \     _: #{
           \       sorters: [],
           \       matchers: [],
-          \     }
-          \   }
+          \     },
+          \   },
           \ })
     endfunction
     Autocmd User skkeleton-enable-pre call <SID>skkeleton_enable()
@@ -1074,8 +1074,8 @@ hook_post_source = '''
         \     sorters: [],
         \     converters: [],
         \     minAutoCompleteLength: 1,
-        \     isVolatile: v:true
-        \   }
+        \     isVolatile: v:true,
+        \   },
         \ })
   endif
 
@@ -1086,16 +1086,16 @@ hook_post_source = '''
   inoremap <silent><expr> <Plug>(vimrc_complete-manual_complete) ddc#map#complete(g:ddc_display_ui)
   inoremap <silent><expr> <Plug>(vimrc_complete-file)
       \ ddc#map#manual_complete(#{
-      \   sources: ['file'], ui: g:ddc_display_ui
+      \   sources: ['file'], ui: g:ddc_display_ui,
       \ })
   inoremap <C-l> <Nop>
   inoremap <silent><expr> <C-l>s
       \ ddc#map#manual_complete(#{
-      \   sources: ['neosnippet'], ui: g:ddc_display_ui
+      \   sources: ['neosnippet'], ui: g:ddc_display_ui,
       \ })
   inoremap <silent><expr> <C-l>l
       \ ddc#map#manual_complete(#{
-      \   sources: ['line'], ui: g:ddc_display_ui
+      \   sources: ['line'], ui: g:ddc_display_ui,
       \ })
   " imap <C-Space> <C-n>
 
@@ -1312,10 +1312,10 @@ hook_source = '''
         \   globalDictionaries: [s:skk_dict_dir .. '/SKK-JISYO.L'],
         \   keepState: v:true,
         \   markerHenkan: '',
-        \   markerHenkanSelect: ''
+        \   markerHenkanSelect: '',
         \ })
     call skkeleton#register_kanatable('rom', #{
-        \   jk: 'escape'
+        \   jk: 'escape',
         \ })
     call skkeleton#register_keymap('input', ';', 'henkanPoint')
 
@@ -1335,7 +1335,7 @@ hook_post_source = '''
       \   hankaku_katakana: 'ｱ ',
       \   zenkaku_alphabet: 'Ａ',
       \   alphabet: 'a ',
-      \   abbrev: 'ab'
+      \   abbrev: 'ab',
       \ })
 '''
 
@@ -1365,7 +1365,7 @@ hook_source = '''
 '''
 lua_post_source = '''
   require'hop'.setup {
-    keys = 'fjdkslaghrueiwoqptyvmcxzbn'
+    keys = 'fjdkslaghrueiwoqptyvmcxzbn',
   }
 '''
 

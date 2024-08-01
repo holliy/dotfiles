@@ -36,7 +36,7 @@ for s:p in s:dpp_plugins
     execute printf(
         \   '!git clone --filter=blob:none https://github.com/%s %s',
         \   s:p,
-        \   shellescape(s:dir)
+        \   shellescape(s:dir),
         \ )
   endif
 
