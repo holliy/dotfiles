@@ -3,30 +3,26 @@ import {
   ConfigArguments,
   ConfigReturn,
   Plugin,
-  // DppOptions,
-} from "https://deno.land/x/dpp_vim@v0.2.0/types.ts";
-import {
-  isBoolean,
-  isUndefined,
-} from "https://deno.land/x/unknownutil@v3.18.1/is.ts";
-import {} from "https://deno.land/x/unknownutil@v3.18.1/mod.ts";
-
+} from "jsr:@shougo/dpp-vim@~1.1.0/types";
+import { is } from "jsr:@core/unknownutil@~4.0.0/is";
 
 type ExtParams = {
-  // https://github.com/Shougo/dpp-ext-toml/blob/341cc272231b3d6a62607a22718fb6dc45e30c54/denops/%40dpp-exts/toml.ts#L11
+  // https://github.com/Shougo/dpp-ext-toml/blob/e854e37a2122f897e6dbb973ec1b2e85b9acd0ca/denops/%40dpp-exts/toml.ts#L14
   toml?: Partial<{
     path: string;
     options?: Partial<Plugin>;
   }>;
+  // https://github.com/Shougo/dpp-ext-installer/blob/a42237b46437269e2b2fe0a134d4b70129640679/denops/%40dpp-exts/installer.ts#L24
   installer?: Partial<{
     checkDiff: boolean;
     githubAPIToken: string;
     logFilePath: string;
     maxProcesses: number;
+    wait: number;
   }>;
 };
 type ProtocolParams = {
-  // https://github.com/Shougo/dpp-protocol-git/blob/53f8531e1e3040127287b09f8bfbb93d77ef7994/denops/%40dpp-protocols/git.ts#L18
+  // https://github.com/Shougo/dpp-protocol-git/blob/97188a4bb7de29a555f80bd6e5967e2bc0833ffa/denops/%40dpp-protocols/git.ts#L18
   git?: Partial<{
     cloneDepth: number;
     commandPath: string;
@@ -52,7 +48,7 @@ export class Config extends BaseConfig {
       extParams: {
         installer: {
           checkDiff: true,
-        }
+        },
       } satisfies ExtParams,
       protocolParams: {
         git: {
@@ -79,14 +75,15 @@ export class Config extends BaseConfig {
 
     const plugins = [];
     for (const p of tomlPlugins) {
-      p.name = p.name.replaceAll(/^vim-|-vim$|\.n?vim$/g, '');
+      p.name = p.name.replaceAll(/^vim-|-vim$|\.n?vim$/g, "");
 
       // 関数呼び出しでない場合はその場で評価する
-      if (isUndefined(p.if)) {
+      if (is.Undefined(p.if)) {
         plugins.push(p);
         continue;
-      } else if (isBoolean(p.if)) {
-        if (p.if) {
+      } else if (is.Boolean(p.if) || is.Number(p.if)) {
+        // deno-lint-ignore no-extra-boolean-cast
+        if (Boolean(p.if)) {
           plugins.push(p);
         }
 
