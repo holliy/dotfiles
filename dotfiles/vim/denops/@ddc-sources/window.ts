@@ -1,43 +1,47 @@
-import { GatherArguments } from 'https://deno.land/x/ddc_vim@v4.3.1/base/source.ts';
-import { Denops, fn, op } from 'https://deno.land/x/ddc_vim@v4.3.1/deps.ts';
-import { BaseSource, Item } from 'https://deno.land/x/ddc_vim@v4.3.1/types.ts';
-import { convertKeywordPattern } from 'https://deno.land/x/ddc_vim@v4.3.1/utils.ts';
-import { ensure, is } from 'https://deno.land/x/unknownutil@v3.11.0/mod.ts';
+import { GatherArguments } from "jsr:@shougo/ddc-vim@~6.0.0/source";
+import { BaseSource, Item } from "jsr:@shougo/ddc-vim@~6.0.0/types";
+import { convertKeywordPattern } from "jsr:@shougo/ddc-vim@~6.0.0/utils";
+import { Denops } from "jsr:@denops/std@~7.0.0";
+import * as fn from "jsr:@denops/std@~7.0.0/function";
+import * as op from "jsr:@denops/std@~7.0.0/option";
+import { ensure, is } from "jsr:@core/unknownutil@~4.0.0";
 
 type Params = {
-  include_same_filetype: boolean;
-  include_filetypes: string[];
-  only_current_tabpage: boolean;
-  only_viewport: boolean;
-  context_lines: number;
+  includeSameFiletype: boolean;
+  includeFiletypes: string[];
+  onlyCurrentTabpage: boolean;
+  onlyViewport: boolean;
+  contextLines: number;
 };
 
-function filetype_list(filetypes: string): string[] {
-  return filetypes.split('.');
+function filetypeList(filetypes: string): string[] {
+  return filetypes.split(".");
 }
 
-function is_filetype_include(
+function isFiletypeInclude(
   filetype1: string[],
   filetype2: string[],
 ): boolean {
-  return filetype1.some((ft) => filetype2.includes(ft));
+  const ft1 = new Set(filetype1);
+  const ft2 = new Set(filetype2);
+  return !ft1.isDisjointFrom(ft2);
 }
 
-async function calc_range(
+async function calcRange(
   denops: Denops,
   wid: number,
-  only_viewport: boolean,
-  context_lines: number,
+  onlyViewport: boolean,
+  contextLines: number,
 ): Promise<[number, number]> {
-  const cursor_line = await fn.line(denops, '.', wid);
-  const [top, bottom] = only_viewport
-    ? [await fn.line(denops, 'w0', wid), await fn.line(denops, 'w$', wid)]
-    : [Math.max(cursor_line - context_lines, 0), cursor_line + context_lines];
+  const cursorLine = await fn.line(denops, ".", wid);
+  const [top, bottom] = onlyViewport
+    ? [await fn.line(denops, "w0", wid), await fn.line(denops, "w$", wid)]
+    : [Math.max(cursorLine - contextLines, 0), cursorLine + contextLines];
 
   return [top, bottom];
 }
 
-async function get_lines(
+async function getLines(
   denops: Denops,
   wid: number,
   top: number,
@@ -47,8 +51,8 @@ async function get_lines(
   return await fn.getbufline(denops, wbn, top, bottom);
 }
 
-function get_words(str: string, pattern: string): string[] {
-  const re = new RegExp(pattern, 'gu');
+function getWords(str: string, pattern: string): string[] {
+  const re = new RegExp(pattern, "gu");
   const words = Array.from(str.matchAll(re))
     .map((m: RegExpMatchArray) => m[0]);
 
@@ -58,23 +62,23 @@ function get_words(str: string, pattern: string): string[] {
 export class Source extends BaseSource<Params> {
   override async gather(args: GatherArguments<Params>): Promise<Item[]> {
     const winids = ensure(
-      await args.denops.eval('map(getwininfo(), { _, v -> v.winid })'),
+      await args.denops.eval("map(getwininfo(), { _, v -> v.winid })"),
       is.ArrayOf(is.Number),
     );
 
     const tn = await fn.tabpagenr(args.denops);
     const bn = await fn.bufnr(args.denops);
-    const bft = filetype_list(
+    const bft = filetypeList(
       await op.filetype.getBuffer(args.denops, bn),
     );
 
-    const source_winids: number[] = [];
+    const sourceWinids: number[] = [];
     for (const wid of winids) {
       const wtn = ensure(
         (await fn.win_id2tabwin(args.denops, wid))[0],
         is.Number,
       );
-      if (args.sourceParams.only_current_tabpage && wtn !== tn) {
+      if (args.sourceParams.onlyCurrentTabpage && wtn !== tn) {
         continue;
       }
 
@@ -84,42 +88,42 @@ export class Source extends BaseSource<Params> {
       }
 
       const wbtype = await op.buftype.getBuffer(args.denops, wbn);
-      if (wbtype === 'quickfix') {
+      if (wbtype === "quickfix") {
         continue;
       }
-      if (wbtype === 'terminal') {
+      if (wbtype === "terminal") {
         continue;
       }
 
-      const wft = filetype_list(
+      const wft = filetypeList(
         await op.filetype.getBuffer(args.denops, wbn),
       );
       if (
-        args.sourceParams.include_same_filetype &&
-        is_filetype_include(wft, bft)
+        args.sourceParams.includeSameFiletype &&
+        isFiletypeInclude(wft, bft)
       ) {
         // nop
       } else if (
-        args.sourceParams.include_filetypes.includes('*') ||
-        is_filetype_include(wft, args.sourceParams.include_filetypes)
+        args.sourceParams.includeFiletypes.includes("*") ||
+        isFiletypeInclude(wft, args.sourceParams.includeFiletypes)
       ) {
         // nop
       } else {
         continue;
       }
 
-      source_winids.push(wid);
+      sourceWinids.push(wid);
     }
 
-    const words = (await Promise.all(source_winids.map(
+    const words = (await Promise.all(sourceWinids.map(
       async (wid) => {
-        const [top, bottom] = await calc_range(
+        const [top, bottom] = await calcRange(
           args.denops,
           wid,
-          args.sourceParams.only_viewport,
-          args.sourceParams.context_lines,
+          args.sourceParams.onlyViewport,
+          args.sourceParams.contextLines,
         );
-        const lines = await get_lines(args.denops, wid, top, bottom);
+        const lines = await getLines(args.denops, wid, top, bottom);
         const wbn = await fn.winbufnr(args.denops, wid);
         const keywordPattern = await convertKeywordPattern(
           args.denops,
@@ -127,7 +131,7 @@ export class Source extends BaseSource<Params> {
           wbn,
         );
 
-        return get_words(lines.join(' '), keywordPattern)
+        return getWords(lines.join(" "), keywordPattern)
           .map((word) => ({ word }));
       },
     ))).flat();
@@ -137,11 +141,11 @@ export class Source extends BaseSource<Params> {
 
   override params(): Params {
     return {
-      include_same_filetype: true,
-      include_filetypes: ['*'],
-      only_current_tabpage: false,
-      only_viewport: true,
-      context_lines: 50,
+      includeSameFiletype: true,
+      includeFiletypes: ["*"],
+      onlyCurrentTabpage: false,
+      onlyViewport: true,
+      contextLines: 50,
     };
   }
 }

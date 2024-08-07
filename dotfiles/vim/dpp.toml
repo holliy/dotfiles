@@ -1005,7 +1005,7 @@ hook_post_source = '''
       \   },
       \   vim-lsp: #{
       \     mark: 'L',
-      \     forceCompletionPattern: '(::|->|\.)',
+      \     forceCompletionPattern: '(::|->|\.)\w*',
       \     minAutoCompleteLength: 0,
       \     sorters: ['sorter_rank', 'sorter_ascii'],
       \   },
