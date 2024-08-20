@@ -1,39 +1,23 @@
 import {
+  LoadArgs,
+  Params as TomlParams,
+} from "jsr:@shougo/dpp-ext-toml@~1.2.0";
+import { Params as InstallerParams } from "jsr:@shougo/dpp-ext-installer@~1.1.0";
+import { Params as GitParams } from "jsr:@shougo/dpp-protocol-git@~1.0.0";
+import {
   BaseConfig,
   ConfigArguments,
   ConfigReturn,
   Plugin,
-} from "jsr:@shougo/dpp-vim@~1.1.0/types";
-import { is } from "jsr:@core/unknownutil@~4.0.0/is";
+} from "jsr:@shougo/dpp-vim@~2.2.0/types";
+import { is } from "jsr:@core/unknownutil@~4.2.0";
 
 type ExtParams = {
-  // https://github.com/Shougo/dpp-ext-toml/blob/e854e37a2122f897e6dbb973ec1b2e85b9acd0ca/denops/%40dpp-exts/toml.ts#L14
-  toml?: Partial<{
-    path: string;
-    options?: Partial<Plugin>;
-  }>;
-  // https://github.com/Shougo/dpp-ext-installer/blob/a42237b46437269e2b2fe0a134d4b70129640679/denops/%40dpp-exts/installer.ts#L24
-  installer?: Partial<{
-    checkDiff: boolean;
-    githubAPIToken: string;
-    logFilePath: string;
-    maxProcesses: number;
-    wait: number;
-  }>;
+  toml?: Partial<TomlParams>;
+  installer?: Partial<InstallerParams>;
 };
 type ProtocolParams = {
-  // https://github.com/Shougo/dpp-protocol-git/blob/97188a4bb7de29a555f80bd6e5967e2bc0833ffa/denops/%40dpp-protocols/git.ts#L18
-  git?: Partial<{
-    cloneDepth: number;
-    commandPath: string;
-    defaultBranch: string;
-    defaultHubSite: string;
-    defaultProtocol: string;
-    defaultRemote: string;
-    enableCredentialHelper: boolean;
-    enablePartialClone: boolean;
-    pullArgs: string[];
-  }>;
+  git?: Partial<GitParams>;
 };
 
 export class Config extends BaseConfig {
@@ -70,7 +54,7 @@ export class Config extends BaseConfig {
       options,
       "toml",
       "load",
-      { path: checkFiles[2] },
+      { path: checkFiles[2] } as LoadArgs,
     ) as { plugins: Plugin[] };
 
     const plugins = [];

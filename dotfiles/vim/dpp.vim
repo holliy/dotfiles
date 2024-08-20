@@ -82,14 +82,15 @@ function! s:install_plugins(prompt) abort
 endfunction
 Autocmd User Dpp:ext:installer:updateDone :
 
+Autocmd User Dpp:makeStatePost call dpp#min#load_state(s:dpp_dir)
+Autocmd User Dpp:makeStatePost call s:install_plugins(!g:vimrc#is_starting)
+Autocmd User Dpp:makeStatePost call s:source_plugins()
+
 if dpp#min#load_state(s:dpp_dir)
   echomsg 'making dpp cache...'
   let s:dpp_ts = expand('<sfile>:p:h') .. '/dpp.ts'
 
   Autocmd User DenopsReady call dpp#make_state(s:dpp_dir, s:dpp_ts)
-  Autocmd User Dpp:makeStatePost call dpp#min#load_state(s:dpp_dir)
-  Autocmd User Dpp:makeStatePost call s:install_plugins(!g:vimrc#is_starting)
-  Autocmd User Dpp:makeStatePost call s:source_plugins()
 else
   call s:source_plugins()
 endif
@@ -100,7 +101,11 @@ endif
 
 Autocmd BufWritePost dpp.{ts,toml} call dpp#check_files()
 
-command! -bar -nargs=* DppUpdate call dpp#async_ext_action('installer', 'update', #{ names: [<f-args>] })
+function! s:complete_plugin_names(arglead, cmdline, cursorpos) abort
+  return join(keys(dpp#get()), "\n")
+endfunction
+
+command! -bar -nargs=* -complete=custom,s:complete_plugin_names DppUpdate call dpp#async_ext_action('installer', 'update', #{ names: [<f-args>] })
 
 doautocmd denops_plugin_internal_startup VimEnter
 
