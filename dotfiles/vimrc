@@ -194,11 +194,11 @@ endfunction "}}}
 
 " バックスラッシュを消して結合(J) "{{{
 function! s:J() range
-  set operatorfunc=Concat
+  set operatorfunc=Join
   return 'g@' .. max([a:lastline - a:firstline - 1, 1]) .. 'j'
 endfunction
 
-function! Concat(type) abort
+function! Join(type) abort
   let js_save = &joinspaces
   let sel_save = &selection
   set selection=inclusive
@@ -250,12 +250,31 @@ function! Concat(type) abort
   let &selection = sel_save
 endfunction
 
-noremap <expr> J <SID>J()
-noremap <Leader>J J
-sunmap J
-ounmap J
-sunmap <Leader>J
-ounmap <Leader>J
+function! s:gJ() range
+  set operatorfunc=GJoin
+  return 'g@' .. max([a:lastline - a:firstline - 1, 1]) .. 'j'
+endfunction
+
+function! GJoin(type) abort
+  let startline = line("'[")
+  let endline = line("']")
+
+  if startline ==# endline
+    let endline += 1
+  endif
+
+  execute printf('%d,%ds/^\s*//', startline + 1, endline)
+  execute startline .. ' | join!' endline - startline + 1
+endfunction
+
+nnoremap <expr> J <SID>J()
+xnoremap <expr> J <SID>J()
+nnoremap <expr> gJ <SID>gJ()
+xnoremap <expr> gJ <SID>gJ()
+nnoremap <Leader>J J
+xnoremap <Leader>J J
+nnoremap <Leader>gJ gJ
+xnoremap <Leader>gJ gJ
 
 nnoremap <silent> <Leader><Leader>J <Cmd>set operatorfunc=Concat<CR>g@
 nnoremap <silent> <Leader><Leader>JJ <Cmd>set operatorfunc=Concat<CR>g@g@
@@ -601,7 +620,7 @@ set display=lastline,uhex
 SetG noequalalways
 set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
 SetG nofixendofline
-SetG foldenable foldlevel=1 foldmethod=syntax foldtext=Foldtext()
+SetG foldenable foldlevel=99 foldmethod=syntax foldtext=Foldtext()
 SetG formatoptions-=c formatoptions+=Bjmr
 set guicursor=a:block-Cursor
 set helpheight=10 helplang=ja
@@ -932,7 +951,8 @@ nmap <Leader>w <C-w>
 nnoremap <silent> <C-w>z <Cmd>pclose<Bar>cclose<Bar>lclose<Bar>helpclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
 
-nnoremap <expr><silent> <Leader>diff printf('<Cmd>windo %s<CR>', &diff ? 'diffoff' : 'diffthis')
+nnoremap <expr><silent> <Leader>diff
+    \ printf('<Cmd>windo %s<CR>', &diff ? 'diffoff' : 'diffthis')
 
 nnoremap <silent> <Leader>a <Cmd>Lexplore<CR>
 nnoremap <silent> <Leader>A <Cmd>Lexplore %:h<CR>
@@ -946,7 +966,11 @@ nnoremap <expr><silent> ZQ
 nnoremap <silent> <Leader><Tab> <Cmd>nohlsearch<CR>
 
 nnoremap <silent> <Leader>tt <Cmd>tab split<CR>
-nnoremap <expr><silent> <Leader>tc printf('<Cmd>%dtabclose<CR>', v:count > 0 ? v:count : tabpagenr())
+nnoremap <expr><silent> <Leader>tc
+    \ printf(
+    \   '<Cmd>%dtabclose<Bar>tabprevious<CR>',
+    \   v:count > 0 ? v:count : tabpagenr()
+    \ )
 nnoremap <expr> gt <SID>delcount(v:count) ..
     \ ((tabpagenr() + max([v:count - 1, 0])) % tabpagenr('$') + 1) .. 'gt'
 
@@ -970,7 +994,10 @@ nnoremap <silent> <Leader>h
 let g:foldmethods = ['indent', 'marker', 'syntax', 'expr']
 call add(g:foldmethods, g:foldmethods[0])
 nnoremap <expr><silent> <Leader>sf
-    \ printf('<Cmd>setlocal foldmethod=%s foldmethod?<CR>zv', g:foldmethods[index(g:foldmethods, &foldmethod) + 1])
+    \ printf(
+    \   '<Cmd>setlocal foldmethod=%s foldmethod?<CR>zv',
+    \   g:foldmethods[index(g:foldmethods, &foldmethod) + 1]
+    \ )
 "}}}
 
 " insert / delete / yank / paste "{{{
@@ -1007,16 +1034,24 @@ inoremap <Plug>(vimrc_tab) <Tab>
 snoremap <Plug>(vimrc_tab) <Tab>
 inoremap <expr> <Plug>(vimrc_complete-next) pumvisible() ? '<C-n>' : ''
 inoremap <expr> <Plug>(vimrc_complete-prev) pumvisible() ? '<C-p>' : ''
-inoremap <expr> <Plug>(vimrc_complete-manual_complete) pumvisible() ? '' : '<C-n>'
+inoremap <expr> <Plug>(vimrc_complete-open) pumvisible() ? '' : '<C-n>'
 inoremap <expr> <Plug>(vimrc_complete-confirm) pumvisible() ? '<C-y>' : ''
+inoremap <expr> <Plug>(vimrc_complete-confirm-or-cr)
+    \ pumvisible() && complete_info(['selected']).selected !=# -1 ?
+    \   '<Plug>(vimrc_complete-confirm)' :
+    \   '<Plug>(vimrc_cr)'
 inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
 inoremap <Plug>(vimrc_reindent) <C-f>
-inoremap <expr> <Plug>(vimrc_cancel-complete) pumvisible() ? '<C-e>' : ''
+inoremap <expr> <Plug>(vimrc_complete-cancel) pumvisible() ? '<C-e>' : ''
 
-inoremap <expr> <CR> pumvisible() ? '<Plug>(vimrc_complete-confirm)' : '<Plug>(vimrc_cr)'
+inoremap <expr> <CR> pumvisible() ?
+    \ '<Plug>(vimrc_complete-confirm-or-cr)' :
+    \ '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
-inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ? '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
-inoremap <expr> <C-e> pumvisible() ? '<Plug>(vimrc_cancel-complete)' : '<End>'
+inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ?
+    \ '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
+inoremap <expr> <C-e>
+    \ pumvisible() ? '<Plug>(vimrc_complete-cancel)' : '<End>'
 "}}}
 
 " terminal "{{{
@@ -1494,7 +1529,7 @@ Autocmd OptionSet foldcolumn,number,numberwidth,relativenumber,signcolumn
 Autocmd ColorScheme * unlet! g:terminal_ansi_colors
 AutocmdFT qf setlocal nobuflisted
 AutocmdFT vim setlocal foldlevel=0 foldmethod=marker | normal! zv
-AutocmdFT toml setlocal foldlevel=0 foldmethod=indent | normal! zv
+AutocmdFT toml setlocal foldmethod=indent | normal! zv
 
 AutocmdFT netrw nnoremap <buffer> h zhg0
 AutocmdFT netrw nnoremap <buffer> l zlg0
