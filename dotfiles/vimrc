@@ -12,7 +12,7 @@ if !exists('g:vimrc#is_starting')
   let g:vimrc#is_nvim = has('nvim')
   if g:vimrc#is_nvim
     if empty(nvim_list_uis())
-      " UI connected later are regarded as GUI
+      " expected as GUI if no UI is connected
       let g:vimrc#is_gui = 1
     elseif nvim_list_uis()[0].chan ==# 0
       " embed
@@ -52,7 +52,7 @@ endif "}}}
 " https://gist.github.com/thinca/1518874#file-vimrc-L20
 if g:vimrc#is_starting && has('reltime')
   let s:startuptime = reltime()
-  " :redraw hides intro message
+  " redraw command skips intro message
   augroup vimrc-startuptime
     autocmd! VimEnter * ++once
         \ let s:startuptime = reltime(s:startuptime) |
@@ -122,7 +122,7 @@ endfunction "}}}
 " 自動で生成されるバッファか判定 "{{{
 let g:vimrc#generate_filetypes = ['git', 'netrw', 'qf']
 
-" a:1 - バッファ番号 (0か省略されたとき現在のバッファに対して判定)
+" a:bn - バッファ番号 (0か省略されたとき現在のバッファに対して判定)
 function! IgnoreBuffer(bn = 0) abort
   let bn = a:bn
   if bn ==# 0
@@ -430,13 +430,14 @@ function! Highlights() abort "{{{
 endfunction "}}}
 
 function! IsCommandLineWindow(bn = 0) abort "{{{
-  let bn = a:bn
-  if bn ==# 0
-    let bn = bufnr()
+  if a:bn ==# 0
+    let wn = winnr()
+  else
+    let wn = bufwinnr(a:bn)
   endif
 
   if exists('*win_gettype')
-    return win_gettype(bufwinnr(bn)) ==# 'command'
+    return win_gettype(wn) ==# 'command'
   endif
 
   return !empty(getcmdwintype())
@@ -629,6 +630,7 @@ set history=1000
 set hlsearch ignorecase incsearch smartcase | nohlsearch
 SetG iminsert=0 imsearch=-1
 set laststatus=2
+" set statusline=... "{{{
 setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'..(g:vimrc#is_windows&&!&shellslash?'\\':'/')..'?'))}
@@ -648,6 +650,7 @@ setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
 "  N | 1 | ~/ | .vimrc +  <1b>          utf-8/unix | vim |  30% | 338:20
+"}}}
 " set lazyredraw
 SetG list | set listchars=tab:>\ ,nbsp:%
 SetG matchpairs+=<:> | set showmatch
@@ -743,7 +746,8 @@ for s:d in filter([
     execute 'set' s:d .. '&'
   endif
 endfor
-unlet s:d "}}}
+unlet s:d
+"}}}
 
 " $VIMRUNTIME 以下の不要なプラグインを読み込まない "{{{
 let g:loaded_2html_plugin = 1
@@ -930,7 +934,7 @@ nnoremap g~ ~
 "}}}
 
 " disable mapping "{{{
-" c. / cc に矯正
+" c. (cl) / cc に矯正
 nnoremap s <Nop>
 xnoremap s <Nop>
 nnoremap S <Nop>
@@ -1008,8 +1012,12 @@ xnoremap zy y
 inoremap <BS> <C-g>u<BS>
 inoremap <CR> <C-]><C-g>u<CR>
 
-cnoremap <C-g> <C-u>
+noremap! <C-f> <Right>
+noremap! <C-b> <Left>
 inoremap <C-k> <C-o>"_d$
+noremap! <C-d> <Delete>
+inoremap <C-t> <Nop>
+noremap! <C-y> <C-r>"
 
 xnoremap p P
 xnoremap P I<C-r>=getreg(v:register)<CR><Esc>
@@ -1041,15 +1049,13 @@ inoremap <expr> <Plug>(vimrc_complete-confirm-or-cr)
     \   '<Plug>(vimrc_complete-confirm)' :
     \   '<Plug>(vimrc_cr)'
 inoremap <Plug>(vimrc_complete-file) <C-x><C-f>
-inoremap <Plug>(vimrc_reindent) <C-f>
 inoremap <expr> <Plug>(vimrc_complete-cancel) pumvisible() ? '<C-e>' : ''
 
 inoremap <expr> <CR> pumvisible() ?
     \ '<Plug>(vimrc_complete-confirm-or-cr)' :
     \ '<Plug>(vimrc_cr)'
 cnoremap <expr> <Tab> wildmenumode() ? '<C-n>' : '<Tab>'
-inoremap <expr> <C-f> search('^\s*\%#', 'bcn', line('.')) > 0 ?
-    \ '<Plug>(vimrc_reindent)' : '<Plug>(vimrc_complete-file)'
+inoremap <C-x><C-f> <Plug>(vimrc_complete-file)
 inoremap <expr> <C-e>
     \ pumvisible() ? '<Plug>(vimrc_complete-cancel)' : '<End>'
 "}}}
