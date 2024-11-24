@@ -948,9 +948,6 @@ nnoremap g# <Nop>
 nnoremap gs :<C-u>%s/
 xnoremap gs :s/
 
-cnoremap <C-n> <Down>
-cnoremap <C-p> <Up>
-
 nmap <Leader>w <C-w>
 nnoremap <silent> <C-w>z <Cmd>pclose<Bar>cclose<Bar>lclose<Bar>helpclose<CR>
 nmap <silent> <C-w><C-z> <C-w>z
@@ -1002,6 +999,12 @@ nnoremap <expr><silent> <Leader>sf
     \   '<Cmd>setlocal foldmethod=%s foldmethod?<CR>zv',
     \   g:foldmethods[index(g:foldmethods, &foldmethod) + 1]
     \ )
+"}}}
+
+" command line "{{{
+cnoremap <C-n> <Down>
+cnoremap <C-p> <Up>
+cnoremap <C-r>w <C-r>=expand('<lt>cword>')<CR>
 "}}}
 
 " insert / delete / yank / paste "{{{
@@ -1264,27 +1267,14 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
   endif
 
   " OSC52でのコピー "{{{
-  if g:vimrc#is_nvim
-    " heredocだと構文表示がダメになるので
-    lua
-        \ function write_stdout(data)
-        \   local uv = vim.uv or vim.loop
-        \   local stdout = uv.new_tty(1, false)
-        \
-        \   stdout:write(data)
-        \   stdout:close()
-        \ end
-  endif
-
   function! s:paste64(text) abort
     let str = join(systemlist('base64 --wrap=0', a:text), '')
     let seq = printf("\e]52;;%s\e\\", str)
 
     if g:vimrc#is_nvim
-      call v:lua.write_stdout(seq)
+      call chansend(v:stderr, seq)
     else
-      let blob = list2blob(str2list(seq))
-      call writefile(blob, '/dev/tty', 'ab')
+      call echoraw(seq)
     endif
   endfunction
 

@@ -969,6 +969,9 @@ hook_source = '''
 '''
 
 [[plugins]]
+repo = 'rickhowe/diffchar.vim'
+
+[[plugins]]
 repo = 'Shougo/context_filetype.vim'
 
 [[plugins]]
@@ -1276,16 +1279,18 @@ name = 'help-fold'
 [[plugins]]
 repo = 'thinca/vim-partedit'
 hook_source = '''
-  let g:partedit#opener = 'split'
-
-  function! OpenContext() abort
+  function! OpenContext(split) abort
     " ex. {'filetype': 'vim', 'range': [[1114, 1], [1128, 90]]}
     let context = context_filetype#get()
     let ft = context.filetype
     let lines = [context.range[0][0], context.range[1][0]]
 
-    call partedit#start(lines[0], lines[1], #{ filetype: ft })
-    nnoremap <silent><buffer> <Leader>p <Cmd>ParteditEnd<CR><C-w>c
+    call partedit#start(lines[0], lines[1], #{ filetype: ft, opener: a:split ? 'split' : 'edit' })
+    if a:split
+      nnoremap <silent><buffer> <Leader>p <Cmd>ParteditEnd<CR><C-w>c
+    else
+      nnoremap <silent><buffer> <Leader>p <Cmd>ParteditEnd<CR>
+    endif
 
     if !empty(dpp#get('ddc'))
       call ddc#custom#patch_buffer('specialBufferCompletion', v:true)
@@ -1297,7 +1302,8 @@ hook_source = '''
 
   Autocmd BufReadPost dpp.toml,dpp/*.toml let b:partedit_filetype = 'vim'
   Autocmd BufReadPost dpp.toml,dpp/*.toml let b:partedit_prefix = '\s*'
-  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p <Cmd>call OpenContext()<CR>
+  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>p <Cmd>call OpenContext(1)<CR>
+  AutocmdFT markdown,toml nnoremap <silent><buffer> <Leader>P <Cmd>call OpenContext(0)<CR>
 '''
 
 [[plugins]]
