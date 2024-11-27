@@ -282,7 +282,7 @@ hook_source = '''
       \   colorscheme: 'landscape',
       \   active: #{
       \     left: [['mode', 'skk', 'paste'], ['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified'], ['showcmd']],
-      \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype']],
+      \     right: [['trailing', 'lineinfo'], ['percent'], ['truncate', 'fileinfo', 'filetype', 'lsp']],
       \   },
       \   inactive: #{
       \     left: [['bufnum', 'git', 'directory', 'filename', 'readonly', 'modified']],
@@ -347,6 +347,10 @@ hook_source = '''
   endif
   if !empty(dpp#get('gitbranch'))
     let g:lightline.component_function['git'] = 'gitbranch#name'
+  endif
+  if !empty(dpp#get('lsp'))
+    let g:lightline.component_function['lsp'] = 'LightlineLspStatus'
+    let g:lightline.component_function_visible_condition['lsp'] = 'len(lsp#get_server_names())'
   endif
   "}}}
 
@@ -509,6 +513,22 @@ hook_source = '''
     let &shellslash = save_shellslash
     return pathshorten(dir)
   endfunction "}}}
+
+  function! LightlineLspStatus() abort "{{{
+    let d = lsp#collect_server_status()
+    if len(d) ==# 0
+      return ''
+    endif
+
+    let status = values(d)[0].status
+    if status ==# 'running'
+      return '✓'
+    else
+      return '✗'
+    endif
+  endfunction
+  Autocmd User lsp_server_init,lsp_server_exit,lsp_buffer_enabled call lightline#update()
+  "}}}
   "}}}
 '''
 hook_post_source = '''
@@ -774,7 +794,7 @@ hook_source = '''
   let g:lsp_preview_float = 0
   let g:lsp_preview_keep_focus = 1
   let g:lsp_untitled_buffer_enabled = 0
-  let g:lsp_use_native_client = 0
+  let g:lsp_use_native_client = 1
 
   let g:lsp_diagnostics_signs_error = #{ text: '!' }
   let g:lsp_diagnostics_signs_warning = #{ text: '*' }
@@ -977,8 +997,18 @@ repo = 'Shougo/context_filetype.vim'
 [[plugins]]
 repo = 'Shougo/ddc.vim'
 hook_post_source = '''
+  function! s:snip(body) abort
+    let body = substitute(a:body, '\v\$(\d+)', '${\1}', 'g')
+    let body = substitute(body, "'", "''", 'g')
+    let expr = neosnippet#anonymous(body)
+    let expr = substitute(expr, "\<C-c>", "\<Cmd>", '')
+    let expr = substitute(expr, "\n", "'..\"\\\\n\"..'", 'g')
+    " echomsg PP(expr)
+    call feedkeys(expr, 'n')
+  endfunction
+
   call ddc#custom#set_global({})
-  call ddc#custom#patch_global('sources', ['lsp', 'around', 'window'])
+  call ddc#custom#patch_global('sources', ['lsp', 'around', 'window', 'neosnippet'])
 
   if !empty(dpp#get('pum')) && !empty(dpp#get('ddc-ui-pum'))
     let g:ddc_display_ui = 'pum'
@@ -990,7 +1020,7 @@ hook_post_source = '''
 
   " call ddc#custom#patch_global('backspaceCompletion', v:true)
 
-  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'window'])
+  call ddc#custom#patch_filetype('vim', 'sources', ['necovim', 'around', 'window', 'neosnippet'])
   call ddc#custom#patch_filetype('vim', 'sourceParams', #{
       \   window: #{
       \     includeFiletypes: ['help'],
@@ -1064,6 +1094,7 @@ hook_post_source = '''
       \   },
       \   lsp: #{
       \     lspEngine: 'vim-lsp',
+      \     snippetEngine: denops#callback#register({body -> s:snip(body)})
       \   },
       \ })
   call ddc#custom#patch_global('filterParams', #{
@@ -1316,6 +1347,9 @@ depends = ['lsp']
 [[plugins]]
 repo = 'thomasfaingnaert/vim-lsp-neosnippet'
 depends = ['lsp', 'neosnippet']
+hook_source = '''
+  let g:lsp_neosnippet_loaded = 1
+'''
 
 [[plugins]]
 repo = 'ttak0422/ddc-sorter_itemsize'
