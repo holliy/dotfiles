@@ -61,9 +61,17 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-alias cdl='cd -L'
-alias cdp='cd -P'
-alias cd=cdp
+bind '"\e\C-a": alias-expand-line'
+bind 'space: "\C-v \e\C-a"'
+
+alias cd='cd -P'
+
+alias dcu='docker compose up'
+alias dcud='docker compose up -d'
+alias dce='docker compose exec'
+alias dcs='docker compose stop'
+
+alias g=git
 
 if type "bfs" > /dev/null 2>&1; then
     alias find="bfs -s"
