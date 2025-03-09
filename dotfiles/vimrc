@@ -601,36 +601,49 @@ endif "}}}
 "}}}
 
 " オプション "{{{
-" options "{{{
+" 組み込みオプション "{{{
+" 表示 "{{{
 set ambiwidth=single
-SetG autoindent cindent copyindent smartindent
-SetG expandtab shiftwidth=2 softtabstop=2 tabstop=4
-set shiftround smarttab
-SetG autoread
-set backspace=indent,eol,start whichwrap+=h,l
-set backup backupskip+=*~,*.o
-let &backupdir = g:vimrc#dotvim .. '/.backup'
 SetG breakindent breakindentopt=shift:2
-set browsedir=buffer
-SetG complete-=u | set completeopt=menuone,noselect,preview pumheight=8 previewheight=6
-set cmdheight=2
-set confirm
 SetG nocursorline
-set diffopt+=context:2,vertical,indent-heuristic,algorithm:histogram
 set display=lastline,uhex
-SetG noequalalways
-set fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\|
-SetG nofixendofline
-SetG foldenable foldlevel=99 foldmethod=syntax foldtext=Foldtext()
-SetG formatoptions-=c formatoptions+=Bjmr
+SetG fillchars=fold:\ ,stl:\ ,stlnc:\ ,vert:\\|
 set guicursor=a:block-Cursor
-set helpheight=10 helplang=ja
-set hidden
-set history=1000
-set hlsearch ignorecase incsearch smartcase | nohlsearch
-SetG iminsert=0 imsearch=-1
+" set lazyredraw
+SetG list | set listchars=tab:>\ ,nbsp:%
+SetG number relativenumber
+set scrolloff=2
+set shortmess+=cmrx shortmess-=t shortmess-=T
+set showbreak==>
+set showcmd
+SetG signcolumn=auto
+SetG synmaxcol=800
+set title
+set virtualedit+=block
+
+if exists('+ballooneval')
+  set ballooneval
+endif
+if exists('+balloonevalterm')
+  set balloonevalterm
+endif
+if exists('+smoothscroll')
+  SetG smoothscroll
+endif
+if exists('+termguicolors') && !g:vimrc#is_windows
+  set termguicolors
+endif
+if has('patch-8.2.0146') || has('nvim-0.5.0')
+  SetG breakindentopt+=sbr
+endif
+if has('patch-9.0.0656')
+  SetG fillchars+=lastline:>
+endif
+"}}}
+
+" status line / tab line "{{{
 set laststatus=2
-" set statusline=... "{{{
+set showtabline=2
 setglobal statusline =\ %2{Mode()}%{&paste?'\ \ \|\ p':''}
 setglobal statusline+=\ \|\ %n
 setglobal statusline+=\ \|\ %{pathshorten(fnamemodify(expand('%:p:h'),':~:s?[^/\\\\]\zs$?'..(g:vimrc#is_windows&&!&shellslash?'\\':'/')..'?'))}
@@ -650,29 +663,61 @@ setglobal statusline+=\ \|\ %{empty(&filetype)?&buftype==#'terminal'?'terminal':
 setglobal statusline+=\ \|\ %4P
 setglobal statusline+=\ \|%4l:%2c\ %#StatusLineNC#
 "  N | 1 | ~/ | .vimrc +  <1b>          utf-8/unix | vim |  30% | 338:20
+
+if exists('+showcmdloc')
+  set showcmdloc=statusline
+endif
 "}}}
-" set lazyredraw
-SetG list | set listchars=tab:>\ ,nbsp:%
-SetG matchpairs+=<:> | set showmatch
-SetG modeline
-set mouse=a
-SetG nrformats+=alpha
-SetG number relativenumber
-let &packpath ..= ',' .. g:vimrc#dotvim .. '/pack'
-set pastetoggle=<F2>
-set scrolloff=2
-set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
-set shortmess+=cmrx shortmess-=t shortmess-=T
-set showbreak==>
-set showcmd
-set showtabline=2
-SetG signcolumn=auto
+
+" window "{{{
+SetG noequalalways
 set splitbelow splitright
+"}}}
+
+" 編集 "{{{
+SetG formatoptions-=c formatoptions+=Bjmr
+SetG iminsert=0 imsearch=-1
+SetG nrformats+=alpha
+"}}}
+
+" command line "{{{
+set cmdheight=2
+set history=1000
+set wildcharm=<Tab> wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
+
+if has('patch-8.2.4325') || has('nvim-0.8.0')
+  set wildoptions=pum
+endif
+"}}}
+
+" 移動 "{{{
+set backspace=indent,eol,start whichwrap+=h,l
+SetG matchpairs+=<:> | set showmatch
 set nostartofline
-set switchbuf=useopen,usetab
-SetG synmaxcol=800
-set timeout ttimeout timeoutlen=700 ttimeoutlen=50
-set title
+"}}}
+
+" indent "{{{
+SetG autoindent cindent copyindent smartindent
+SetG expandtab shiftwidth=2 softtabstop=2 tabstop=4
+set shiftround smarttab
+"}}}
+
+" 検索 "{{{
+set hlsearch ignorecase incsearch smartcase | nohlsearch
+"}}}
+
+" fold "{{{
+SetG foldenable foldlevel=99 foldmethod=syntax foldtext=Foldtext()
+"}}}
+
+" 補完 "{{{
+SetG complete-=u | set completeopt=menuone,noselect,preview pumheight=8 previewheight=6
+"}}}
+
+" 一時ファイル (backup / undo / viminfo / session / swap) "{{{
+set backup backupskip+=*~,*.o
+let &backupdir = g:vimrc#dotvim .. '/.backup'
+set sessionoptions+=localoptions,resize,slash,unix sessionoptions-=blank
 set undoreload=20000 | SetG undolevels=800
 let &undodir = g:vimrc#dotvim .. '/.undo'
 set updatecount=0 | SetG noswapfile
@@ -680,41 +725,47 @@ set updatetime=2000
 set viewoptions+=localoptions,slash,unix
 let &viewdir = g:vimrc#dotvim .. '/.view'
 set viminfo-=<50 viminfo+=<100
-set virtualedit+=block
-set wildcharm=<Tab> wildignore+=*~,*.o wildignorecase wildmenu wildmode=longest:full
-set winaltkeys=yes
 
-if exists('+ballooneval')
-  set ballooneval
+if g:vimrc#is_nvim
+  " 互換性がないので
+  " SetG noundofile
+  let &undodir = g:vimrc#dotvim .. '/.undo/nvim'
+else
+  SetG undofile
 endif
-if exists('+balloonevalterm')
-  set balloonevalterm
+"}}}
+
+" diff / grep / 外部コマンド "{{{
+set diffopt+=context:2,vertical,indent-heuristic,algorithm:histogram
+
+if g:vimrc#is_unix
+  set shell=bash
 endif
-if exists('+showcmdloc')
-  set showcmdloc=statusline
-endif
-if exists('+smoothscroll')
-  SetG smoothscroll
-endif
-if exists('+termguicolors') && !g:vimrc#is_windows
-  set termguicolors
-endif
+"}}}
+
+" help "{{{
+set helpheight=10 helplang=ja
+"}}}
+
+" その他 "{{{
+SetG autoread
+set browsedir=buffer
+set confirm
+SetG nofixendofline
+set hidden
+SetG modeline
+set mouse=a
+let &packpath ..= ',' .. g:vimrc#dotvim .. '/pack'
+set pastetoggle=<F2>
+set switchbuf=useopen,usetab
+set timeout ttimeout timeoutlen=700 ttimeoutlen=50
+set winaltkeys=yes
 
 if has('unnamedplus')
   set clipboard^=unnamedplus
 else
   set clipboard^=unnamed
 endif
-if has('patch-8.2.0146') || has('nvim-0.5.0')
-  SetG breakindentopt+=sbr
-endif
-if has('patch-8.2.4325') || has('nvim-0.8.0')
-  set wildoptions=pum
-endif
-if has('patch-9.0.0656')
-  SetG fillchars+=lastline:>
-endif
-
 if g:vimrc#is_nvim
   set clipboard=
 elseif g:vimrc#is_wsl
@@ -722,19 +773,12 @@ elseif g:vimrc#is_wsl
 else
   set clipboard=exclude:console\|linux
 endif
-if g:vimrc#is_unix
-  set shell=bash
-endif
+
 if g:vimrc#is_nvim || !g:vimrc#is_windows
   let &runtimepath = g:vimrc#dotvim .. ',' .. &runtimepath
 endif
-if g:vimrc#is_nvim
-  " 互換性がないので
-  " SetG noundofile
-  let &undodir = g:vimrc#dotvim .. '/.undo/nvim'
-else
-  SetG undofile
-endif "}}}
+"}}}
+"}}}
 
 " バックアップフォルダ等を作成 "{{{
 for s:d in filter([
@@ -749,7 +793,7 @@ endfor
 unlet s:d
 "}}}
 
-" $VIMRUNTIME 以下の不要なプラグインを読み込まない "{{{
+" $VIMRUNTIME 以下のプラグインの読み込み設定 "{{{
 let g:loaded_2html_plugin = 1
 let g:loaded_gzip = 1
 let g:loaded_tar = 1
