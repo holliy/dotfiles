@@ -1268,7 +1268,11 @@ if !g:vimrc#is_gui && &term !~# 'cygwin\|win32\|linux' " &term =~# 'xterm' &&
 
   " OSC52でのコピー "{{{
   function! s:paste64(text) abort
-    let str = join(systemlist('base64 --wrap=0', a:text), '')
+    if exists('*base64_encode')
+      let str = base64_encode(list2blob(str2list(a:text)))
+    else
+      let str = join(systemlist('base64 --wrap=0', a:text), '')
+    endif
     let seq = printf("\e]52;;%s\e\\", str)
 
     if g:vimrc#is_nvim
