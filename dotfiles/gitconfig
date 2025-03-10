@@ -13,9 +13,13 @@
 [diff]
 	algorithm = histogram
 	indentHeuristic = true
+	colorMoved = plain
+	mnemonicPrefix = true
 [log]
 	date = format:%Y-%m-%d %H:%M %z
 	decorate = short
+[branch]
+	sort = -committerdate
 [alias]
 	partialclone = clone --filter=blob:none
 	unstage = restore --staged
