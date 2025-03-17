@@ -220,6 +220,14 @@ if [ "$(type -t __git_ps1)" != "function" ]; then
     }
 fi
 
+_git_continue() {
+    __gitcomp 'merge rebase revert cherry-pick'
+}
+
+_git_abort() {
+    _git_continue
+}
+
 # set variable identifying the chroot you work in (used in the prompt below)
 if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
     debian_chroot=$(cat /etc/debian_chroot)

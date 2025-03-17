@@ -37,7 +37,7 @@
 	listadded = diff --cached --name-only --relative --diff-filter=A
 	listuntracked = ls-files --others --exclude-standard
 	pushf = push --force-with-lease --force-if-includes
-	synonym = switch --no-track --create
+	synonym = "!f(){ : git reset; git switch --no-track --create $2 $1; };f"
 	# show branch list command from bash-completions
 	branches = !git for-each-ref --sort=-committerdate --format=\"%(refname:strip=2)\" --exclude=\"refs/heads/$(git current-branch)\" \"refs/heads/**\"
 	remote-branches = for-each-ref --sort=-committerdate --format="%(refname:strip=2)" "refs/remotes/**"
