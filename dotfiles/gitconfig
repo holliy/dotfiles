@@ -43,7 +43,7 @@
 	remote-branches = for-each-ref --sort=-committerdate --format="%(refname:strip=2)" "refs/remotes/**"
 	merged-branches = !git for-each-ref --sort=-committerdate --format=\"%(refname:strip=2)\" --merged=\"remotes/origin/HEAD\" --exclude=\"refs/heads/$(git current-branch)\" \"refs/heads/**\"
 	prebase = pull --rebase
-	edit = config --global --edit
+	configure = config --global --edit
 	uncached = !cd ${GIT_PREFIX:-.} && git ls-files -v $(git rev-parse --show-toplevel) | grep -v ^H
 	loglinetime = logline --format="%C(auto)%h%C(reset)\\ %ad%C(auto)%d%C(reset)\\ %s"
 	fixup = commit --fixup
@@ -52,4 +52,7 @@
 	continue = "!f(){ git $1 --continue; };f"
 	abort = "!f(){ git $1 --abort; };f"
 	unchange = !git restore . && git clean --force
+	ignores = ls-files --others --ignored --exclude-standard --directory
+	alias = "!f(){ git config get alias.$1; };f"
+	aliases = --list-cmds=alias
 # vi: noet ts=4 sw=4 ft=gitconfig:
