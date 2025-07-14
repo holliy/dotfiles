@@ -19,7 +19,7 @@ local config = {
             stretch="Normal",
         },
     },
-    font_size = 10.8,
+    font_size = 10,
     line_height = 0.98,
     adjust_window_size_when_changing_font_size = false,
     use_resize_increments = true,
@@ -57,11 +57,11 @@ local config = {
     allow_win32_input_mode = false,
 
     use_fancy_tab_bar = false,
-    window_background_opacity = 0.60,
-    text_background_opacity = 0.60,
+    window_background_opacity = 0.80,
+    text_background_opacity = 0.80,
 
-    initial_rows = 30,
-    initial_cols = 100,
+    initial_rows = 40,
+    initial_cols = 140,
     window_padding = {
         left = "6px",
         right = "4px",
