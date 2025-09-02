@@ -1637,6 +1637,18 @@ packadd! matchit
 augroup filetypedetect
 augroup END
 
+if executable('fzf')
+  let s:fzf_path = trim(system('which fzf'))
+  if s:fzf_path =~# '^/home/linuxbrew/'
+    " Homebrew経由でインストールされている場合はbrewコマンドからインストール先を調べる
+    let g:fzf_dir = trim(system('brew --prefix fzf'))
+  else
+    let g:fzf_dir = substitute(s:fzf_path, '/bin/fzf$', '')
+  endif
+
+  unlet s:fzf_path
+endif
+
 let s:plugin_loader_path = g:vimrc#dotvim .. '/dpp.vim'
 if g:vimrc#is_starting
   " 画面切り替え前のメッセージを遅延して表示する

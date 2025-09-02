@@ -10,6 +10,7 @@ import {
   ConfigReturn,
   Plugin,
 } from "jsr:@shougo/dpp-vim@~2.2.0/types";
+import { globals } from "jsr:@denops/std@~7.0.1/variable";
 import { is } from "jsr:@core/unknownutil@~4.2.0";
 
 type ExtParams = {
@@ -57,7 +58,7 @@ export class Config extends BaseConfig {
       { path: checkFiles[2] } as LoadArgs,
     ) as { plugins: Plugin[] };
 
-    const plugins = [];
+    const plugins: Plugin[] = [];
     for (const p of tomlPlugins) {
       p.name = p.name.replaceAll(/^vim-|-vim$|\.n?vim$/g, "");
 
@@ -75,7 +76,7 @@ export class Config extends BaseConfig {
       }
 
       if (!p.if.includes("(")) {
-        // 即値/変数
+        // 即値/変数の場合、評価してtrueのときはifの値を削除して追加
         if (await denops.call("eval", p.if) as boolean) {
           const { if: _if, ...plugin } = p;
           plugins.push(plugin);
@@ -85,6 +86,24 @@ export class Config extends BaseConfig {
       }
 
       plugins.push(p);
+    }
+
+    for (const p of plugins) {
+      // Vimの外でインストールされたプラグインなどの処理
+      switch (p.name) {
+        case "fzf":
+          const fzfDir = await globals.get(denops, 'fzf_dir');
+
+          if (is.Nullish(fzfDir) || !is.String(fzfDir)) {
+            p.if = false;
+            continue;
+          }
+
+          p.local = true
+          p.merged = false
+          p.path = fzfDir
+          break;
+      }
     }
 
     return { checkFiles, plugins };
