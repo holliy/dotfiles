@@ -1055,7 +1055,7 @@ hook_post_source = '''
       \       'sorter_fuzzy',
       \       'sorter_rank',
       \       'sorter_itemsize',
-      \       'sorter_lsp-kind',
+      \       'sorter_lsp_kind',
       \     ],
       \     forceCompletionPattern: '(::|->|\.)\w*',
       \   },
@@ -1184,6 +1184,10 @@ hook_post_source = '''
 [[plugins]]
 repo = 'Shougo/ddc-filter-matcher_head'
 depends = ['ddc']
+
+[[plugins]]
+repo = 'Shougo/ddc-filter-sorter_lsp_kind'
+depends = ['ddc', 'ddc-source-lsp']
 
 [[plugins]]
 repo = 'Shougo/ddc-filter-sorter_rank'
