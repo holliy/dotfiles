@@ -1,0 +1,4 @@
+[tools]
+fzf = "latest"
+deno = "latest"
+direnv = "latest"

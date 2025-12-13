@@ -38,4 +38,7 @@ gitconfig = "~/.gitconfig"
 [byobu.files]
 byobu = "~/.byobu"
 
+[mise.files]
+"config/mise" = "~/.config/mise"
+
 [default.variables]

@@ -86,6 +86,10 @@ if [ -x /home/linuxbrew/.linuxbrew/bin/brew ] > /dev/null 2>&1; then
     fi
 fi
 
+if type "mise" > /dev/null 2>&1; then
+    eval "$(mise activate bash)"
+fi
+
 if type "bfs" > /dev/null 2>&1; then
     alias find="bfs -s"
 fi
