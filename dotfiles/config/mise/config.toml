@@ -2,3 +2,7 @@
 fzf = "latest"
 deno = "latest"
 direnv = "latest"
+dotter = "latest"
+
+[alias]
+dotter = "ubi:SuperCuber/dotter"

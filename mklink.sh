@@ -1,32 +1,24 @@
 #!/bin/bash
 
 # スクリプトが置かれている場所をカレントディレクトリにする
-cd "$(dirname "$0")"
+CURDIR=$(dirname "$0")
+cd "$CURDIR"
 
 # terminfoファイルのコンパイル
 ls -1 terminfo/* | xargs -n1 tic -x
 
-# homebrewをインストール
-if ! { which brew >/dev/null 2>&1; }; then
-  echo "Installing homebrew..."
-  if ! { which curl >/dev/null 2>&1; }; then
-    echo "curl is required to install homebrew"
-    exit 1
-  fi
-
-  bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-  if [ $? -ne 0 ]; then
-    exit 1
-  fi
-
-  eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi
-
 DOTTER=dotter
 
-if ! { which $DOTTER >/dev/null 2>&1; }; then
+if ! { which "$DOTTER" >/dev/null 2>&1; }; then
+  if ! { which mise >/dev/null 2>&1; }; then
+    echo "dotter and mise commands not found"
+    exit 1
+  fi
+
   echo "Installing dotter..."
-  brew install dotter
+  export MISE_GLOBAL_CONFIG_FILE="$(realpath $CURDIR)/dotfiles/config/mise/config.toml"
+  mise install dotter
+  DOTTER="mise exec dotter -- dotter"
 fi
 
 # 既存のファイルを退避
