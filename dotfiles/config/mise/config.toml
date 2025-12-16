@@ -3,6 +3,7 @@ fzf = "latest"
 deno = "latest"
 direnv = "latest"
 dotter = "latest"
+usage = "latest"
 
 [alias]
 dotter = "ubi:SuperCuber/dotter"
