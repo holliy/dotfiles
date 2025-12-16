@@ -1637,13 +1637,19 @@ packadd! matchit
 augroup filetypedetect
 augroup END
 
+" fzfと一緒にインストールされるプラグインファイルを検索
 if executable('fzf')
   let s:fzf_path = trim(system('which fzf'))
   if s:fzf_path =~# '^/home/linuxbrew/'
     " Homebrew経由でインストールされている場合はbrewコマンドからインストール先を調べる
     let g:fzf_dir = trim(system('brew --prefix fzf'))
   else
-    let g:fzf_dir = substitute(s:fzf_path, '/bin/fzf$', '')
+    let g:fzf_dir = substitute(s:fzf_path, '/bin/fzf$', '', '')
+  endif
+
+  if !isdirectory(g:fzf_dir .. '/plugin')
+    " バイナリのみインストールされている場合
+    unlet g:fzf_dir
   endif
 
   unlet s:fzf_path

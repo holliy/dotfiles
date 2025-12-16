@@ -58,7 +58,7 @@ export class Config extends BaseConfig {
       { path: checkFiles[2] } as LoadArgs,
     ) as { plugins: Plugin[] };
 
-    const plugins: Plugin[] = [];
+    let plugins: Plugin[] = [];
     for (const p of tomlPlugins) {
       p.name = p.name.replaceAll(/^vim-|-vim$|\.n?vim$/g, "");
 
@@ -88,23 +88,27 @@ export class Config extends BaseConfig {
       plugins.push(p);
     }
 
-    for (const p of plugins) {
+    const fzfDir = await globals.get(denops, 'fzf_dir');
+    plugins = plugins.flatMap((p) => {
       // Vimの外でインストールされたプラグインなどの処理
       switch (p.name) {
         case "fzf":
-          const fzfDir = await globals.get(denops, 'fzf_dir');
-
           if (is.Nullish(fzfDir) || !is.String(fzfDir)) {
-            p.if = false;
-            continue;
+            if (!p.repo && !p.path) {
+              // プラグインファイルが見つからなかったので除外
+              p.if = false;
+              return [];
+            }
+          } else {
+            p.local = true
+            p.merged = false
+            p.path = fzfDir
           }
-
-          p.local = true
-          p.merged = false
-          p.path = fzfDir
           break;
       }
-    }
+
+      return [p];
+    });
 
     return { checkFiles, plugins };
   }

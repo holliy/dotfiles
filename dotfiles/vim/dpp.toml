@@ -555,6 +555,7 @@ hook_source = '''
 '''
 
 [[plugins]]
+repo = 'junegunn/fzf'
 name = 'fzf'
 local = true
 merged = false
@@ -587,13 +588,20 @@ hook_source = '''
 hook_post_source = '''
   " オプションを上書き
   " 上書きする前に読み込まれている必要があるのでautoloadファイル (と依存するpluginファイル)を読み込む
-  runtime! plugin/fzf.vim
-  call fzf#vim#with_preview()
-  function! fzf#vim#with_preview(...) abort
-    let spec = a:0 ? copy(a:1) : {}
-    let spec.options = get(spec, 'options', []) + ['--no-unicode']
-    return spec
-  endfunction
+  if get(dpp#get('fzf'), 'sourced', v:false)
+    runtime! plugin/fzf.vim
+    call fzf#vim#with_preview()
+    function! fzf#vim#with_preview(...) abort
+      let spec = a:0 ? copy(a:1) : {}
+      let spec.options = get(spec, 'options', []) + ['--no-unicode']
+      return spec
+    endfunction
+  else
+    nunmap <Leader>bb
+    nunmap <Leader>e
+    nunmap <Leader>gl
+    nunmap <Leader>mru
+  endif
 '''
 
 [[plugins]]
