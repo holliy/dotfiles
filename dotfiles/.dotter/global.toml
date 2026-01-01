@@ -41,4 +41,9 @@ byobu = "~/.byobu"
 [mise.files]
 "config/mise" = "~/.config/mise"
 
+[wsl.files]
+wslconfig = "~/.wslconfig"
+wslgconfig = "~/.wslgconfig"
+cloud-init = "~/.cloud-init"
+
 [default.variables]

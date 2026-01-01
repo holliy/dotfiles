@@ -1,0 +1,23 @@
+#cloud-config
+apt:
+  primary:
+    - arches: [i386, amd64]
+      uri: http://ftp.udx.icscoe.jp/Linux/ubuntu
+  security:
+    - arches: [i386, amd64]
+      uri: http://security.ubuntu.com/ubuntu
+
+write_files:
+- path: /etc/wsl.conf
+  content: |
+    [boot]
+    systemd = true
+
+    [network]
+    hostname = wsl
+
+    [interop]
+    appendWindowsPath = false
+
+timezone: Asia/Tokyo
+locale: ja_JP.utf8
