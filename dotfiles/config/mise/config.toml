@@ -5,5 +5,5 @@ direnv = "latest"
 dotter = "latest"
 usage = "latest"
 
-[alias]
+[tool_alias]
 dotter = "ubi:SuperCuber/dotter"
