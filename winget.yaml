@@ -1,0 +1,116 @@
+# Created using winget configure export 1.12.350
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.3
+$schema: https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/2023/08/config/document.json
+metadata:
+  winget:
+    processor:
+      identifier: "dscv3"
+resources:
+  - name: Microsoft.WinGet/Package_zoopvgsv
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.PowerShell"
+      source: "winget"
+  - name: Microsoft.WinGet/UserSettingsFile-0
+    type: Microsoft.WinGet/UserSettingsFile
+    properties:
+      settings:
+        interactivity:
+          disable: false
+        installBehavior:
+          preferences:
+            scope: "user"
+            locale:
+              - "ja-JP"
+              - "en-US"
+        $schema: "https://aka.ms/winget-settings.schema.json"
+  - name: winget_7zip.7zip
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "7zip.7zip"
+      source: "winget"
+  - name: winget_Git.Git
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Git.Git"
+      source: "winget"
+  - name: winget_Mozilla.Firefox.ja
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Mozilla.Firefox.ja"
+      source: "winget"
+  - name: winget_vim.vim
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "vim.vim"
+      source: "winget"
+  - name: winget_Alacritty.Alacritty
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Alacritty.Alacritty"
+      source: "winget"
+  - name: winget_Google.JapaneseIME
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Google.JapaneseIME"
+      source: "winget"
+  - name: winget_GitHub.cli
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "GitHub.cli"
+      source: "winget"
+  - name: winget_wez.wezterm
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "wez.wezterm"
+      source: "winget"
+  - name: winget_Neovim.Neovim
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Neovim.Neovim"
+      source: "winget"
+  - name: winget_Google.Chrome.EXE
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Google.Chrome.EXE"
+      source: "winget"
+  - name: winget_Microsoft.Edge
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.Edge"
+      source: "winget"
+  - name: winget_Microsoft.PowerShell
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.PowerShell"
+      source: "winget"
+  - name: winget_nathancorvussolis.corvusskk
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "nathancorvussolis.corvusskk"
+      source: "winget"
+  - name: winget_WinMerge.WinMerge
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "WinMerge.WinMerge"
+      source: "winget"
+  - name: winget_jdx.mise
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "jdx.mise"
+      source: "winget"
+  - name: winget_Microsoft.PowerToys
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.PowerToys"
+      source: "winget"
+  - name: winget_Microsoft.VisualStudioCode
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.VisualStudioCode"
+      source: "winget"
+  - name: winget_Microsoft.WindowsTerminal
+    type: Microsoft.WinGet/Package
+    properties:
+      id: "Microsoft.WindowsTerminal"
+      source: "winget"

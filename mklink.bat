@@ -9,6 +9,9 @@ set NODEFAULTCURRENTDIRECTORYINEXEPATH=1
 REM スクリプトが置かれている場所をカレントディレクトリにする
 cd /d %~dp0
 
+REM 開発用ツールをインストール
+winget configure winget.yaml
+
 REM 管理者権限で実行
 for /f "tokens=3 delims=\ " %%i in ('%SYSTEMROOT%\System32\whoami.exe /groups^|%SYSTEMROOT%\System32\find "Mandatory"') do set LEVEL=%%i
 
@@ -33,9 +36,6 @@ if not %ERRORLEVEL% == 0 (
 
 cd dotfiles
 %DOTTER% deploy --local-config .dotter/windows.toml
-
-cd ..
-winget import --no-upgrade winget_packages.json
 
 pause
 

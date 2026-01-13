@@ -31,10 +31,6 @@ Xresources = "~/.Xresources"
 [git.files]
 gitconfig = "~/.gitconfig"
 
-[winget.files]
-# see windows.toml
-"winget.json" = ""
-
 [byobu.files]
 byobu = "~/.byobu"
 
