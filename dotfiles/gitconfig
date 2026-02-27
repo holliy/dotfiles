@@ -20,6 +20,8 @@
 	decorate = short
 [branch]
 	sort = -committerdate
+[tag]
+	sort = -committerdate
 [alias]
 	partialclone = clone --filter=blob:none
 	unstage = restore --staged
@@ -51,8 +53,11 @@
 	squash = rebase --autosquash
 	continue = "!f(){ git $1 --continue; };f"
 	abort = "!f(){ git $1 --abort; };f"
-	unchange = !git restore . && git clean --force
+	# unchange = !git restore . && git clean --force
 	ignores = ls-files --others --ignored --exclude-standard --directory
 	alias = "!f(){ git config get alias.$1; };f"
 	aliases = --list-cmds=alias
+	hash = "!f(){ : git reset; if [ $# = 0 ]; then git rev-parse --short @; else git rev-parse --short $1; fi };f"
+	new-file = add --intent-to-add
+	pick = cherry-pick -x
 # vi: noet ts=4 sw=4 ft=gitconfig:
