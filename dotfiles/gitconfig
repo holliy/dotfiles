@@ -10,14 +10,18 @@
 	conflictStyle = zdiff3 # 2.35~
 [status]
 	showUntrackedFiles = all
+	showStash = true
 [diff]
 	algorithm = histogram
 	indentHeuristic = true
 	colorMoved = plain
 	mnemonicPrefix = true
+	statGraphWidth = 15
 [log]
 	date = format:%Y-%m-%d %H:%M %z
 	decorate = short
+[format]
+	pretty = fuller
 [branch]
 	sort = -committerdate
 [tag]
@@ -29,6 +33,12 @@
 	commitadd = commit --amend --no-edit
 	diffc = diff --cached
 	diffs = diff --stat
+	diffcs = diff --cached --stat
+	diffsc = diff --stat --cached
+	dc = diff --cached
+	ds = diff --stat
+	dcs = diff --cached --stat
+	dsc = diff --stat --cached
 	logline = log --oneline --graph
 	s = status
 	sa = status --ignored --untracked-files=normal
@@ -58,6 +68,7 @@
 	alias = "!f(){ git config get alias.$1; };f"
 	aliases = --list-cmds=alias
 	hash = "!f(){ : git reset; if [ $# = 0 ]; then git rev-parse --short @; else git rev-parse --short $1; fi };f"
-	new-file = add --intent-to-add
+	# e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 = echo -n | git hash-object -w --stdin
+	new-file-single = update-index --add --cacheinfo 100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
 	pick = cherry-pick -x
 # vi: noet ts=4 sw=4 ft=gitconfig:
